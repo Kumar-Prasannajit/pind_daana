@@ -2,7 +2,7 @@
 import React, { useState, useLayoutEffect, useRef, useEffect } from "react";
 import PujaModal from "./PujaModal";
 import { X } from "lucide-react";
-import { motion } from "framer-motion";
+
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -157,33 +157,7 @@ const Hero = () => {
 
       <PujaModal isOpen={openModal} onClose={() => setOpenModal(false)} />
 
-      {/* Marquee Section */}
-      <div className="absolute bottom-0 left-0 w-full z-30 bg-black/60 backdrop-blur-sm border-t border-white/10 overflow-hidden py-3">
-        <div className="flex whitespace-nowrap">
-          <motion.div
-            className="flex items-center gap-16 text-white/90 text-sm md:text-lg font-medium cursor-pointer"
-            animate={{ x: [0, -1000] }}
-            transition={{
-              repeat: Infinity,
-              ease: "linear",
-              duration: 25, // Adjust speed here
-            }}
-            onClick={() => window.location.href = '/pujas'}
-          >
-            {/* Repeating text enough times to cover width and loop smoothly */}
-            {[1, 2, 3, 4, 5].map((i) => (
-              <span key={i} className="flex items-center gap-2">
-                🕉️ Shivratri Puja Special 🕉️
-                <span className="mx-2">Book Your Shivratri Puja At Just ₹199</span>
-                | Use Code <span className="text-[#F1C40F] font-bold">MANIMA100</span> & Get Flat ₹100 OFF |
-                <span className="text-[#D35400] font-bold bg-white/10 px-2 py-0.5 rounded ml-2 border border-[#D35400]/50 hover:bg-[#D35400] hover:text-white transition-colors">
-                  Book Now 🙏
-                </span>
-              </span>
-            ))}
-          </motion.div>
-        </div>
-      </div>
+
 
     </section>
   );

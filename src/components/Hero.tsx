@@ -143,15 +143,30 @@ const Hero = () => {
         </div>
 
         <div className="flex justify-center gap-8 flex-wrap">
-          <div className="flex items-center gap-2 text-sm font-medium text-[#F1C40F] bg-black/40 px-4 py-2 rounded-full">
-            ✓ Verified Priests
-          </div>
-          <div className="flex items-center gap-2 text-sm font-medium text-[#F1C40F] bg-black/40 px-4 py-2 rounded-full">
-            ● Live Video Option
-          </div>
-          <div className="flex items-center gap-2 text-sm font-medium text-[#F1C40F] bg-black/40 px-4 py-2 rounded-full">
-            ☸ Traditional Vidhi
-          </div>
+          <button
+            onClick={() => document.getElementById("Services")?.scrollIntoView({ behavior: "smooth" })}
+            className="flex items-center gap-2 text-sm font-medium text-[#F1C40F] bg-black/40 px-4 py-2 rounded-full hover:bg-black/60 transition-colors cursor-pointer"
+          >
+            ● Online Puja for Special Occasion
+          </button>
+          <button
+            onClick={() => document.getElementById("Services")?.scrollIntoView({ behavior: "smooth" })}
+            className="flex items-center gap-2 text-sm font-medium text-[#F1C40F] bg-black/40 px-4 py-2 rounded-full hover:bg-black/60 transition-colors cursor-pointer"
+          >
+            ● Online Asthi Visarjan
+          </button>
+          <button
+            onClick={() => document.getElementById("Services")?.scrollIntoView({ behavior: "smooth" })}
+            className="flex items-center gap-2 text-sm font-medium text-[#F1C40F] bg-black/40 px-4 py-2 rounded-full hover:bg-black/60 transition-colors cursor-pointer"
+          >
+            ☸ Online Pinda daan
+          </button>
+          <button
+            onClick={() => document.getElementById("Services")?.scrollIntoView({ behavior: "smooth" })}
+            className="flex items-center gap-2 text-sm font-medium text-[#F1C40F] bg-black/40 px-4 py-2 rounded-full hover:bg-black/60 transition-colors cursor-pointer"
+          >
+            ● Book a Pandit
+          </button>
         </div>
       </div>
 

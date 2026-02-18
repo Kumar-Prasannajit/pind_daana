@@ -123,7 +123,7 @@ function PujaServicesContent() {
                         {/* Results Count Badge */}
                         <div className="flex w-full md:w-auto items-center justify-center md:justify-start gap-2 bg-orange-50 text-[#D35400] px-4 py-2 rounded-full text-xs md:text-sm font-bold shadow-sm border border-orange-100 order-2 md:order-1">
                             <span className="w-2 h-2 rounded-full bg-[#D35400] animate-pulse"></span>
-                            Showing {filteredPujas.length} {filteredPujas.length === 1 ? 'Ritual' : 'Rituals'}
+                            Showing {filteredPujas.length} {filteredPujas.length === 1 ? 'Temple' : 'Temples'}
                         </div>
 
                         {/* Filter Controls */}
@@ -202,12 +202,7 @@ function PujaServicesContent() {
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
 
-                                        <div className="absolute top-4 left-4">
-                                            <div className="bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-[#D35400] shadow-sm flex items-center gap-1.5">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-[#D35400] animate-pulse"></div>
-                                                {puja.templeType}
-                                            </div>
-                                        </div>
+
                                     </div>
 
                                     <div className="p-6 flex-1 flex flex-col">

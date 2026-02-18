@@ -98,7 +98,7 @@ export default function ClientDashboard() {
                                         Verified Member
                                     </span>
                                     <h2 className="text-3xl md:text-4xl font-serif font-bold leading-tight">
-                                        Namaste, <span className="text-[#DAA520]">{client.name.split(' ')[0]}</span>
+                                        Namaste, <span className="text-[#DAA520]">{(client.name || "User").split(' ')[0]}</span>
                                     </h2>
                                     <p className="text-white/70 text-lg leading-relaxed">
                                         Your spiritual journey continues here. Book a ritual for your ancestors or manage your ongoing requests.
@@ -182,7 +182,7 @@ export default function ClientDashboard() {
                                     <div className="flex flex-col md:flex-row gap-8 items-center md:items-start text-center md:text-left">
                                         <div className="relative">
                                             <div className="w-24 h-24 rounded-full bg-[#2C0E0F] flex items-center justify-center text-3xl font-serif text-[#DAA520] font-bold ring-4 ring-gray-50 shadow-lg">
-                                                {client.name.charAt(0).toUpperCase()}
+                                                {(client.name || "U").charAt(0).toUpperCase()}
                                             </div>
                                             <div className="absolute bottom-0 right-0 bg-green-500 w-6 h-6 rounded-full border-4 border-white"></div>
                                         </div>
@@ -326,7 +326,7 @@ export default function ClientDashboard() {
                 <div className="p-4 border-t border-white/10 bg-[#230b0c] flex-shrink-0">
                     <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
                         <div className="w-10 h-10 rounded-full bg-[#DAA520] flex items-center justify-center text-[#2C0E0F] font-bold font-serif">
-                            {client.name.charAt(0).toUpperCase()}
+                            {(client.name || "U").charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold text-white truncate">{client.name}</p>
@@ -352,7 +352,7 @@ export default function ClientDashboard() {
                             <h1 className="text-xl md:text-2xl font-serif font-bold text-[#2C0E0F]">
                                 {navItems.find(i => i.id === activeTab)?.label || "Dashboard"}
                             </h1>
-                            <p className="text-xs md:text-sm text-gray-500">Welcome back, {client.name.split(' ')[0]}</p>
+                            <p className="text-xs md:text-sm text-gray-500">Welcome back, {(client.name || "User").split(' ')[0]}</p>
                         </div>
                     </div>
 

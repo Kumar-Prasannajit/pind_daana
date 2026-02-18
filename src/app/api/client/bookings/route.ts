@@ -36,12 +36,7 @@ export async function GET() {
         }
 
         // Ensure models are registered involved in populate
-        console.log("Models loaded:", {
-            Agent: !!mongoose.models.Agent,
-            Service: !!mongoose.models.Service,
-            Location: !!mongoose.models.Location,
-            Puja: !!mongoose.models.Puja
-        });
+
 
         // Force usage of imported models to prevent tree-shaking (though explicit import should be enough)
         const _models = [Agent, Service, Location];

@@ -6,9 +6,12 @@ import { X } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
+import { useRouter } from "next/navigation";
+
 gsap.registerPlugin(ScrollTrigger);
 
 const Hero = () => {
+  const router = useRouter();
   const [openModal, setOpenModal] = useState(false);
 
   const heroRef = useRef<HTMLDivElement>(null);
@@ -136,7 +139,7 @@ const Hero = () => {
         <div className="flex flex-col md:flex-row gap-6 justify-center mb-16">
           <button
             className="px-6 py-3 rounded-[4px] font-semibold bg-[#D35400] text-white shadow-sm hover:bg-[#E67E22]"
-            onClick={() => setOpenModal(true)}
+            onClick={() => router.push('/client/signup')}
           >
             Book Ritual Now
           </button>
@@ -147,25 +150,25 @@ const Hero = () => {
             onClick={() => document.getElementById("Services")?.scrollIntoView({ behavior: "smooth" })}
             className="flex items-center gap-2 text-sm font-medium text-[#F1C40F] bg-black/40 px-4 py-2 rounded-full hover:bg-black/60 transition-colors cursor-pointer"
           >
-            ● Online Puja for Special Occasion
+            Puja for Special Occasion
           </button>
           <button
             onClick={() => document.getElementById("Services")?.scrollIntoView({ behavior: "smooth" })}
             className="flex items-center gap-2 text-sm font-medium text-[#F1C40F] bg-black/40 px-4 py-2 rounded-full hover:bg-black/60 transition-colors cursor-pointer"
           >
-            ● Online Asthi Visarjan
+            Asthi Visarjan
           </button>
           <button
             onClick={() => document.getElementById("Services")?.scrollIntoView({ behavior: "smooth" })}
             className="flex items-center gap-2 text-sm font-medium text-[#F1C40F] bg-black/40 px-4 py-2 rounded-full hover:bg-black/60 transition-colors cursor-pointer"
           >
-            ☸ Online Pinda daan
+            Pinda daan
           </button>
           <button
             onClick={() => document.getElementById("Services")?.scrollIntoView({ behavior: "smooth" })}
             className="flex items-center gap-2 text-sm font-medium text-[#F1C40F] bg-black/40 px-4 py-2 rounded-full hover:bg-black/60 transition-colors cursor-pointer"
           >
-            ● Book a Pandit
+            Book a Pandit
           </button>
         </div>
       </div>

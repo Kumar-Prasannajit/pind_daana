@@ -38,6 +38,9 @@ export default function ClientLogin() {
             const data = await res.json();
 
             if (!res.ok) {
+                if (data.code === "ACCOUNT_NOT_VERIFIED") {
+                    throw new Error(`Your account is not verified. <a href="/client/verify-otp?email=${data.email}" class="underline font-bold">Verify Now</a>`);
+                }
                 throw new Error(data.error || "Login failed");
             }
 
@@ -84,7 +87,7 @@ export default function ClientLogin() {
                     {error && (
                         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 text-sm flex items-center gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                            {error}
+                            <span dangerouslySetInnerHTML={{ __html: error }}></span>
                         </div>
                     )}
 
@@ -141,6 +144,12 @@ export default function ClientLogin() {
                         </Link>
                         <p className="text-gray-500 text-sm">
                             Don't have an account?{" "}
+                            <Link href="/client/signup" className="text-[#D35400] font-semibold hover:underline">
+                                Sign up
+                            </Link>
+                        </p>
+                        <p className="text-gray-500 text-sm pt-2">
+                            Need help?{" "}
                             <button
                                 onClick={() => setIsModalOpen(true)}
                                 className="text-[#D35400] font-semibold hover:underline"

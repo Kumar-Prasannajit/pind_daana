@@ -17,11 +17,14 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
     const isDashboardRoute = pathname?.startsWith('/client/dashboard');
     const isAgentRoute = pathname?.startsWith('/agent');
     const isLoginRoute = pathname?.startsWith('/client/login');
+    const isSignupRoute = pathname?.startsWith('/client/signup');
+    const isForgotPasswordRoute = pathname?.startsWith('/client/forgot-password');
+    const isVerifyOtpRoute = pathname?.startsWith('/client/verify-otp');
     const isCheckoutRoute = pathname?.startsWith('/checkout');
     const isCountdownRoute = pathname?.startsWith('/countdown');
 
     // For these routes, we don't want the global Header/Footer/Loader
-    if (isAdminRoute || isDashboardRoute || isAgentRoute || isLoginRoute || isCheckoutRoute || isCountdownRoute) {
+    if (isAdminRoute || isDashboardRoute || isAgentRoute || isLoginRoute || isSignupRoute || isForgotPasswordRoute || isVerifyOtpRoute || isCheckoutRoute || isCountdownRoute) {
         return <div className="app">{children}</div>;
     }
 

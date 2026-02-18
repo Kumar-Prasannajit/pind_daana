@@ -43,8 +43,8 @@ const Footer: React.FC<FooterProps> = ({ onOpenPuja }) => {
                     <h4 className="text-[#2c0e0e] text-xl mb-6 relative inline-block font-bold">Quick Links</h4>
                     <ul className="list-none">
                         {[
-                            { name: 'Home', href: '#hero' },
-                            { name: 'About Us', href: '#about' },
+                            { name: 'Home', href: '/' },
+                            { name: 'About Us', href: '/about-us' },
                             { name: 'Ritual Packages', href: '/pujas' },
                             // { name: 'FAQs', href: '#faq' },
                             { name: 'Privacy Policy', href: '/privacy-policy' },
@@ -68,7 +68,7 @@ const Footer: React.FC<FooterProps> = ({ onOpenPuja }) => {
                     <h4 className="text-[#2c0e0e] text-xl mb-6 relative inline-block font-bold">Contact Us</h4>
                     <ul className="list-none">
                         <li className="flex items-start gap-3 mb-4">
-                            <Phone size={18} className="text-[#D35400]" /> <span>+91 8280638830</span> <span>+91 9040693050</span>
+                            <Phone size={18} className="text-[#D35400]" /> <span>+91 8280638830</span> <span>+91 9668198230</span>
                         </li>
                         <li className="flex items-start gap-3 mb-4">
                             <Mail size={18} className="text-[#D35400]" /> <span>manima.app@gmail.com</span>

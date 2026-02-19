@@ -23,8 +23,18 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Email and Password are required" }, { status: 400 });
         }
 
-        const client = await Client.findOne({ email });
+        let client = await Client.findOne({ email });
         if (!client) {
+            // Check if pending
+            const PendingClient = (await import("@/models/PendingClient")).default;
+            const pending = await PendingClient.findOne({ email });
+            if (pending) {
+                return NextResponse.json({
+                    error: "Account not verified",
+                    code: "ACCOUNT_NOT_VERIFIED",
+                    email: email
+                }, { status: 403 });
+            }
             return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
         }
 

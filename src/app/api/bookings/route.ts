@@ -89,6 +89,12 @@ export async function POST(req: Request) {
         }
         // ---------------------------------
 
+        // Update Client Status
+        await Client.findByIdAndUpdate(body.client, {
+            $set: { isBooked: true },
+            $unset: { expireAt: "" }
+        });
+
         return NextResponse.json({ message: "Booking created successfully", booking: newBooking }, { status: 201 });
     } catch (error: any) {
         console.error("Error creating booking:", error);

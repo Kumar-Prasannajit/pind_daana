@@ -9,6 +9,8 @@ export interface IClient extends Document {
     resetPasswordToken?: string;
     resetPasswordTokenExpiry?: Date;
     createdAt: Date;
+    isBooked: boolean;
+    expireAt?: Date;
 }
 
 const ClientSchema: Schema = new Schema({
@@ -45,6 +47,14 @@ const ClientSchema: Schema = new Schema({
     createdAt: {
         type: Date,
         default: Date.now,
+    },
+    isBooked: {
+        type: Boolean,
+        default: false,
+    },
+    expireAt: {
+        type: Date,
+        index: { expires: 0 }, // Documents expire at the time specified in this field
     },
 });
 

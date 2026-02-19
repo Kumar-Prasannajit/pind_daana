@@ -138,3 +138,41 @@ export const sendBookingConfirmationEmail = async ({ to, name, bookingId, agentN
         return null;
     }
 };
+
+export const sendOtpEmail = async ({ to, name, otp }: any) => {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.warn('Email credentials missing. Skipping email send.');
+        return;
+    }
+
+    const mailOptions = {
+        from: `"Manima Support" <${process.env.EMAIL_USER}>`,
+        to,
+        subject: 'Verify Your Account - Manima',
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+                <h2 style="color: #D35400; text-align: center;">Verify Your Account</h2>
+                <p>Hello <strong>${name}</strong>,</p>
+                <p>Thank you for signing up with Manima. Please use the following OTP to verify your account:</p>
+                
+                <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0; text-align: center;">
+                    <span style="font-size: 24px; font-weight: bold; letter-spacing: 5px; color: #D35400;">${otp}</span>
+                </div>
+
+                <p>This OTP is valid for <strong>24 hours</strong>.</p>
+                <p>If you did not request this, please ignore this email.</p>
+                <br>
+                <p>Best Regards,</p>
+                <p><strong>The Manima Team</strong></p>
+            </div>
+        `,
+    };
+
+    try {
+        const info = await transporter.sendMail(mailOptions);
+        return info;
+    } catch (error) {
+        console.error('Error sending OTP email:', error);
+        throw error;
+    }
+};

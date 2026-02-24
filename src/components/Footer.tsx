@@ -68,7 +68,7 @@ const Footer: React.FC<FooterProps> = ({ onOpenPuja }) => {
                     <h4 className="text-[#2c0e0e] text-xl mb-6 relative inline-block font-bold">Contact Us</h4>
                     <ul className="list-none">
                         <li className="flex items-start gap-3 mb-4">
-                            <Phone size={18} className="text-[#D35400]" /> <span>+91 8280638830</span> <span>+91 9668198230</span>
+                            <Phone size={18} className="text-[#D35400]" /> <span>+91 8280638830</span> <span>+91 9668093025</span>
                         </li>
                         <li className="flex items-start gap-3 mb-4">
                             <Mail size={18} className="text-[#D35400]" /> <span>manima.app@gmail.com</span>

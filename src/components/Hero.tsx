@@ -145,31 +145,72 @@ const Hero = () => {
           </button>
         </div>
 
-        <div className="flex justify-center gap-8 flex-wrap">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-8 justify-items-center">
+
           <button
-            onClick={() => document.getElementById("Services")?.scrollIntoView({ behavior: "smooth" })}
-            className="flex items-center gap-2 text-sm font-medium text-[#F1C40F] bg-black/40 px-4 py-2 rounded-full hover:bg-black/60 transition-colors cursor-pointer"
+            onClick={() =>
+              document.getElementById("Services")?.scrollIntoView({ behavior: "smooth" })
+            }
+            className="relative w-full max-w-[160px] h-12 
+               flex flex-col items-center justify-center
+               rounded-full overflow-hidden cursor-pointer
+               text-xs font-medium text-white"
           >
-            Puja for Special Occasion
+            <div className="absolute inset-0 bg-[url('/assets/special_puja.jpeg')] bg-cover bg-center"></div>
+            <div className="absolute inset-0 bg-black/55"></div>
+            <span className="relative z-10 leading-tight text-center">
+              Puja for <br /> Special Occasion
+            </span>
           </button>
+
           <button
-            onClick={() => document.getElementById("Services")?.scrollIntoView({ behavior: "smooth" })}
-            className="flex items-center gap-2 text-sm font-medium text-[#F1C40F] bg-black/40 px-4 py-2 rounded-full hover:bg-black/60 transition-colors cursor-pointer"
+            onClick={() =>
+              document.getElementById("Services")?.scrollIntoView({ behavior: "smooth" })
+            }
+            className="relative w-full max-w-[160px] h-12 
+               flex flex-col items-center justify-center
+               rounded-full overflow-hidden cursor-pointer
+               text-xs font-medium text-white"
           >
-            Asthi Visarjan
+            <div className="absolute inset-0 bg-[url('/assets/asthi_visarjan.jpeg')] bg-cover bg-center"></div>
+            <div className="absolute inset-0 bg-black/55"></div>
+            <span className="relative z-10 leading-tight text-center">
+              Asthi <br /> Visarjan
+            </span>
           </button>
+
           <button
-            onClick={() => document.getElementById("Services")?.scrollIntoView({ behavior: "smooth" })}
-            className="flex items-center gap-2 text-sm font-medium text-[#F1C40F] bg-black/40 px-4 py-2 rounded-full hover:bg-black/60 transition-colors cursor-pointer"
+            onClick={() =>
+              document.getElementById("Services")?.scrollIntoView({ behavior: "smooth" })
+            }
+            className="relative w-full max-w-[160px] h-12 
+               flex flex-col items-center justify-center
+               rounded-full overflow-hidden cursor-pointer
+               text-xs font-medium text-white"
           >
-            Pinda daan
+            <div className="absolute inset-0 bg-[url('/assets/special_puja.jpeg')] bg-cover bg-center"></div>
+            <div className="absolute inset-0 bg-black/55"></div>
+            <span className="relative z-10 leading-tight text-center">
+              Pinda <br /> Daan
+            </span>
           </button>
+
           <button
-            onClick={() => document.getElementById("Services")?.scrollIntoView({ behavior: "smooth" })}
-            className="flex items-center gap-2 text-sm font-medium text-[#F1C40F] bg-black/40 px-4 py-2 rounded-full hover:bg-black/60 transition-colors cursor-pointer"
+            onClick={() =>
+              document.getElementById("Services")?.scrollIntoView({ behavior: "smooth" })
+            }
+            className="relative w-full max-w-[160px] h-12 
+               flex flex-col items-center justify-center
+               rounded-full overflow-hidden cursor-pointer
+               text-xs font-medium text-white"
           >
-            Book a Pandit
+            <div className="absolute inset-0 bg-[url('/assets/book_pandit.jpeg')] bg-cover bg-center"></div>
+            <div className="absolute inset-0 bg-black/55"></div>
+            <span className="relative z-10 leading-tight text-center">
+              Book a <br /> Pandit
+            </span>
           </button>
+
         </div>
       </div>
 

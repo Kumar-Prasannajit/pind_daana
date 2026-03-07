@@ -94,7 +94,7 @@ const Footer: React.FC<FooterProps> = ({ onOpenPuja }) => {
             </div>
             <div className="bg-[#D35400]/5 py-6 text-center text-[#8d7a6f] text-[0.85rem] border-t border-[#D35400]/10">
                 <div className="container mx-auto px-6 flex justify-end items-center">
-                    <p>&copy; {new Date().getFullYear()} Manima Services. All rights reserved. | Jai Jagannath</p>
+                    <p>&copy; {new Date().getFullYear()} Manima Online, a product of Navgyan Innovations Pvt Ltd. All rights reserved. | Jai Jagannath</p>
                 </div>
             </div>
         </footer>

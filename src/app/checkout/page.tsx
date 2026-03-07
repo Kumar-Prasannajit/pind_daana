@@ -188,11 +188,54 @@ function CheckoutContent() {
 
         if (paymentMethod === 'razorpay') {
             setIsProcessing(true);
-            // Simulate Razorpay loading
-            setTimeout(() => {
-                setIsProcessing(false);
+            try {
+                // Create order on backend
+                const orderRes = await fetch("/api/bookings/create-order", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ amount: totalAmount })
+                });
+
+                const order = await orderRes.json();
+
+                if (!orderRes.ok) throw new Error(order.error);
+
+                // Initialize Razorpay
+                const options = {
+                    key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+                    order_id: order.id,
+                    amount: order.amount,
+                    currency: "INR",
+                    name: "Manima Spiritual Services",
+                    description: `${serviceName} - ${packageName}`,
+                    handler: (response: any) => {
+                        // Payment successful
+                        processBooking(response.razorpay_payment_id);
+                    },
+                    prefill: {
+                        name: client?.name,
+                        email: client?.email,
+                        contact: client?.phone,
+                    },
+                    theme: {
+                        color: "#D35400",
+                    },
+                    modal: {
+                        ondismiss: () => {
+                            setIsProcessing(false);
+                        }
+                    }
+                };
+
+                const razorpayWindow = (window as any).Razorpay;
+                const rzp1 = new razorpayWindow(options);
+                rzp1.open();
+            } catch (error) {
+                console.error(error);
                 setShowErrorModal(true);
-            }, 2000);
+            } finally {
+                setIsProcessing(false);
+            }
             return;
         }
 

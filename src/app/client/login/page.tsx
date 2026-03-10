@@ -1,14 +1,14 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import PujaModal from "@/components/PujaModal";
 
-export default function ClientLogin() {
+function ClientLoginContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [loading, setLoading] = useState(false);
@@ -174,5 +174,17 @@ export default function ClientLogin() {
                 onClose={() => setIsModalOpen(false)}
             />
         </div>
+    );
+}
+
+export default function ClientLogin() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-[#FDFAF0]">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#D35400]"></div>
+            </div>
+        }>
+            <ClientLoginContent />
+        </Suspense>
     );
 }

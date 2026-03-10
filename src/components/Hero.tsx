@@ -1,14 +1,61 @@
 "use client";
-import React, { useState, useLayoutEffect, useRef, useEffect } from "react";
-import PujaModal from "./PujaModal";
-import { X } from "lucide-react";
 
+import React, { useState, useLayoutEffect, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-import { useRouter } from "next/navigation";
+import PujaModal from "./PujaModal";
 
 gsap.registerPlugin(ScrollTrigger);
+
+//SERVICES
+
+const services = [
+  {
+    icon: () => (
+      <img
+        src="/assets/puja.png"
+        alt="Puja"
+        className="w-12 sm:w-14 md:w-16 h-auto object-contain"
+      />
+    ),
+    line1: "Puja for",
+    line2: "Special Occasion",
+  },
+  {
+    icon: () => (
+      <img
+        src="/assets/asthi.png"
+        alt="Asthi Visarjan"
+        className="w-12 sm:w-14 md:w-16 h-auto object-contain"
+      />
+    ),
+    line1: "Asthi Visarjan",
+  },
+  {
+    icon: () => (
+      <img
+        src="/assets/pinda.png"
+        alt="Pinda Daan"
+        className="w-12 sm:w-14 md:w-16 h-auto object-contain"
+      />
+    ),
+    line1: "Pinda Daan",
+  },
+  {
+    icon: () => (
+      <img
+        src="/assets/pandit_.png"
+        alt="Book Pandit"
+        className="w-12 sm:w-14 md:w-16 h-auto object-contain"
+      />
+    ),
+    line1: "Book a",
+    line2: "Pandit",
+  },
+];
+
+//HERO
 
 const Hero = () => {
   const router = useRouter();
@@ -17,17 +64,18 @@ const Hero = () => {
   const heroRef = useRef<HTMLDivElement>(null);
   const logoRef = useRef<HTMLImageElement>(null);
   const placeholderRef = useRef<HTMLDivElement>(null);
-  const [showAd, setShowAd] = useState(false);
+
+  //TEMPORARY AD LOGIC
 
   useEffect(() => {
-    // Current time: 2026-02-15T05:01:21+05:30
-    // Expiry: 24 hours from 2026-02-15T05:01:03+05:30
     const now = Date.now();
     const expiry = new Date("2026-02-16T05:01:03+05:30").getTime();
     if (now < expiry) {
-      setShowAd(true);
+      console.log("Ad visible");
     }
   }, []);
+
+  /* -------- GSAP LOGO ANIMATION -------- */
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
@@ -38,37 +86,20 @@ const Hero = () => {
       if (!logo || !placeholder || !headerLogo) return;
 
       let startRect: DOMRect;
-      let isMobile: boolean;
 
       const calculatePositions = () => {
         startRect = placeholder.getBoundingClientRect();
-        isMobile = window.innerWidth < 768;
 
-        if (isMobile) {
-          gsap.set(logo, {
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: startRect.width,
-            x: startRect.left,
-            y: startRect.top,
-            transformOrigin: "top left",
-          });
-        } else {
-          gsap.set(logo, {
-            position: "fixed",
-            top: startRect.top,
-            left: startRect.left,
-            width: startRect.width,
-            transformOrigin: "top left",
-          });
-        }
+        gsap.set(logo, {
+          position: "fixed",
+          top: startRect.top,
+          left: startRect.left,
+          width: startRect.width,
+          transformOrigin: "top left",
+        });
       };
 
-      // Initial calculation
       calculatePositions();
-
-      // Recalculate on every refresh (resize/orientation/address bar)
       ScrollTrigger.addEventListener("refreshInit", calculatePositions);
 
       gsap.fromTo(
@@ -85,61 +116,65 @@ const Hero = () => {
           scrub: 1,
           invalidateOnRefresh: true,
         },
+        top: () => headerLogo.getBoundingClientRect().top,
+        left: () => headerLogo.getBoundingClientRect().left,
+        width: () => headerLogo.getBoundingClientRect().width,
         ease: "power2.out",
-        ...(window.innerWidth < 768
-          ? {
-            x: () => headerLogo.getBoundingClientRect().left,
-            y: () => headerLogo.getBoundingClientRect().top,
-            scale: () =>
-              headerLogo.getBoundingClientRect().width /
-              startRect.width,
-          }
-          : {
-            top: () => headerLogo.getBoundingClientRect().top,
-            left: () => headerLogo.getBoundingClientRect().left,
-            width: () => headerLogo.getBoundingClientRect().width,
-          }),
       });
     }, heroRef);
 
-    // Force refresh after mount
     setTimeout(() => ScrollTrigger.refresh(), 100);
 
     return () => ctx.revert();
   }, []);
 
+  /* ---------------- RENDER ---------------- */
 
   return (
     <section
       id="hero"
       ref={heroRef}
-      className="relative h-screen min-h-[600px] flex items-center text-white hero-bg bg-cover bg-center bg-fixed"
+      className="relative min-h-[100svh] flex items-center text-white bg-cover bg-center hero-bg md:bg-fixed"
     >
-      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-black/40 to-[#D35400]/30 z-10"></div>
+      {/* Gradient Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-[#D35400]/30 z-10" />
 
       {/* Animated Logo */}
       <img
         ref={logoRef}
         src="/assets/manima_logo.png"
         alt="Manima Logo"
-        className="fixed z-[99] h-auto mr-35 drop-shadow-2xl pointer-events-none"
+        className="fixed z-[99] h-auto drop-shadow-2xl pointer-events-none"
       />
 
-      <div className="relative z-20 max-w-[800px] mx-auto md:mr-[15%] text-center pt-[60px] px-6">
-        {/* Placeholder to define starting position */}
+      {/* Content */}
+      <div
+        className="
+    relative z-20
+    max-w-4xl
+    md:ml-auto md:mr-[15%]
+    flex flex-col items-center
+    text-center
+    px-6 md:px-0
+    pt-24
+  "
+      >
+        {/* Placeholder */}
         <div
           ref={placeholderRef}
-          className="flex justify-center mx-auto mb-6 w-[250px] sm:w-[320px] md:w-[550px] aspect-[4.39/1] opacity-0"
-        ></div>
+          className="mx-auto md:mx-0 mb-6 w-[250px] sm:w-[320px] md:w-[550px] aspect-[4.5] opacity-0"
+        />
 
-        <h1 className="text-2xl md:text-[2rem] mt-4 mb-6 leading-[1.2] text-[#f1c40f]/100 drop-shadow-lg font-normal">
+        {/* Heading */}
+        <h1 className="text-2xl md:text-[2rem] mb-6 leading-tight text-[#f1c40f] drop-shadow-lg font-normal">
           For Every Ritual That Matters
         </h1>
 
-        <div className="flex flex-col md:flex-row gap-6 justify-center mb-16">
+        {/* CTA */}
+        <div className="mb-14">
           <button
-            className="px-6 py-3 rounded-[4px] font-semibold bg-[#D35400] text-white shadow-sm hover:bg-[#E67E22]"
-            onClick={() => router.push('/client/signup')}
+            onClick={() => router.push("/client/signup")}
+            className="px-6 py-3 rounded font-semibold bg-[#D35400] hover:bg-[#E67E22] transition-colors"
           >
             Book Ritual Now
           </button>
@@ -170,16 +205,58 @@ const Hero = () => {
           >
             Book a Pandit
           </button>
+        {/* Services Grid */}
+        <div className="w-full">
+          <div className="grid 
+                  grid-cols-2 
+                  md:grid-cols-4 
+                  gap-4 md:gap-6 
+                  justify-items-center">
+
+            {services.map((item, i) => {
+              const Icon = item.icon;
+
+              return (
+                <button
+                  key={i}
+                  onClick={() =>
+                    document
+                      .getElementById("Services")
+                      ?.scrollIntoView({ behavior: "smooth" })
+                  }
+                  className="
+            w-[130px] sm:w-[140px] md:w-[150px]
+            py-3
+            flex flex-col items-center justify-center
+            rounded-[26px]
+            bg-white/35
+            backdrop-blur-xl
+            border border-white/60
+            text-[#5a3e36]
+            shadow-[0_8px_25px_rgba(255,255,255,0.35)]
+            transition-all duration-300
+            hover:-translate-y-1 hover:bg-white/45
+            text-center
+          "
+                >
+                  <div className="mb-2">
+                    <Icon />
+                  </div>
+
+                  <div className="text-[11px] sm:text-xs font-normal leading-tight text-[#3d2f2a]">
+                    <div>{item.line1}</div>
+                    {item.line2 && <div>{item.line2}</div>}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
       <PujaModal isOpen={openModal} onClose={() => setOpenModal(false)} />
-
-
-
     </section>
   );
 };
-
 
 export default Hero;

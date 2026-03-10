@@ -1,34 +1,62 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Plus, Trash2, IndianRupee, Save } from "lucide-react";
+import { Loader2, Plus, Trash2, IndianRupee, Save, MapPin, Tag, CheckCircle2 } from "lucide-react";
+
+interface IPujaService {
+    _id: string;
+    name: string;
+}
 
 interface Package {
     name: string;
     features: string[];
-    priceAmount: number | string;
+    priceAmount: string;
+}
+
+interface ServicePricing {
+    serviceId: string;
+    serviceName: string;
+    packages: Package[];
 }
 
 export default function AddPujaPage() {
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const [pujaServices, setPujaServices] = useState<IPujaService[]>([]);
+    const [fetchingServices, setFetchingServices] = useState(true);
+
     const [formData, setFormData] = useState({
         name: "",
         location: "",
         templeType: "",
-        description: "",
     });
 
     const [file, setFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-    const [packages, setPackages] = useState<Package[]>([
-        { name: "Standard", features: [""], priceAmount: "" },
-    ]);
+    const [servicePackages, setServicePackages] = useState<ServicePricing[]>([]);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    useEffect(() => {
+        const fetchServices = async () => {
+            try {
+                const res = await fetch("/api/type-pujas");
+                if (res.ok) {
+                    const data = await res.json();
+                    setPujaServices(data);
+                }
+            } catch (err) {
+                console.error("Error fetching puja services:", err);
+            } finally {
+                setFetchingServices(false);
+            }
+        };
+        fetchServices();
+    }, []);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
@@ -41,39 +69,55 @@ export default function AddPujaPage() {
         }
     };
 
-    const handlePackageChange = (index: number, field: keyof Package, value: any) => {
-        const newPackages = [...packages];
-        // @ts-ignore
-        newPackages[index][field] = value;
-        setPackages(newPackages);
+    const handleServiceToggle = (service: IPujaService) => {
+        setServicePackages((prev) => {
+            const exists = prev.find(sp => sp.serviceId === service._id);
+            if (exists) {
+                return prev.filter(sp => sp.serviceId !== service._id);
+            } else {
+                return [
+                    ...prev,
+                    {
+                        serviceId: service._id,
+                        serviceName: service.name,
+                        packages: [{ name: "", priceAmount: "", features: [] }]
+                    }
+                ];
+            }
+        });
     };
 
-    const handleFeatureChange = (pkgIndex: number, featureIndex: number, value: string) => {
-        const newPackages = [...packages];
-        newPackages[pkgIndex].features[featureIndex] = value;
-        setPackages(newPackages);
+    const handleAddPackage = (serviceIndex: number) => {
+        const newServicePackages = [...servicePackages];
+        if (newServicePackages[serviceIndex].packages.length >= 3) return;
+
+        newServicePackages[serviceIndex].packages.push({ name: "", priceAmount: "", features: [] });
+        setServicePackages(newServicePackages);
     };
 
-    const addFeature = (pkgIndex: number) => {
-        const newPackages = [...packages];
-        newPackages[pkgIndex].features.push("");
-        setPackages(newPackages);
+    const handleRemovePackage = (serviceIndex: number, pkgIndex: number) => {
+        const newServicePackages = [...servicePackages];
+        newServicePackages[serviceIndex].packages = newServicePackages[serviceIndex].packages.filter((_, i) => i !== pkgIndex);
+        setServicePackages(newServicePackages);
     };
 
-    const addPackage = () => {
-        if (packages.length >= 3) return; // Limit to 3 packages
-        setPackages([...packages, { name: "", features: [""], priceAmount: "" }]);
+    const handlePackageChange = (serviceIndex: number, pkgIndex: number, field: keyof Package, value: string) => {
+        const newServicePackages = [...servicePackages];
+        newServicePackages[serviceIndex].packages[pkgIndex][field] = value as never;
+        setServicePackages(newServicePackages);
     };
 
-    const removePackage = (index: number) => {
-        const newPackages = packages.filter((_, i) => i !== index);
-        setPackages(newPackages);
+    const handleFeatureAdd = (serviceIndex: number, pkgIndex: number, feature: string) => {
+        if (!feature.trim()) return;
+        const newServicePackages = [...servicePackages];
+        newServicePackages[serviceIndex].packages[pkgIndex].features.push(feature.trim());
+        setServicePackages(newServicePackages);
     };
 
-    const removeFeature = (pkgIndex: number, featureIndex: number) => {
-        const newPackages = [...packages];
-        newPackages[pkgIndex].features = newPackages[pkgIndex].features.filter((_, i) => i !== featureIndex);
-        setPackages(newPackages);
+    const handleFeatureRemove = (serviceIndex: number, pkgIndex: number, featureIndex: number) => {
+        const newServicePackages = [...servicePackages];
+        newServicePackages[serviceIndex].packages[pkgIndex].features = newServicePackages[serviceIndex].packages[pkgIndex].features.filter((_, i) => i !== featureIndex);
+        setServicePackages(newServicePackages);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -86,14 +130,17 @@ export default function AddPujaPage() {
             data.append("location", formData.location);
             data.append("templeType", formData.templeType);
 
-            // Filter out empty features and ensure price is number
-            const cleanedPackages = packages.map(pkg => ({
-                ...pkg,
-                features: pkg.features.filter(f => f.trim() !== ""),
-                priceAmount: pkg.priceAmount === "" ? 0 : Number(pkg.priceAmount)
+            // Clean service packages (remove empty features and parse numbers)
+            const cleanedServices = servicePackages.map(sp => ({
+                service: sp.serviceId,
+                packages: sp.packages.map(pkg => ({
+                    name: pkg.name,
+                    features: pkg.features.filter(f => f.trim() !== ""),
+                    priceAmount: pkg.priceAmount === "" ? 0 : Number(pkg.priceAmount)
+                }))
             }));
 
-            data.append("packages", JSON.stringify(cleanedPackages));
+            data.append("services", JSON.stringify(cleanedServices));
 
             if (file) {
                 data.append("file", file);
@@ -109,7 +156,7 @@ export default function AddPujaPage() {
                 throw new Error(errorData.message || "Failed to create puja");
             }
 
-            router.push("/admin/dashboard");
+            router.push("/admin/dashboard/pujas");
             router.refresh();
         } catch (error) {
             console.error("Error submitting form:", error);
@@ -121,242 +168,287 @@ export default function AddPujaPage() {
 
     return (
         <div className="max-w-5xl mx-auto p-6">
-            <div className="flex justify-between items-center mb-6">
-                <div>
-                    <h1 className="text-2xl font-heading font-bold text-gray-900 tracking-tight">Add New Puja</h1>
-                    <p className="text-gray-500 mt-1 text-sm">Create a new puja service offering</p>
-                </div>
-            </div>
+            <h1 className="text-2xl font-heading text-gray-800 mb-8 flex items-center gap-3 font-bold">
+                <MapPin className="text-manima-red" />
+                Add New Temple / Puja
+            </h1>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    {/* Left Column: Basic Details */}
-                    <div className="lg:col-span-8 space-y-6">
-                        {/* Basic Info Card */}
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                            <h2 className="text-lg font-heading font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                                <span className="w-1 h-5 bg-manima-red rounded-full"></span>
-                                Basic Information
-                            </h2>
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Left Column - Details & Packages */}
+                <div className="lg:col-span-2 space-y-8">
+                    {/* Basic Info */}
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h3 className="text-lg font-heading text-gray-700 mb-4 border-b pb-2 font-bold">Basic Information</h3>
+                        <div className="grid grid-cols-1 gap-6">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Temple Name</label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleInputChange}
+                                    required
+                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-manima-red/20 focus:border-manima-red outline-none transition-all placeholder:text-gray-400"
+                                    placeholder="e.g. Sri Kashi Vishwanath Temple"
+                                />
+                            </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2 md:col-span-2">
-                                    <label className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Temple Name</label>
-                                    <input
-                                        type="text"
-                                        name="name"
-                                        value={formData.name}
-                                        onChange={handleInputChange}
-                                        required
-                                        className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-manima-red/20 focus:border-manima-red outline-none transition-all placeholder-gray-400 text-sm"
-                                        placeholder="e.g. Sri Kashi Vishwanath Temple"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Location</label>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Location</label>
                                     <input
                                         type="text"
                                         name="location"
                                         value={formData.location}
                                         onChange={handleInputChange}
                                         required
-                                        className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-manima-red/20 focus:border-manima-red outline-none transition-all placeholder-gray-400 text-sm"
-                                        placeholder="e.g. Varanasi, Uttar Pradesh"
+                                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-manima-red/20 focus:border-manima-red outline-none transition-all placeholder:text-gray-400"
+                                        placeholder="e.g. Varanasi, UP"
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Deity / Temple Type</label>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Deity / Temple Type</label>
                                     <input
                                         type="text"
                                         name="templeType"
                                         value={formData.templeType}
                                         onChange={handleInputChange}
                                         required
-                                        className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-manima-red/20 focus:border-manima-red outline-none transition-all placeholder-gray-400 text-sm"
+                                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-manima-red/20 focus:border-manima-red outline-none transition-all placeholder:text-gray-400"
                                         placeholder="e.g. Shiva"
                                     />
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        {/* Packages Section */}
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                            <h2 className="text-lg font-heading font-semibold text-gray-800 mb-4 flex items-center justify-between">
-                                <span className="flex items-center gap-2">
-                                    <span className="w-1 h-5 bg-manima-gold rounded-full"></span>
-                                    Packages ({packages.length}/3)
-                                </span>
-                                <button
-                                    type="button"
-                                    onClick={addPackage}
-                                    disabled={packages.length >= 3}
-                                    className={`flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full transition-all ${packages.length >= 3
-                                        ? "text-gray-400 border border-gray-200 cursor-not-allowed"
-                                        : "text-manima-red hover:text-white hover:bg-manima-red border border-manima-red"
-                                        }`}
-                                >
-                                    <Plus size={14} /> ADD PACKAGE
-                                </button>
-                            </h2>
-                            <div className="flex flex-col gap-4">
-                                {packages.map((pkg, listIndex) => (
-                                    <div
-                                        key={listIndex}
-                                        className="relative border rounded-xl p-4 bg-white border-gray-200 hover:border-manima-red/30 transition-all group"
-                                    >
-                                        <div className="flex flex-col md:flex-row gap-6 items-start">
-                                            {/* Package Name */}
-                                            <div className="w-full md:w-1/4">
-                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Package Name</label>
-                                                <input
-                                                    type="text"
-                                                    value={pkg.name}
-                                                    onChange={(e) => handlePackageChange(listIndex, "name", e.target.value)}
-                                                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-1 focus:ring-manima-red focus:border-manima-red outline-none text-sm font-bold transition-all"
-                                                    placeholder="e.g. Standard"
-                                                />
-                                            </div>
+                    {/* Services Packages Configuration */}
+                    <div className="space-y-6">
+                        <h3 className="text-lg font-heading text-gray-700 border-b pb-2 flex items-center justify-between font-bold">
+                            <span>Services & Packages Confguration</span>
+                            <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                                {servicePackages.length} Services Selected
+                            </span>
+                        </h3>
 
-                                            {/* Price */}
-                                            <div className="w-full md:w-1/4">
-                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Price (₹)</label>
-                                                <div className="relative">
-                                                    <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={14} />
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        value={pkg.priceAmount}
-                                                        onChange={(e) => handlePackageChange(listIndex, "priceAmount", e.target.value)}
-                                                        className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-1 focus:ring-manima-red focus:border-manima-red outline-none text-sm font-medium transition-all"
-                                                        placeholder="0.00"
-                                                    />
+                        {servicePackages.length === 0 ? (
+                            <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                                <Tag className="mx-auto h-10 w-10 text-gray-300 mb-3" />
+                                <p className="text-gray-500 font-medium">No services selected.</p>
+                                <p className="text-sm text-gray-400">Select type pujas from the right panel to configure packages.</p>
+                            </div>
+                        ) : (
+                            servicePackages.map((sp, sIndex) => (
+                                <div key={sp.serviceId} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 relative overflow-hidden">
+                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-manima-gold"></div>
+
+                                    <div className="flex justify-between items-center mb-6 border-b border-dashed pb-3">
+                                        <h4 className="text-lg font-bold text-gray-800">{sp.serviceName}</h4>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleAddPackage(sIndex)}
+                                            disabled={sp.packages.length >= 3}
+                                            className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition-all ${sp.packages.length >= 3
+                                                ? "text-gray-400 border border-gray-200 cursor-not-allowed"
+                                                : "text-manima-red hover:text-white hover:bg-manima-red border border-manima-red"
+                                                }`}
+                                        >
+                                            <Plus size={14} /> ADD PACKAGE {sp.packages.length}/3
+                                        </button>
+                                    </div>
+
+                                    <div className="space-y-6">
+                                        {sp.packages.map((pkg, pIndex) => (
+                                            <div key={pIndex} className="flex flex-col sm:flex-row gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200 relative group">
+                                                <div className="absolute -left-1 top-4 w-10 h-6 bg-gray-200 rounded-r text-[10px] flex items-center justify-center font-bold text-gray-500 rotate-90 -translate-x-full group-hover:translate-x-0 transition-transform">
+                                                    #{pIndex + 1}
                                                 </div>
-                                            </div>
 
-                                            {/* Features */}
-                                            <div className="w-full md:w-1/2">
-                                                <div className="flex justify-between items-center mb-2">
-                                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Features</label>
+                                                <div className="flex-1 space-y-4">
+                                                    <div>
+                                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Package Name</label>
+                                                        <input
+                                                            type="text"
+                                                            value={pkg.name}
+                                                            onChange={(e) => handlePackageChange(sIndex, pIndex, 'name', e.target.value)}
+                                                            placeholder="e.g. Standard"
+                                                            required
+                                                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded focus:border-manima-red outline-none text-sm font-semibold"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Price (₹)</label>
+                                                        <div className="relative">
+                                                            <IndianRupee className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400" size={12} />
+                                                            <input
+                                                                type="number"
+                                                                value={pkg.priceAmount}
+                                                                onChange={(e) => handlePackageChange(sIndex, pIndex, 'priceAmount', e.target.value)}
+                                                                placeholder="e.g. 1500"
+                                                                required
+                                                                className="w-full pl-7 pr-3 py-2 bg-white border border-gray-200 rounded focus:border-manima-red outline-none text-sm font-medium"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex-[2]">
+                                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Features</label>
+                                                    <div className="space-y-2">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Add feature and press Enter..."
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') {
+                                                                    e.preventDefault();
+                                                                    handleFeatureAdd(sIndex, pIndex, e.currentTarget.value);
+                                                                    e.currentTarget.value = '';
+                                                                }
+                                                            }}
+                                                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded focus:border-manima-red outline-none text-sm"
+                                                        />
+                                                        <div className="flex flex-wrap gap-2 mt-2">
+                                                            {pkg.features?.map((feature, fIndex) => (
+                                                                <span key={fIndex} className="inline-flex items-center px-2 py-1.5 rounded bg-white border border-gray-200 text-xs text-gray-700 font-medium">
+                                                                    {feature}
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => handleFeatureRemove(sIndex, pIndex, fIndex)}
+                                                                        className="ml-1.5 text-gray-400 hover:text-red-500 focus:outline-none"
+                                                                    >
+                                                                        &times;
+                                                                    </button>
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-start">
                                                     <button
                                                         type="button"
-                                                        onClick={() => addFeature(listIndex)}
-                                                        className="text-[10px] flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded transition-colors"
+                                                        onClick={() => handleRemovePackage(sIndex, pIndex)}
+                                                        className="p-2 mt-6 text-gray-400 hover:text-red-500 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-red-200"
+                                                        title="Remove Package"
                                                     >
-                                                        <Plus size={12} /> Add
+                                                        <Trash2 size={18} />
                                                     </button>
                                                 </div>
-                                                <div className="space-y-2">
-                                                    {pkg.features.map((feature, featureIndex) => (
-                                                        <div key={featureIndex} className="flex gap-2">
-                                                            <input
-                                                                type="text"
-                                                                value={feature}
-                                                                onChange={(e) => handleFeatureChange(listIndex, featureIndex, e.target.value)}
-                                                                className="flex-1 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded text-sm focus:bg-white focus:border-manima-red focus:ring-1 focus:ring-manima-red outline-none transition-all placeholder-gray-400"
-                                                                placeholder="Feature..."
-                                                            />
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => removeFeature(listIndex, featureIndex)}
-                                                                className="text-gray-400 hover:text-red-500 p-1.5 rounded hover:bg-red-50 transition-all"
-                                                            >
-                                                                <Trash2 size={14} />
-                                                            </button>
-                                                        </div>
-                                                    ))}
-                                                    {pkg.features.length === 0 && (
-                                                        <div className="text-center py-2 border-2 border-dashed border-gray-100 rounded">
-                                                            <p className="text-[10px] text-gray-400">No features</p>
-                                                        </div>
-                                                    )}
-                                                </div>
                                             </div>
-
-                                            {/* Remove Package Button */}
-                                            <div className="pt-6">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removePackage(listIndex)}
-                                                    className="text-gray-400 hover:text-white hover:bg-red-500 p-2 rounded-lg transition-all"
-                                                    title="Remove Package"
-                                                >
-                                                    <Trash2 size={18} />
-                                                </button>
-                                            </div>
-                                        </div>
+                                        ))}
+                                        {sp.packages.length === 0 && (
+                                            <p className="text-sm text-center py-2 text-gray-400 italic">No packages configured. Click &quot;ADD PACKAGE&quot;.</p>
+                                        )}
                                     </div>
-                                ))}
-                            </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+
+                {/* Right Column - Image, Services list & Submit */}
+                <div className="space-y-8">
+                    {/* Image Upload Card */}
+                    <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                        <h3 className="text-base font-heading font-bold text-gray-800 mb-3 border-b pb-2">Temple Image</h3>
+                        <div className="w-full aspect-[4/3] bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg overflow-hidden hover:border-manima-red/50 transition-colors group relative">
+                            {previewUrl ? (
+                                <>
+                                    <img
+                                        src={previewUrl}
+                                        alt="Preview"
+                                        className="w-full h-full object-cover"
+                                    />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setFile(null);
+                                                setPreviewUrl(null);
+                                            }}
+                                            className="bg-red-500/90 text-white p-3 rounded-full hover:bg-red-600 hover:scale-110 transition-all shadow-lg backdrop-blur-sm"
+                                        >
+                                            <Trash2 size={20} />
+                                        </button>
+                                    </div>
+                                </>
+                            ) : (
+                                <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer">
+                                    <div className="bg-white p-4 rounded-full shadow-sm mb-3 group-hover:scale-110 transition-transform">
+                                        <Plus className="h-8 w-8 text-manima-red" />
+                                    </div>
+                                    <p className="text-sm font-medium text-gray-900">Upload Photo</p>
+                                    <p className="text-xs text-gray-500 mt-1">supports PNG, JPG</p>
+                                    <input
+                                        type="file"
+                                        className="hidden"
+                                        onChange={handleFileChange}
+                                        accept="image/*"
+                                        required={!file} // Required if no file selected
+                                    />
+                                </label>
+                            )}
                         </div>
                     </div>
 
-                    {/* Right Column: Image & Actions */}
-                    <div className="lg:col-span-4 space-y-6">
-                        {/* Image Upload Card */}
-                        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                            <h2 className="text-base font-heading font-semibold text-gray-800 mb-3">Puja Image</h2>
-                            <div className="w-full aspect-[4/3] bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg overflow-hidden hover:border-manima-red/50 transition-colors group relative">
-                                {previewUrl ? (
-                                    <>
-                                        <img
-                                            src={previewUrl}
-                                            alt="Preview"
-                                            className="w-full h-full object-cover"
-                                        />
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setFile(null);
-                                                    setPreviewUrl(null);
-                                                }}
-                                                className="bg-red-500/90 text-white p-3 rounded-full hover:bg-red-600 hover:scale-110 transition-all shadow-lg backdrop-blur-sm"
-                                            >
-                                                <Trash2 size={20} />
-                                            </button>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer">
-                                        <div className="bg-white p-4 rounded-full shadow-sm mb-3 group-hover:scale-110 transition-transform">
-                                            <Plus className="h-8 w-8 text-manima-red" />
-                                        </div>
-                                        <p className="text-sm font-medium text-gray-900">Upload Photo</p>
-                                        <p className="text-xs text-gray-500 mt-1">supports PNG, JPG</p>
-                                        <input
-                                            type="file"
-                                            className="hidden"
-                                            onChange={handleFileChange}
-                                            accept="image/*"
-                                            required={!file} // Required if no file selected
-                                        />
-                                    </label>
-                                )}
+                    {/* Services Toggle Card */}
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h3 className="text-base font-heading font-bold text-gray-800 mb-4 border-b pb-2">Available Type Pujas</h3>
+
+                        {fetchingServices ? (
+                            <div className="flex flex-col items-center justify-center py-8 text-gray-400 gap-2">
+                                <Loader2 size={24} className="animate-spin text-manima-red" />
+                                <span className="text-sm">Loading pujas...</span>
                             </div>
-                        </div>
+                        ) : pujaServices.length === 0 ? (
+                            <p className="text-sm text-center py-6 text-gray-500 italic bg-gray-50 rounded">No type pujas found. Add some in Type Pujas menu.</p>
+                        ) : (
+                            <div className="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                {pujaServices.map((service) => {
+                                    const isSelected = servicePackages.some(sp => sp.serviceId === service._id);
+                                    return (
+                                        <label
+                                            key={service._id}
+                                            className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-all ${isSelected
+                                                ? "bg-red-50 border-manima-red/30 shadow-sm"
+                                                : "bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                                                }`}
+                                        >
+                                            <div className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center transition-colors ${isSelected ? "bg-manima-red border-manima-red text-white" : "border-gray-300 bg-white"
+                                                }`}>
+                                                {isSelected && <CheckCircle2 size={14} />}
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isSelected}
+                                                    onChange={() => handleServiceToggle(service)}
+                                                    className="hidden"
+                                                />
+                                            </div>
+                                            <div>
+                                                <span className={`block text-sm font-bold ${isSelected ? "text-manima-red" : "text-gray-700"}`}>
+                                                    {service.name}
+                                                </span>
+                                            </div>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
 
-                        {/* Actions Card */}
-                        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 sticky top-8">
-                            <h2 className="text-base font-heading font-semibold text-gray-800 mb-3">Publish</h2>
-                            <p className="text-xs text-gray-500 mb-4">Review your details before publishing.</p>
-
-                            <button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-manima-red to-red-700 text-white px-6 py-3 rounded-lg font-bold shadow-lg shadow-red-500/20 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-70 disabled:cursor-not-allowed text-sm"
-                            >
-                                {isSubmitting ? (
-                                    <>
-                                        <Loader2 className="animate-spin" size={20} />
-                                        Processing...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Save size={20} />
-                                        Create Puja Service
-                                    </>
-                                )}
-                            </button>
-                        </div>
+                    {/* Actions Card */}
+                    <div className="sticky top-24">
+                        <button
+                            type="submit"
+                            disabled={isSubmitting || servicePackages.length === 0}
+                            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-manima-red to-red-600 text-white px-6 py-4 rounded-xl hover:from-red-700 hover:to-red-800 transition-all shadow-md hover:shadow-lg font-semibold disabled:opacity-70 disabled:cursor-not-allowed transform hover:-translate-y-0.5"
+                        >
+                            {isSubmitting ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />}
+                            {isSubmitting ? "Saving Puja..." : "Save Puja"}
+                        </button>
+                        {servicePackages.length === 0 && (
+                            <p className="text-center text-xs text-red-500 mt-2 font-medium">
+                                Select at least one type puja to save.
+                            </p>
+                        )}
                     </div>
                 </div>
             </form>

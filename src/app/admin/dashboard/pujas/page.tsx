@@ -16,7 +16,11 @@ interface IPuja {
     name: string;
     location: string;
     templeType: string;
-    packages: IPackage[];
+    services: {
+        service: string;
+        packages: IPackage[];
+        _id: string;
+    }[];
 }
 
 export default function PujasPage() {
@@ -131,10 +135,14 @@ export default function PujasPage() {
                                 </div>
                                 <div className="flex items-center justify-between pt-4 border-t border-gray-50">
                                     <div className="text-xs font-medium text-gray-500">
-                                        {puja.packages.length} Packages Available
+                                        {puja.services?.reduce((total, s) => total + (s.packages?.length || 0), 0) || 0} Packages Available
                                     </div>
                                     <div className="font-bold text-manima-red text-sm">
-                                        From ₹{Math.min(...puja.packages.map(p => p.priceAmount)).toLocaleString('en-IN')}
+                                        From ₹{
+                                            puja.services && puja.services.length > 0
+                                                ? Math.min(...puja.services.flatMap(s => s.packages.map(p => p.priceAmount))).toLocaleString('en-IN')
+                                                : 0
+                                        }
                                     </div>
                                 </div>
                             </div>

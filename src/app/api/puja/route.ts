@@ -21,9 +21,9 @@ export async function POST(req: Request) {
       data = Object.fromEntries(formData);
       fileToUpload = formData.get("file") || formData.get("image"); // Expecting 'file' or 'image' field
       // Extract other fields from JSON string if needed, or simple fields
-      if (typeof data.packages === 'string') {
+      if (typeof data.services === 'string') {
         try {
-          data.packages = JSON.parse(data.packages);
+          data.services = JSON.parse(data.services);
         } catch (e) {
           // ignore
         }
@@ -76,7 +76,9 @@ export async function GET() {
   try {
     await dbConnect();
 
-    const pujas = await Puja.find().sort({ createdAt: -1 });
+    const pujas = await Puja.find()
+      .populate("services.service", "name significance")
+      .sort({ createdAt: -1 });
 
     return NextResponse.json(
       { success: true, data: pujas },
@@ -106,9 +108,9 @@ export async function PATCH(req: Request) {
       data = Object.fromEntries(formData);
       fileToUpload = formData.get("file") || formData.get("image");
 
-      if (typeof data.packages === 'string') {
+      if (typeof data.services === 'string') {
         try {
-          data.packages = JSON.parse(data.packages);
+          data.services = JSON.parse(data.services);
         } catch (e) {
           // ignore
         }

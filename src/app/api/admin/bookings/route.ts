@@ -1,5 +1,7 @@
 
 import { NextResponse } from "next/server";
+
+export const dynamic = 'force-dynamic';
 import mongoose from "mongoose";
 import Booking from "@/models/Booking";
 import Agent from "@/models/Agent";

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Loader2, Plus, Edit2, Package, Search } from "lucide-react";
+import { Loader2, Plus, Edit2, Package, Search, Trash2 } from "lucide-react";
 
 interface IService {
     _id: string;
@@ -31,6 +31,23 @@ export default function ServicesPage() {
             console.error("Error fetching services:", error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!window.confirm("Are you sure you want to delete this service?")) return;
+
+        try {
+            const res = await fetch(`/api/services?id=${id}`, { method: "DELETE" });
+            const data = await res.json();
+            if (res.ok) {
+                setServices(services.filter(s => s._id !== id));
+            } else {
+                alert(data.error || "Failed to delete service");
+            }
+        } catch (error) {
+            console.error("Error deleting service:", error);
+            alert("Failed to delete service");
         }
     };
 
@@ -97,13 +114,22 @@ export default function ServicesPage() {
                                 <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center text-manima-red">
                                     <Package size={20} />
                                 </div>
-                                <Link
-                                    href={`/admin/dashboard/edit-service/${service._id}`}
-                                    className="p-2 text-gray-400 hover:text-manima-red hover:bg-red-50 rounded-lg transition-colors"
-                                    title="Edit Service"
-                                >
-                                    <Edit2 size={18} />
-                                </Link>
+                                <div className="flex gap-2">
+                                    <Link
+                                        href={`/admin/dashboard/edit-service/${service._id}`}
+                                        className="p-2 text-gray-400 hover:text-manima-red hover:bg-red-50 rounded-lg transition-colors"
+                                        title="Edit Service"
+                                    >
+                                        <Edit2 size={18} />
+                                    </Link>
+                                    <button
+                                        onClick={() => handleDelete(service._id)}
+                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                        title="Delete Service"
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
+                                </div>
                             </div>
 
                             <h3 className="font-heading font-bold text-lg text-gray-900 mb-2">{service.name}</h3>

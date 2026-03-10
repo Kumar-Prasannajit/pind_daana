@@ -10,7 +10,7 @@ interface PujaService {
     significance: string;
 }
 
-export default function SpecialPujasContent() {
+export default function SpecialPujasContent({ basePath }: { basePath?: string }) {
     const router = useRouter();
     const [services, setServices] = useState<PujaService[]>([]);
     const [loading, setLoading] = useState(true);
@@ -33,8 +33,9 @@ export default function SpecialPujasContent() {
         fetchServices();
     }, []);
 
-    const handleServiceClick = (id: string) => {
-        router.push(`/pujas?serviceId=${id}`);
+    const handleServiceClick = (service: PujaService) => {
+        const path = basePath || "/pujas";
+        router.push(`${path}?serviceId=${service._id}&serviceName=${encodeURIComponent(service.name)}&serviceDesc=${encodeURIComponent(service.significance)}`);
     };
 
     const filteredServices = services.filter((s) =>
@@ -121,7 +122,7 @@ export default function SpecialPujasContent() {
                         {filteredServices.map((service, index) => (
                             <div
                                 key={service._id}
-                                onClick={() => handleServiceClick(service._id)}
+                                onClick={() => handleServiceClick(service)}
                                 className="group bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-500 border border-gray-100 cursor-pointer flex flex-col h-full relative overflow-hidden"
                             >
                                 {/* Decorative Gradient Orb */}

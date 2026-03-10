@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+
+export const dynamic = 'force-dynamic';
 import dbConnect from "@/lib/db";
 import Puja from "@/models/Puja";
 
@@ -170,6 +172,44 @@ export async function PATCH(req: Request) {
     return NextResponse.json(
       { success: false, message: error.message },
       { status: 400 }
+    );
+  }
+}
+
+/* -------------------- */
+/* DELETE: Delete Puja  */
+/* -------------------- */
+export async function DELETE(req: Request) {
+  try {
+    await dbConnect();
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, message: "Puja ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const puja = await Puja.findByIdAndDelete(id);
+
+    if (!puja) {
+      return NextResponse.json(
+        { success: false, message: "Puja not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(
+      { success: true, message: "Puja deleted successfully" },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    console.error("Error deleting puja:", error);
+    return NextResponse.json(
+      { success: false, message: error.message },
+      { status: 500 }
     );
   }
 }

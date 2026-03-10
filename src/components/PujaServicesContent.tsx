@@ -88,6 +88,20 @@ export default function PujaServicesContent({
             setFetchedServiceInfo(null);
             return;
         }
+
+        const serviceNameParam = searchParams?.get('serviceName');
+        const serviceDescParam = searchParams?.get('serviceDesc');
+
+        // Fast path: Use URL params if available instead of re-fetching
+        if (serviceNameParam && serviceDescParam) {
+            setFetchedServiceInfo({
+                _id: serviceFilter,
+                name: serviceNameParam,
+                significance: serviceDescParam
+            });
+            return;
+        }
+
         fetch("/api/type-pujas")
             .then(r => r.json())
             .then(data => {
@@ -98,7 +112,7 @@ export default function PujaServicesContent({
                 setFetchedServiceInfo(match || null);
             })
             .catch(() => setFetchedServiceInfo(null));
-    }, [serviceFilter]);
+    }, [serviceFilter, searchParams]);
 
     const fetchPujas = async () => {
         try {

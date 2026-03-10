@@ -109,7 +109,10 @@ function CheckoutContent() {
                 // 1. Fetch User Profile
                 const userRes = await fetch("/api/client/me");
                 if (!userRes.ok) {
-                    router.push('/client/login?redirect=/checkout'); // Handle auth expiry
+                    // Preserve all current search parameters for the redirect
+                    const currentParams = searchParams.toString();
+                    const redirectUrl = currentParams ? `/checkout?${currentParams}` : '/checkout';
+                    router.push(`/client/login?redirect=${encodeURIComponent(redirectUrl)}`); // Handle auth expiry
                     return;
                 }
                 const userData = await userRes.json();
@@ -126,10 +129,25 @@ function CheckoutContent() {
                         if (foundPuja) {
                             setServiceName(foundPuja.name);
                             setLocationName(foundPuja.location);
-                            // @ts-ignore
-                            const foundPackage = foundPuja.packages.find((p: any) => p.name === packageName);
+
+                            // Find the package within the puja's services array
+                            let foundPackage = null;
+                            if (foundPuja.services && Array.isArray(foundPuja.services)) {
+                                for (const svc of foundPuja.services) {
+                                    if (svc.packages && Array.isArray(svc.packages)) {
+                                        const pkg = svc.packages.find((p: any) => p.name === packageName);
+                                        if (pkg) {
+                                            foundPackage = pkg;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+
                             if (foundPackage) {
                                 setFetchedPrice(foundPackage.priceAmount);
+                            } else {
+                                console.error("Could not find package", packageName, "in puja", pujaId);
                             }
                         }
                     }

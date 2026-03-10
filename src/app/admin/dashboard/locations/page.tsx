@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Loader2, Plus, Edit2, MapPin, Search } from "lucide-react";
+import { Loader2, Plus, Edit2, MapPin, Search, Trash2 } from "lucide-react";
 
 interface ILocation {
     _id: string;
@@ -32,6 +32,23 @@ export default function LocationsPage() {
             console.error("Error fetching locations:", error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!window.confirm("Are you sure you want to delete this location?")) return;
+
+        try {
+            const res = await fetch(`/api/locations?id=${id}`, { method: "DELETE" });
+            const data = await res.json();
+            if (res.ok) {
+                setLocations(locations.filter(l => l._id !== id));
+            } else {
+                alert(data.error || "Failed to delete location");
+            }
+        } catch (error) {
+            console.error("Error deleting location:", error);
+            alert("Failed to delete location");
         }
     };
 
@@ -100,13 +117,22 @@ export default function LocationsPage() {
                                 <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center text-manima-red">
                                     <MapPin size={20} />
                                 </div>
-                                <Link
-                                    href={`/admin/dashboard/edit-location/${location._id}`}
-                                    className="p-2 text-gray-400 hover:text-manima-red hover:bg-red-50 rounded-lg transition-colors"
-                                    title="Edit Location"
-                                >
-                                    <Edit2 size={18} />
-                                </Link>
+                                <div className="flex gap-2">
+                                    <Link
+                                        href={`/admin/dashboard/edit-location/${location._id}`}
+                                        className="p-2 text-gray-400 hover:text-manima-red hover:bg-red-50 rounded-lg transition-colors"
+                                        title="Edit Location"
+                                    >
+                                        <Edit2 size={18} />
+                                    </Link>
+                                    <button
+                                        onClick={() => handleDelete(location._id)}
+                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                        title="Delete Location"
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
+                                </div>
                             </div>
 
                             <h3 className="font-heading font-bold text-lg text-gray-900 mb-1">{location.name}</h3>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Loader2, Plus, Edit2, MapPin, Building2, Search } from "lucide-react";
+import { Loader2, Plus, Edit2, MapPin, Building2, Search, Trash2 } from "lucide-react";
 
 interface IPackage {
     name: string;
@@ -43,6 +43,23 @@ export default function PujasPage() {
             console.error("Error fetching pujas:", error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!window.confirm("Are you sure you want to delete this puja?")) return;
+
+        try {
+            const res = await fetch(`/api/puja?id=${id}`, { method: "DELETE" });
+            const data = await res.json();
+            if (data.success) {
+                setPujas(pujas.filter(p => p._id !== id));
+            } else {
+                alert(data.message || "Failed to delete puja");
+            }
+        } catch (error) {
+            console.error("Error deleting puja:", error);
+            alert("Failed to delete puja");
         }
     };
 
@@ -112,7 +129,7 @@ export default function PujasPage() {
                                     alt={puja.name}
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                 />
-                                <div className="absolute top-3 right-3">
+                                <div className="absolute top-3 right-3 flex gap-2">
                                     <Link
                                         href={`/admin/dashboard/edit-puja/${puja._id}`}
                                         className="p-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-sm text-gray-700 hover:text-manima-red hover:bg-white transition-all flex items-center justify-center"
@@ -120,6 +137,13 @@ export default function PujasPage() {
                                     >
                                         <Edit2 size={18} />
                                     </Link>
+                                    <button
+                                        onClick={() => handleDelete(puja._id)}
+                                        className="p-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-sm text-gray-700 hover:text-red-600 hover:bg-white transition-all flex items-center justify-center"
+                                        title="Delete Puja"
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
                                 </div>
                                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
                                     <span className="inline-block px-2 py-1 bg-manima-gold/90 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider rounded">

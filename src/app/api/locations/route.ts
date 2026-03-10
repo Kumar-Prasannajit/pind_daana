@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+
+export const dynamic = 'force-dynamic';
 import mongoose from "mongoose";
 import Location from "@/models/Location";
 
@@ -64,6 +66,29 @@ export async function PATCH(req: Request) {
         return NextResponse.json({ message: "Location updated successfully", location: updatedLocation });
     } catch (error) {
         console.error("Error updating location:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}
+
+export async function DELETE(req: Request) {
+    try {
+        await connectToDB();
+        const { searchParams } = new URL(req.url);
+        const id = searchParams.get("id");
+
+        if (!id) {
+            return NextResponse.json({ error: "Location ID is required" }, { status: 400 });
+        }
+
+        const deletedLocation = await Location.findByIdAndDelete(id);
+
+        if (!deletedLocation) {
+            return NextResponse.json({ error: "Location not found" }, { status: 404 });
+        }
+
+        return NextResponse.json({ message: "Location deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting location:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

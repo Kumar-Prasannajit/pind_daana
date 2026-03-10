@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Loader2, Eye, EyeOff } from "lucide-react";
@@ -10,6 +10,7 @@ import PujaModal from "@/components/PujaModal";
 
 export default function ClientLogin() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [formData, setFormData] = useState({
@@ -44,9 +45,11 @@ export default function ClientLogin() {
                 throw new Error(data.error || "Login failed");
             }
 
-            // Redirect to client dashboard
+            // Redirect to destination or client dashboard
             window.dispatchEvent(new Event("auth-change"));
-            router.push("/client/dashboard");
+
+            const redirectUrl = searchParams.get("redirect") || "/client/dashboard";
+            router.push(redirectUrl);
             router.refresh();
         } catch (err: any) {
             setError(err.message);

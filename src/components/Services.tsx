@@ -27,7 +27,7 @@ const Services = ({ onServiceClick }: ServicesProps) => {
                 _id: 'ritual-puja-static',
                 name: 'Puja for Special Occasions',
                 details: 'Perform authentic Vedic Pujas with experienced Pandits.',
-                link: '/pujas',
+                link: '/special-pujas',
                 image: '/assets/special_puja.jpeg'
             };
 

@@ -147,7 +147,7 @@ const Hero = () => {
 
         <div className="flex justify-center gap-8 flex-wrap">
           <button
-            onClick={() => document.getElementById("Services")?.scrollIntoView({ behavior: "smooth" })}
+            onClick={() => router.push('/special-pujas')}
             className="flex items-center gap-2 text-sm font-medium text-[#F1C40F] bg-black/40 px-4 py-2 rounded-full hover:bg-black/60 transition-colors cursor-pointer"
           >
             Puja for Special Occasion

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Search, MapPin, Filter, X, Check, ArrowRight, Loader2, ShieldCheck, ArrowLeft } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Search, MapPin, Filter, X, Check, ArrowRight, Loader2, ShieldCheck, ArrowLeft, ChevronDown, Sparkles } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 // Interface matches the API response structure
@@ -17,7 +17,14 @@ interface Puja {
     name: string;
     location: string;
     templeType: string;
-    packages: Package[];
+    services: {
+        service: {
+            _id: string;
+            name: string;
+            significance: string;
+        };
+        packages: Package[];
+    }[];
 }
 
 interface PujaServicesProps {
@@ -42,8 +49,18 @@ export default function PujaServicesContent({
     // Filters
     const [locationFilter, setLocationFilter] = useState("");
     const [templeTypeFilter, setTempleTypeFilter] = useState("");
+    const [serviceFilter, setServiceFilter] = useState("");
+
+    // Independently fetched service info (for when no temples have this service)
+    const [fetchedServiceInfo, setFetchedServiceInfo] = useState<{ _id: string; name: string; significance: string } | null>(null);
+
+    // Read more state
+    const [showFullDesc, setShowFullDesc] = useState(false);
+    const [isDescClamped, setIsDescClamped] = useState(false);
+    const descRef = useRef<HTMLParagraphElement>(null);
 
     // Modal State
+    const [selectedServiceId, setSelectedServiceId] = useState<string>("");
     const [selectedPackage, setSelectedPackage] = useState<string>("");
 
     useEffect(() => {
@@ -52,6 +69,7 @@ export default function PujaServicesContent({
         // Only checking params if they exist to avoid unnecessary re-renders or overrides
         const filterParam = searchParams?.get('filter');
         const typeParam = searchParams?.get('type');
+        const serviceParam = searchParams?.get('serviceId');
 
         if (filterParam) {
             if (filterParam !== 'Lord Shiva') setLocationFilter(filterParam);
@@ -59,7 +77,28 @@ export default function PujaServicesContent({
         if (typeParam) {
             setTempleTypeFilter(typeParam);
         }
+        if (serviceParam) {
+            setServiceFilter(serviceParam);
+        }
     }, [searchParams]);
+
+    // Fetch service info independently when serviceFilter changes
+    useEffect(() => {
+        if (!serviceFilter) {
+            setFetchedServiceInfo(null);
+            return;
+        }
+        fetch("/api/type-pujas")
+            .then(r => r.json())
+            .then(data => {
+                const services = data.data || data;
+                const match = Array.isArray(services)
+                    ? services.find((s: { _id: string; name: string; significance: string }) => s._id === serviceFilter)
+                    : null;
+                setFetchedServiceInfo(match || null);
+            })
+            .catch(() => setFetchedServiceInfo(null));
+    }, [serviceFilter]);
 
     const fetchPujas = async () => {
         try {
@@ -84,27 +123,79 @@ export default function PujaServicesContent({
     const filteredPujas = pujas.filter((p) => {
         const matchesLocation = locationFilter ? p.location === locationFilter : true;
         const matchesType = templeTypeFilter ? p.templeType === templeTypeFilter : true;
-        return matchesLocation && matchesType;
+        const matchesService = serviceFilter ? p.services?.some(s => s.service?._id === serviceFilter) : true;
+        return matchesLocation && matchesType && matchesService;
     });
+
+    // Derive active service info from any puja that has the filtered service,
+    // or fall back to independently fetched service info (for services with no temples yet)
+    const activeServiceInfo = serviceFilter
+        ? (pujas.flatMap(p => p.services).find(s => s.service?._id === serviceFilter)?.service || fetchedServiceInfo)
+        : null;
+
+    // Derived title/description for the hero
+    const derivedTitle = activeServiceInfo?.name || title;
+    const derivedDesc = activeServiceInfo?.significance || "Book authentic Vedic pujas performed by experienced Pandits at sacred temples. Choose your preferred location and package for a blessed experience.";
+
+    // Check clamping with ResizeObserver — runs on every layout change / resize
+    useEffect(() => {
+        setShowFullDesc(false);
+        setIsDescClamped(false);
+    }, [derivedDesc]);
+
+    useEffect(() => {
+        const el = descRef.current;
+        if (!el) return;
+
+        const checkClamped = () => {
+            // Only check when in collapsed mode so the scrollHeight isn't expanded
+            if (!showFullDesc) {
+                setIsDescClamped(el.scrollHeight > el.clientHeight + 2);
+            }
+        };
+
+        const observer = new ResizeObserver(checkClamped);
+        observer.observe(el);
+        checkClamped(); // run immediately too
+
+        return () => observer.disconnect();
+    }, [derivedDesc, showFullDesc]);
 
     // Helper to get package details
     const getPackage = (puja: Puja, type: string) => {
-        return puja.packages.find(p => p.name === type) || puja.packages[0];
+        const activeService = puja.services?.find(s => s.service?._id === selectedServiceId) || puja.services?.[0];
+        const activePackages = activeService?.packages || [];
+        return activePackages.find(p => p.name === type) || activePackages[0];
     };
 
     const handleBookNow = (puja: Puja) => {
         const pkg = getPackage(puja, selectedPackage);
-        router.push(`/checkout?pujaId=${puja._id}&packageName=${pkg.name}`);
+        router.push(`/checkout?pujaId=${puja._id}&serviceId=${selectedServiceId}&packageName=${pkg?.name || ''}`);
     };
 
-    // Reset selected package when modal opens
+    // Reset selected service and package when modal opens
     useEffect(() => {
-        if (selectedPuja && selectedPuja.packages.length > 0) {
-            // Default to recommended or first package
-            const recommended = selectedPuja.packages.find(p => p.name === "Premium" || p.name === "Recommended");
-            setSelectedPackage(recommended ? recommended.name : selectedPuja.packages[0].name);
+        if (selectedPuja && selectedPuja.services?.length > 0) {
+            // Default to the filtered service if it exists in this temple, otherwise the first one
+            const targetService = selectedPuja.services.find(s => s.service?._id === serviceFilter) || selectedPuja.services[0];
+            setSelectedServiceId(targetService.service?._id);
+            const sorted = [...(targetService.packages || [])].sort((a, b) => a.priceAmount - b.priceAmount);
+            if (sorted.length > 0) {
+                setSelectedPackage(sorted[0].name);
+            }
         }
     }, [selectedPuja]);
+
+    // Reset selected package when service changes
+    useEffect(() => {
+        if (selectedPuja && selectedServiceId) {
+            const activeService = selectedPuja.services?.find(s => s.service?._id === selectedServiceId);
+            const sorted = [...(activeService?.packages || [])].sort((a, b) => a.priceAmount - b.priceAmount);
+            if (sorted.length > 0) {
+                setSelectedPackage(sorted[0].name);
+            }
+        }
+    }, [selectedServiceId, selectedPuja]);
 
 
     return (
@@ -132,12 +223,29 @@ export default function PujaServicesContent({
 
                     <div className="container mx-auto px-4 relative z-10 pt-12">
                         <h1 className="text-4xl md:text-5xl font-serif font-bold text-[#2C0E0F] mb-4">
-                            {title}
+                            {derivedTitle}
                         </h1>
-                        <p className="text-gray-600 max-w-2xl text-lg leading-relaxed">
-                            Book authentic Vedic pujas performed by experienced Pandits at sacred temples.
-                            Choose your preferred location and package for a blessed experience.
-                        </p>
+                        <div className="w-full text-lg leading-relaxed text-gray-600">
+                            <p ref={descRef} className={!showFullDesc ? 'line-clamp-3' : ''}>
+                                {derivedDesc}
+                            </p>
+                            {isDescClamped && !showFullDesc && (
+                                <button
+                                    onClick={() => setShowFullDesc(true)}
+                                    className="mt-1 text-[#D35400] font-semibold hover:underline text-sm md:text-base"
+                                >
+                                    Read more
+                                </button>
+                            )}
+                            {showFullDesc && (
+                                <button
+                                    onClick={() => setShowFullDesc(false)}
+                                    className="mt-1 text-[#D35400] font-semibold hover:underline text-sm md:text-base"
+                                >
+                                    Read less
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
@@ -203,7 +311,7 @@ export default function PujaServicesContent({
                         <h3 className="text-lg font-bold text-gray-900 mb-2">No rituals found</h3>
                         <p className="text-gray-500 mb-6">We couldn't find any pujas matching your filters.</p>
                         <button
-                            onClick={() => { setLocationFilter(""); setTempleTypeFilter(""); }}
+                            onClick={() => { setLocationFilter(""); setTempleTypeFilter(""); setServiceFilter(""); }}
                             className="text-[#D35400] font-bold hover:underline"
                         >
                             Reset all filters
@@ -212,7 +320,10 @@ export default function PujaServicesContent({
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                         {filteredPujas.map((puja, i) => {
-                            const minPrice = Math.min(...puja.packages.map(p => p.priceAmount));
+                            const applicablePackages = serviceFilter
+                                ? puja.services?.find(s => s.service?._id === serviceFilter)?.packages || []
+                                : puja.services?.flatMap(s => s.packages) || [];
+                            const minPrice = applicablePackages.length > 0 ? Math.min(...applicablePackages.map(p => p.priceAmount)) : 0;
 
                             return (
                                 <div
@@ -260,7 +371,7 @@ export default function PujaServicesContent({
             {/* Puja Details Modal - Enhanced */}
             {selectedPuja && (
                 <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center sm:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-white w-full max-w-5xl h-[90vh] sm:h-auto sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300 relative border border-white/20">
+                    <div className="bg-white w-full max-w-6xl h-[90vh] sm:h-auto sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300 relative border border-white/20">
                         {/* Close Button */}
                         <button
                             onClick={() => setSelectedPuja(null)}
@@ -294,62 +405,78 @@ export default function PujaServicesContent({
                         <div className="w-full md:w-1/2 flex flex-col h-full bg-white relative overflow-hidden">
                             {/* Scrollable Content */}
                             <div className="p-6 md:p-8 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
-                                <div className="mb-6 md:mb-8">
-                                    <h3 className="text-xs md:text-sm font-bold text-gray-400 uppercase tracking-widest mb-3 md:mb-4">Choose Your Package</h3>
+                                <div className="mb-4">
+                                    <h3 className="text-xs md:text-sm font-bold text-gray-400 uppercase tracking-widest mb-3 md:mb-4">Choose Service Type</h3>
 
-                                    <div className="flex gap-2 md:gap-3 bg-gray-50 p-1 md:p-1.5 rounded-xl border border-gray-100 overflow-x-auto">
-                                        {selectedPuja.packages.map((pkg) => (
-                                            <button
-                                                key={pkg.name}
-                                                onClick={() => setSelectedPackage(pkg.name)}
-                                                className={`flex-1 min-w-[100px] py-2.5 md:py-3 rounded-lg text-xs md:text-sm font-bold transition-all duration-300 whitespace-nowrap ${selectedPackage === pkg.name
-                                                    ? 'bg-white text-[#D35400] shadow-md ring-1 ring-[#D35400]/10 transform scale-[1.02]'
-                                                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/50'
-                                                    }`}
-                                            >
-                                                {pkg.name}
-                                            </button>
-                                        ))}
+                                    <div className="relative mb-6">
+                                        <select
+                                            value={selectedServiceId}
+                                            onChange={(e) => setSelectedServiceId(e.target.value)}
+                                            className="w-full appearance-none bg-gray-50 border border-gray-100 rounded-xl pl-4 pr-10 py-3.5 md:py-4 text-sm font-bold text-gray-900 border-2 hover:border-orange-200 focus:border-[#D35400] focus:bg-white focus:ring-4 focus:ring-orange-50 transition-all outline-none cursor-pointer shadow-sm"
+                                        >
+                                            {selectedPuja.services?.map((svc) => (
+                                                <option key={svc.service?._id} value={svc.service?._id}>
+                                                    {svc.service?.name || "Unnamed Service"}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 group-focus-within:text-[#D35400]">
+                                            <ChevronDown size={20} />
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div className="space-y-6">
-                                    {(() => {
-                                        const activePkg = getPackage(selectedPuja, selectedPackage);
-                                        return (
-                                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                                <div className="flex items-baseline gap-2 mb-6 md:mb-8 pb-6 md:pb-8 border-b border-gray-100">
-                                                    <span className="text-3xl md:text-5xl font-bold text-[#2C0E0F] tracking-tight">
-                                                        ₹{activePkg.priceAmount.toLocaleString('en-IN')}
-                                                    </span>
-                                                    <span className="text-gray-400 font-medium text-sm md:text-lg">/ puja</span>
-                                                </div>
+                                    {selectedServiceId && (
+                                        <div className="mt-8 mb-6">
+                                            <h3 className="text-xs md:text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Choose Your Package</h3>
+                                            {/* Package toggle buttons */}
+                                            <div className="flex flex-wrap gap-3 mb-6">
+                                                {selectedPuja.services?.find(s => s.service?._id === selectedServiceId)?.packages.map((pkg) => (
+                                                    <button
+                                                        key={pkg.name}
+                                                        onClick={() => setSelectedPackage(pkg.name)}
+                                                        className={`relative px-5 py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center gap-2 ${selectedPackage === pkg.name
+                                                            ? 'bg-[#D35400] text-white shadow-md ring-2 ring-orange-200 ring-offset-1 transform scale-[1.02]'
+                                                            : 'bg-white border-2 border-gray-100 text-gray-700 hover:border-orange-200 hover:bg-orange-50/50'
+                                                            }`}
+                                                    >
+                                                        {(pkg.name === "Premium" || pkg.name === "Recommended") && (
+                                                            <div className="absolute -top-[10px] -right-[10px] bg-[#DAA520] text-white w-5 h-5 rounded-full flex items-center justify-center shadow-sm z-10">
+                                                                <Sparkles size={10} />
+                                                            </div>
+                                                        )}
+                                                        {selectedPackage === pkg.name ? <Check size={16} /> : null}
+                                                        {pkg.name}
+                                                    </button>
+                                                ))}
+                                            </div>
 
-                                                <div className="space-y-4">
-                                                    <h4 className="text-xs md:text-sm font-bold text-gray-900 uppercase tracking-wide flex items-center gap-2 mb-3 md:mb-4">
-                                                        <ShieldCheck size={16} className="text-[#D35400]" />
-                                                        What's Included
-                                                    </h4>
-                                                    <ul className="space-y-3 md:space-y-4">
-                                                        {activePkg.features.map((feature, i) => (
-                                                            <li key={i} className="flex items-start gap-3 group">
-                                                                <div className="min-w-[18px] h-[18px] md:min-w-[20px] md:h-[20px] rounded-full bg-green-50 flex items-center justify-center mt-0.5 group-hover:bg-green-100 transition-colors">
-                                                                    <Check size={10} className="text-green-600 md:hidden" />
-                                                                    <Check size={12} className="text-green-600 hidden md:block" />
-                                                                </div>
-                                                                <span className="text-gray-600 text-xs md:text-[15px] leading-relaxed group-hover:text-gray-900 transition-colors">{feature}</span>
+                                            {/* Features of selected package shown below buttons */}
+                                            {selectedPuja.services?.find(s => s.service?._id === selectedServiceId)?.packages.filter(p => p.name === selectedPackage).map((pkg) => (
+                                                <div key={pkg.name} className="rounded-2xl bg-orange-50/40 border border-orange-100 p-4">
+                                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">What&apos;s Included</p>
+                                                    <ul className="flex flex-col gap-2.5">
+                                                        {pkg.features.map((feature, i) => (
+                                                            <li key={i} className="flex items-start gap-2.5 text-sm text-gray-700">
+                                                                <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#D35400] shrink-0"></div>
+                                                                <span className="leading-snug">{feature}</span>
                                                             </li>
                                                         ))}
                                                     </ul>
                                                 </div>
-                                            </div>
-                                        );
-                                    })()}
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* Footer / CTA */}
-                            <div className="p-4 md:p-6 border-t border-gray-100 bg-gray-50/50 backdrop-blur-sm z-10">
+                            {/* Footer / CTA with Package Details */}
+                            <div className="p-5 md:p-8 border-t border-gray-100 bg-white shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] z-10 shrink-0">
+                                {selectedPuja.services?.find(s => s.service?._id === selectedServiceId)?.packages.filter(p => p.name === selectedPackage).map((pkg) => (
+                                    <div key={pkg.name} className="flex items-center gap-3 mb-5">
+                                        <span className="text-3xl font-bold text-[#2C0E0F]">₹{pkg.priceAmount.toLocaleString('en-IN')}</span>
+                                        <span className="text-sm text-gray-400 font-medium">{pkg.name} Package</span>
+                                    </div>
+                                ))}
                                 <button
                                     onClick={() => handleBookNow(selectedPuja)}
                                     className="w-full bg-[#D35400] hover:bg-[#b04600] text-white py-3 md:py-4 rounded-xl font-bold text-base md:text-lg shadow-xl shadow-orange-500/20 hover:shadow-orange-500/30 transition-all flex items-center justify-center gap-2 active:scale-[0.98] group"
@@ -358,8 +485,8 @@ export default function PujaServicesContent({
                                     <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform md:hidden" />
                                     <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform hidden md:block" />
                                 </button>
-                                <div className="flex items-center justify-center gap-2 mt-3 md:mt-4 text-[10px] md:text-xs text-center text-gray-400">
-                                    <ShieldCheck size={12} />
+                                <div className="flex items-center justify-center gap-2 mt-3 md:mt-4 text-[10px] md:text-xs text-center text-gray-400 font-medium">
+                                    <ShieldCheck size={14} />
                                     <span>Secure Payment • 100% Verified Pandits</span>
                                 </div>
                             </div>

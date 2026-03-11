@@ -88,7 +88,11 @@ const Services = ({ onServiceClick }: ServicesProps) => {
                 </div>
 
                 {loading ? (
-                    <div className="w-full text-center py-20 text-gray-500">Loading services...</div>
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                        {[1, 2, 3, 4].map((i) => (
+                            <div key={i} className="block h-64 w-full rounded-[2rem] bg-gray-200 animate-pulse relative shadow-md" />
+                        ))}
+                    </div>
                 ) : services.length > 0 ? (
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                         {services.slice(0, 4).map((service, index) => (

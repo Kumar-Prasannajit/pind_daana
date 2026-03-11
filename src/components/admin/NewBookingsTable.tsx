@@ -121,7 +121,42 @@ export default function NewBookingsTable() {
         return true;
     });
 
-    if (loading) return <div className="p-8 text-center text-gray-500">Loading bookings...</div>;
+    if (loading) return (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative animate-pulse">
+            <div className="p-6 border-b border-gray-100 flex justify-between">
+                <div>
+                    <div className="h-5 bg-gray-200 rounded w-40 mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-64"></div>
+                </div>
+                <div className="flex gap-2">
+                    {[1, 2, 3, 4].map(i => <div key={i} className="h-8 bg-gray-200 rounded-lg w-20"></div>)}
+                </div>
+            </div>
+            <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                    <thead>
+                        <tr className="bg-gray-50 border-b border-gray-100">
+                            {[1, 2, 3, 4, 5].map(i => <th key={i} className="px-6 py-4"><div className="h-3 bg-gray-200 rounded w-20"></div></th>)}
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                        {[1, 2, 3, 4, 5].map(row => (
+                            <tr key={row}>
+                                {[1, 2, 3, 4, 5].map(col => (
+                                    <td key={col} className="px-6 py-4">
+                                        <div className="flex flex-col gap-2">
+                                            <div className="h-4 bg-gray-200 rounded w-24"></div>
+                                            <div className="h-3 bg-gray-200 rounded w-16"></div>
+                                        </div>
+                                    </td>
+                                ))}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
 
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative">

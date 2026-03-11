@@ -135,8 +135,24 @@ export default function EditTypePujaPage({ params }: { params: Promise<{ id: str
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <Loader2 className="animate-spin text-manima-red" size={40} />
+            <div className="max-w-2xl mx-auto p-6 animate-pulse">
+                <div className="flex justify-between items-center mb-6">
+                    <div>
+                        <div className="h-4 bg-gray-200 rounded w-32 mb-4"></div>
+                        <div className="h-8 bg-gray-200 rounded w-48 mb-2"></div>
+                        <div className="h-4 bg-gray-200 rounded w-64"></div>
+                    </div>
+                </div>
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-6">
+                    <div>
+                        <div className="h-4 bg-gray-200 rounded w-32 mb-2"></div>
+                        <div className="h-10 bg-gray-200 rounded-lg w-full"></div>
+                    </div>
+                    <div>
+                        <div className="h-4 bg-gray-200 rounded w-32 mb-2"></div>
+                        <div className="h-32 bg-gray-200 rounded-lg w-full"></div>
+                    </div>
+                </div>
             </div>
         );
     }

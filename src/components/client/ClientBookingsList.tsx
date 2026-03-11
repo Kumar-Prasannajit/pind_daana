@@ -41,9 +41,42 @@ export default function ClientBookingsList() {
     }, []);
 
     if (loading) return (
-        <div className="flex flex-col items-center justify-center min-h-[400px] text-gray-400 gap-4">
-            <Loader2 className="animate-spin text-[#D35400]" size={40} />
-            <p className="text-lg">Loading your bookings...</p>
+        <div className="flex flex-col gap-6 w-full animate-pulse">
+            <div className="flex items-center justify-between">
+                <div className="h-8 bg-gray-200 rounded-lg w-48"></div>
+                <div className="h-6 bg-gray-200 rounded-full w-24"></div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 relative overflow-hidden flex flex-col h-full">
+                        <div className="absolute top-0 left-0 w-1.5 h-full bg-gray-200"></div>
+                        <div className="flex-1 space-y-5 mb-5">
+                            <div className="space-y-3">
+                                <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                                <div className="flex gap-4">
+                                    <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                                    <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-between border-t border-gray-50 pt-4">
+                                <div className="h-6 bg-gray-200 rounded-full w-24"></div>
+                                <div className="h-8 bg-gray-200 rounded w-20"></div>
+                            </div>
+                        </div>
+                        <div className="h-px bg-gray-50 my-5"></div>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            <div className="flex flex-col gap-2">
+                                <div className="h-3 bg-gray-200 rounded w-16"></div>
+                                <div className="h-4 bg-gray-200 rounded w-24"></div>
+                            </div>
+                            <div className="flex flex-col gap-2 lg:items-end">
+                                <div className="h-3 bg-gray-200 rounded w-16"></div>
+                                <div className="h-6 bg-gray-200 rounded-full w-24"></div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
         </div>
     );
 

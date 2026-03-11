@@ -95,9 +95,21 @@ export default function SpecialPujasContent({ basePath }: { basePath?: string })
             {/* Services Grid */}
             <div className="container mx-auto px-4 py-16">
                 {loading ? (
-                    <div className="min-h-[40vh] flex flex-col items-center justify-center gap-4">
-                        <Loader2 className="animate-spin text-[#D35400]" size={40} />
-                        <p className="text-gray-500 font-medium animate-pulse">Loading Sacred Services...</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8 max-w-7xl mx-auto">
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                            <div 
+                                key={i} 
+                                className="rounded-3xl p-8 shadow-sm border border-gray-100 h-80 bg-gray-200 animate-pulse relative flex flex-col justify-end"
+                            >
+                                <div className="h-4 bg-gray-300/50 rounded-full w-24 mb-6"></div>
+                                <div className="h-7 bg-gray-300/60 rounded-lg w-3/4 mb-4"></div>
+                                <div className="h-4 bg-gray-300/50 rounded w-full mb-2"></div>
+                                <div className="h-4 bg-gray-300/50 rounded w-5/6 mb-4"></div>
+                                <div className="flex justify-between items-center mt-auto">
+                                    <div className="w-10 h-10 rounded-full bg-gray-300/60 ml-auto"></div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 ) : filteredServices.length === 0 ? (
                     <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200 mt-4 max-w-3xl mx-auto">

@@ -57,8 +57,33 @@ export default function ServicesPage() {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <Loader2 className="animate-spin text-manima-red" size={40} />
+            <div className="max-w-6xl mx-auto p-6 w-full animate-pulse">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                    <div>
+                        <div className="h-8 bg-gray-200 rounded w-48 mb-2"></div>
+                        <div className="h-4 bg-gray-200 rounded w-64"></div>
+                    </div>
+                    <div className="h-10 bg-gray-200 rounded-lg w-40"></div>
+                </div>
+                <div className="h-12 bg-gray-200 rounded-xl w-full mb-6"></div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[1, 2, 3, 4, 5, 6].map(i => (
+                        <div key={i} className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 h-48 flex flex-col justify-between">
+                            <div className="flex justify-between items-start mb-4">
+                                <div className="w-10 h-10 bg-gray-200 rounded-lg"></div>
+                                <div className="flex gap-2">
+                                    <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
+                                    <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
+                                </div>
+                            </div>
+                            <div className="h-6 bg-gray-200 rounded w-3/4 mb-3"></div>
+                            <div className="space-y-2 mt-auto">
+                                <div className="h-3 bg-gray-200 rounded w-full"></div>
+                                <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         );
     }

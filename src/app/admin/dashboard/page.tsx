@@ -49,7 +49,23 @@ export default function AdminDashboard() {
     };
 
     if (loading) {
-        return <div className="p-6 text-center text-gray-500">Loading stats...</div>;
+        return (
+            <div className="w-full animate-pulse">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    {[1, 2, 3, 4].map(i => (
+                        <div key={i} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-36">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="w-12 h-12 rounded-lg bg-gray-200"></div>
+                                <div className="w-16 h-4 bg-gray-200 rounded"></div>
+                            </div>
+                            <div className="w-24 h-4 bg-gray-200 rounded mb-2"></div>
+                            <div className="w-12 h-8 bg-gray-200 rounded"></div>
+                        </div>
+                    ))}
+                </div>
+                <div className="mt-6 h-96 bg-gray-200 rounded-xl w-full"></div>
+            </div>
+        );
     }
 
     return (

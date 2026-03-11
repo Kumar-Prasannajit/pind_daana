@@ -10,9 +10,24 @@ import {
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import ClientBookingsList from "@/components/client/ClientBookingsList";
+import dynamic from "next/dynamic";
 import ProfilePage from "./profile/page";
 import PujaModal from "@/components/PujaModal";
+
+const ClientBookingsList = dynamic(() => import("@/components/client/ClientBookingsList"), {
+    ssr: false,
+    loading: () => (
+        <div className="flex flex-col gap-6 w-full animate-pulse">
+            <div className="flex items-center justify-between">
+                <div className="h-8 bg-gray-200 rounded-lg w-48"></div>
+                <div className="h-6 bg-gray-200 rounded-full w-24"></div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                {[1, 2].map(i => <div key={i} className="h-64 bg-gray-200 rounded-2xl"></div>)}
+            </div>
+        </div>
+    )
+});
 
 interface ClientProfile {
     _id: string;
@@ -63,8 +78,31 @@ export default function ClientDashboard() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#F5F6F8] flex items-center justify-center">
-                <Loader2 className="animate-spin text-[#DAA520]" size={40} />
+            <div className="flex h-screen bg-[#F5F6F8] font-sans">
+                {/* Skeleton Sidebar - Desktop Only */}
+                <aside className="hidden md:flex flex-col w-72 bg-[#2C0E0F] shrink-0 border-r border-white/5 animate-pulse">
+                    <div className="h-24 px-8 flex items-center border-b border-white/10">
+                        <div className="w-10 h-10 rounded-full bg-white/10"></div>
+                        <div className="h-6 w-24 bg-white/10 rounded ml-3"></div>
+                    </div>
+                    <div className="flex-1 p-4 space-y-4 mt-4">
+                        {[1, 2, 3, 4, 5].map(i => <div key={i} className="h-12 w-full bg-white/5 rounded-xl"></div>)}
+                    </div>
+                </aside>
+                {/* Skeleton Main Content */}
+                <div className="flex-1 flex flex-col min-w-0">
+                    <header className="h-16 md:h-24 bg-white border-b border-gray-100 flex items-center px-4 md:px-8 shrink-0 animate-pulse">
+                        <div className="w-32 h-6 bg-gray-200 rounded"></div>
+                    </header>
+                    <main className="flex-1 p-4 md:p-8">
+                        <div className="max-w-7xl mx-auto space-y-8 animate-pulse">
+                            <div className="h-64 md:h-80 w-full bg-gray-200 rounded-3xl"></div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {[1, 2, 3].map(i => <div key={i} className="h-32 bg-gray-200 rounded-2xl"></div>)}
+                            </div>
+                        </div>
+                    </main>
+                </div>
             </div>
         );
     }

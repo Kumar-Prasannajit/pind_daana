@@ -121,8 +121,40 @@ export default function ProfilePage() {
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center min-h-[60vh]">
-                <Loader2 className="animate-spin text-[#D35400]" size={40} />
+            <div className="max-w-4xl mx-auto pb-10 w-full animate-pulse">
+                <div className="h-10 bg-gray-200 rounded w-48 mb-8"></div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                        <div className="flex items-center gap-3 mb-6 border-b border-gray-100 pb-4">
+                            <div className="w-6 h-6 bg-gray-200 rounded-full"></div>
+                            <div className="h-6 bg-gray-200 rounded w-48"></div>
+                        </div>
+                        <div className="space-y-4">
+                            {[1, 2, 3, 4].map(i => (
+                                <div key={i}>
+                                    <div className="h-4 bg-gray-200 rounded w-24 mb-1"></div>
+                                    <div className={`h-10 bg-gray-200 rounded w-full ${i === 4 ? 'h-24' : ''}`}></div>
+                                </div>
+                            ))}
+                            <div className="pt-2"><div className="h-10 bg-gray-200 rounded w-full"></div></div>
+                        </div>
+                    </div>
+                    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 h-fit">
+                        <div className="flex items-center gap-3 mb-6 border-b border-gray-100 pb-4">
+                            <div className="w-6 h-6 bg-gray-200 rounded-full"></div>
+                            <div className="h-6 bg-gray-200 rounded w-40"></div>
+                        </div>
+                        <div className="space-y-4">
+                            {[1, 2, 3].map(i => (
+                                <div key={i}>
+                                    <div className="h-4 bg-gray-200 rounded w-32 mb-1"></div>
+                                    <div className="h-10 bg-gray-200 rounded w-full"></div>
+                                </div>
+                            ))}
+                            <div className="pt-2"><div className="h-10 bg-gray-200 rounded w-full"></div></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         );
     }

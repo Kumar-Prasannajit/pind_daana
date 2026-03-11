@@ -313,9 +313,23 @@ export default function PujaServicesContent({
             {/* Content Grid */}
             <div className="container mx-auto px-4 py-12">
                 {loading ? (
-                    <div className="min-h-[40vh] flex flex-col items-center justify-center gap-4">
-                        <Loader2 className="animate-spin text-[#D35400]" size={40} />
-                        <p className="text-gray-500 font-medium animate-pulse">Loading Sacred Rituals...</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                            <div key={i} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-[400px] animate-pulse">
+                                <div className="h-60 bg-gray-200 w-full" />
+                                <div className="p-6 flex flex-col flex-1">
+                                    <div className="h-6 bg-gray-200 rounded w-3/4 mb-4" />
+                                    <div className="h-4 bg-gray-200 rounded w-1/2 mb-auto" />
+                                    <div className="pt-5 border-t border-gray-50 flex items-center justify-between mt-auto">
+                                        <div className="flex flex-col gap-2 w-1/3">
+                                            <div className="h-2 bg-gray-200 rounded w-full" />
+                                            <div className="h-4 bg-gray-200 rounded w-full" />
+                                        </div>
+                                        <div className="w-10 h-10 rounded-full bg-gray-200" />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 ) : filteredPujas.length === 0 ? (
                     <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200 mt-4">

@@ -123,27 +123,30 @@ export default function SpecialPujasContent({ basePath }: { basePath?: string })
                             <div
                                 key={service._id}
                                 onClick={() => handleServiceClick(service)}
-                                className="group bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-500 border border-gray-100 cursor-pointer flex flex-col h-full relative overflow-hidden"
+                                className="group rounded-3xl p-8 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-500 border border-gray-100 cursor-pointer flex flex-col h-full relative overflow-hidden"
                             >
+                                {/* Background Image with Zoom Effect */}
+                                <div 
+                                    className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
+                                    style={{
+                                        backgroundImage: `url(/assets/marjana.jpeg)`,
+                                    }}
+                                ></div>
+                                
+                                {/* Dark Overlay for text readability */}
+                                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/35 transition-colors duration-500"></div>
+
                                 {/* Decorative Gradient Orb */}
                                 <div className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-orange-100 to-yellow-50 rounded-full blur-3xl opacity-50 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-                                {/* Icon / Number */}
-                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-50 to-orange-100/50 flex items-center justify-center mb-6 text-[#D35400] font-bold text-xl shadow-inner border border-orange-100/50 group-hover:scale-110 transition-transform duration-500">
-                                    {index + 1}
-                                </div>
-
                                 <div className="flex-1 relative z-10">
-                                    <h3 className="font-serif font-bold text-2xl text-gray-900 group-hover:text-[#D35400] transition-colors mb-4 leading-tight">
+                                    <h3 className="font-serif font-bold text-2xl text-white group-hover:text-[#FFD700] transition-colors mb-4 leading-tight">
                                         {service.name}
                                     </h3>
-                                    <p className="text-gray-500 text-sm leading-relaxed line-clamp-4">
-                                        {service.significance}
-                                    </p>
                                 </div>
 
                                 <div className="pt-8 mt-auto flex items-center justify-between relative z-10">
-                                    <span className="text-sm font-bold text-[#D35400] group-hover:underline underline-offset-4 pointer-events-none">
+                                    <span className="text-sm font-bold text-white group-hover:underline underline-offset-4 pointer-events-none">
                                         View Temples
                                     </span>
                                     <div className="w-10 h-10 rounded-full bg-orange-50 text-[#D35400] flex items-center justify-center group-hover:bg-[#D35400] group-hover:text-white transition-all duration-300 transform group-hover:rotate-[-45deg] shadow-sm">

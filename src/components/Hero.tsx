@@ -12,7 +12,7 @@ const services = [
   {
     icon: () => (
       <img
-        src="/assets/puja.png"
+        src="/assets/puja_hero.png"
         alt="Puja"
         className="w-12 sm:w-14 md:w-16 h-auto object-contain"
       />
@@ -151,49 +151,6 @@ const Hero = () => {
             className="px-6 py-3 rounded font-semibold bg-[#D35400] hover:bg-[#E67E22] transition-colors"
           >
             Book Ritual Now
-          </button>
-        </div>
-
-        {/* Top Buttons */}
-        <div className="flex justify-center gap-8 flex-wrap mb-10">
-          <button
-            onClick={() => router.push("/special-pujas")}
-            className="flex items-center gap-2 text-sm font-medium text-[#F1C40F] bg-black/40 px-4 py-2 rounded-full hover:bg-black/60 transition-colors cursor-pointer"
-          >
-            Puja for Special Occasion
-          </button>
-
-          <button
-            onClick={() =>
-              document
-                .getElementById("Services")
-                ?.scrollIntoView({ behavior: "smooth" })
-            }
-            className="flex items-center gap-2 text-sm font-medium text-[#F1C40F] bg-black/40 px-4 py-2 rounded-full hover:bg-black/60 transition-colors cursor-pointer"
-          >
-            Asthi Visarjan
-          </button>
-
-          <button
-            onClick={() =>
-              document
-                .getElementById("Services")
-                ?.scrollIntoView({ behavior: "smooth" })
-            }
-            className="flex items-center gap-2 text-sm font-medium text-[#F1C40F] bg-black/40 px-4 py-2 rounded-full hover:bg-black/60 transition-colors cursor-pointer"
-          >
-            Pinda Daan
-          </button>
-
-          <button
-            onClick={() =>
-              document
-                .getElementById("Services")
-                ?.scrollIntoView({ behavior: "smooth" })
-            }
-            className="flex items-center gap-2 text-sm font-medium text-[#F1C40F] bg-black/40 px-4 py-2 rounded-full hover:bg-black/60 transition-colors cursor-pointer"
-          >
-            Book a Pandit
           </button>
         </div>
 

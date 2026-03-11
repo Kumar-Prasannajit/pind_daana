@@ -2,8 +2,9 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Trash2, Upload, X } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import toast from "react-hot-toast";
 
 export default function EditTypePujaPage({ params }: { params: Promise<{ id: string }> }) {
@@ -16,7 +17,22 @@ export default function EditTypePujaPage({ params }: { params: Promise<{ id: str
     const [formData, setFormData] = useState({
         name: "",
         significance: "",
+        imageUrl: "",
     });
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setSelectedFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     useEffect(() => {
         const fetchTypePuja = async () => {
@@ -28,7 +44,11 @@ export default function EditTypePujaPage({ params }: { params: Promise<{ id: str
                 setFormData({
                     name: data.name || "",
                     significance: data.significance || "",
+                    imageUrl: data.imageUrl || "",
                 });
+                if (data.imageUrl) {
+                    setImagePreview(data.imageUrl);
+                }
             } catch (error) {
                 console.error("Error fetching type puja:", error);
                 toast.error("Could not load type puja details");
@@ -56,12 +76,20 @@ export default function EditTypePujaPage({ params }: { params: Promise<{ id: str
         setIsSaving(true);
 
         try {
+            const formDataToSend = new FormData();
+            formDataToSend.append("id", resolvedParams.id);
+            formDataToSend.append("name", formData.name);
+            formDataToSend.append("significance", formData.significance);
+            
+            if (selectedFile) {
+                formDataToSend.append("image", selectedFile);
+            } else if (formData.imageUrl) {
+                formDataToSend.append("imageUrl", formData.imageUrl);
+            }
+
             const response = await fetch("/api/type-pujas", {
                 method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ ...formData, id: resolvedParams.id }),
+                body: formDataToSend,
             });
 
             const data = await response.json();
@@ -141,6 +169,57 @@ export default function EditTypePujaPage({ params }: { params: Promise<{ id: str
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Puja Image
+                            </label>
+                            <div className="mt-1 flex justify-center px-4 pt-3 pb-4 border-2 border-gray-300 border-dashed rounded-xl hover:border-manima-red transition-colors relative">
+                                {imagePreview ? (
+                                    <div className="relative w-full max-w-[300px] aspect-video rounded-lg overflow-hidden mx-auto">
+                                        <Image
+                                            src={imagePreview}
+                                            alt="Preview"
+                                            fill
+                                            className="object-cover"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setImagePreview(null);
+                                                setSelectedFile(null);
+                                                setFormData(prev => ({ ...prev, imageUrl: "" }));
+                                            }}
+                                            className="absolute top-1 right-1 p-1 bg-white/80 hover:bg-white text-gray-700 rounded-full transition-colors"
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-1 text-center">
+                                        <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                                        <div className="flex text-sm text-gray-600 justify-center">
+                                            <label
+                                                htmlFor="image-upload"
+                                                className="relative cursor-pointer bg-white rounded-md font-medium text-manima-red hover:text-red-700 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-manima-red"
+                                            >
+                                                <span>Upload a file</span>
+                                                <input
+                                                    id="image-upload"
+                                                    name="image-upload"
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="sr-only"
+                                                    onChange={handleImageChange}
+                                                />
+                                            </label>
+                                            <p className="pl-1">or drag and drop</p>
+                                        </div>
+                                        <p className="text-xs text-gray-500">PNG, JPG, WEBP up to 5MB</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
                         <div>
                             <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                                 Puja Name <span className="text-red-500">*</span>

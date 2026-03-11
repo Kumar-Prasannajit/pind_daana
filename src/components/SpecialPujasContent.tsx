@@ -8,6 +8,7 @@ interface PujaService {
     _id: string;
     name: string;
     significance: string;
+    imageUrl?: string;
 }
 
 export default function SpecialPujasContent({ basePath }: { basePath?: string }) {
@@ -129,7 +130,7 @@ export default function SpecialPujasContent({ basePath }: { basePath?: string })
                                 <div 
                                     className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
                                     style={{
-                                        backgroundImage: `url(/assets/marjana.jpeg)`,
+                                        backgroundImage: `url(${service.imageUrl || '/assets/marjana.jpeg'})`,
                                     }}
                                 ></div>
                                 

@@ -128,12 +128,19 @@ const Hero = () => {
     >
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-[#D35400]/30 z-10" />
 
-      <img
-        ref={logoRef}
-        src="/assets/manima_logo.png"
-        alt="Manima Logo"
-        className="fixed z-[99] h-auto drop-shadow-2xl pointer-events-none"
-      />
+      <a
+        href="https://manimaonline.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed z-[99] pointer-events-auto" // Added pointer-events-auto
+      >
+        <img
+          ref={logoRef}
+          src="/assets/manima_logo.png"
+          alt="Manima Logo"
+          className="h-auto drop-shadow-2xl"
+        />
+      </a>
 
       <div className="relative z-20 max-w-4xl md:ml-auto md:mr-[15%] flex flex-col items-center text-center px-6 md:px-0 pt-24">
         <div

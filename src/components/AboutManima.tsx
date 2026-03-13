@@ -16,10 +16,16 @@ const AboutManima = () => {
 
         const update = () => {
 
-            if (window.innerWidth >= 1024) {
+            if (window.innerWidth >= 1280) {
                 setSpinnerConfig({
                     radius: 220,
                     count: 120
+                });
+
+            } else if (window.innerWidth >= 1024) {
+                setSpinnerConfig({
+                    radius: 170,
+                    count: 90
                 });
 
             } else if (window.innerWidth >= 768) {
@@ -58,14 +64,16 @@ const AboutManima = () => {
     const { title, tagline, descriptionParts, cta } = content;
 
     return (
-        <section className="w-full min-h-screen flex items-center bg-[#FDFAF0] overflow-hidden">
+        <section className="w-full min-h-screen flex items-center bg-manima-sand overflow-hidden">
 
-            <div className="max-w-[1200px] mx-auto px-6 grid 
-grid-cols-1 lg:grid-cols-[1fr_1fr] 
-items-center gap-10 md:gap-14 lg:gap-20">
+            <div className="max-w-300 mx-auto px-6 py-10 lg:py-6 grid
+                grid-cols-1 lg:grid-cols-[1fr_1fr]
+                items-center gap-10 md:gap-14 lg:gap-10 xl:gap-20">
 
                 {/* LEFT SIDE */}
-                <div className="relative flex items-center justify-center w-full h-[300px] sm:h-[360px] md:h-[620px] lg:h-[720px] mt-6 md:mt-0">
+                <div className="relative flex items-center justify-center w-full
+                    h-75 sm:h-90 md:h-125 lg:h-120 xl:h-150
+                    mt-6 md:mt-0">
 
                     <TunnelSpinner
                         radius={spinnerConfig.radius}
@@ -73,10 +81,10 @@ items-center gap-10 md:gap-14 lg:gap-20">
                     />
 
                     {/* Glow */}
-                    <div className="absolute w-[220px] h-[220px] md:w-[360px] md:h-[360px] bg-manima-gold/20 blur-[90px] rounded-full"></div>
+                    <div className="absolute w-55 h-55 md:w-80 md:h-80 xl:w-90 xl:h-90 bg-manima-gold/20 blur-[90px] rounded-full"></div>
 
                     {/* Logo */}
-                    <div className="relative w-[120px] h-[120px] md:w-[240px] md:h-[240px] lg:w-[300px] lg:h-[300px] z-10">
+                    <div className="relative w-30 h-30 md:w-50 md:h-50 lg:w-55 lg:h-55 xl:w-75 xl:h-75 z-10">
                         <Image
                             src="/assets/logo.png"
                             alt="Manima Logo"
@@ -89,17 +97,17 @@ items-center gap-10 md:gap-14 lg:gap-20">
                 </div>
 
                 {/* RIGHT SIDE */}
-                <div className="max-w-[520px] flex flex-col items-center md:items-start">
+                <div className="max-w-130 flex flex-col items-center md:items-start">
 
-                    <h2 className="font-heading text-[48px] md:text-[80px] lg:text-[100px] leading-[0.95] tracking-[-1px] text-[#bf392a] text-center md:text-left">
+                    <h2 className="font-heading text-[48px] md:text-[72px] lg:text-[72px] xl:text-[96px] leading-[0.95] tracking-[-1px] text-[#bf392a] text-center md:text-left">
                         {title}
                     </h2>
 
-                    <p className="mt-6 text-[18px] md:text-[22px] text-[#582C12] font-medium text-center md:text-left">
-                        “{tagline}”
+                    <p className="mt-6 text-[16px] md:text-[18px] lg:text-[18px] xl:text-[22px] text-[#582C12] font-medium text-center md:text-left">
+                        &quot;{tagline}&quot;
                     </p>
 
-                    <div className="mt-6 text-[16px] md:text-[18px] leading-[1.7] text-[#000000]">
+                    <div className="mt-6 text-[15px] md:text-[16px] lg:text-[15px] xl:text-[18px] leading-[1.7] text-[#000000]">
 
                         <p className="md:hidden text-justify">
                             {descriptionParts.join(" ")}
@@ -108,21 +116,21 @@ items-center gap-10 md:gap-14 lg:gap-20">
                         <div className="hidden md:flex flex-col space-y-4">
 
                             <div className="flex gap-4 items-start">
-                                <div className="size-8 rounded-full bg-[#bf392a]/10 flex items-center justify-center flex-shrink-0 mt-1">
+                                <div className="size-8 rounded-full bg-[#bf392a]/10 flex items-center justify-center shrink-0 mt-1">
                                     <Heart size={18} className="text-[#bf392a]" fill="#bf392a" />
                                 </div>
                                 <p>{descriptionParts[0]}</p>
                             </div>
 
                             <div className="flex gap-4 items-start">
-                                <div className="size-8 rounded-full bg-[#bf392a]/10 flex items-center justify-center flex-shrink-0 mt-1">
+                                <div className="size-8 rounded-full bg-[#bf392a]/10 flex items-center justify-center shrink-0 mt-1">
                                     <Users size={18} className="text-[#bf392a]" />
                                 </div>
                                 <p>{descriptionParts[1]}</p>
                             </div>
 
                             <div className="flex gap-4 items-start">
-                                <div className="size-8 rounded-full bg-[#bf392a]/10 flex items-center justify-center flex-shrink-0 mt-1">
+                                <div className="size-8 rounded-full bg-[#bf392a]/10 flex items-center justify-center shrink-0 mt-1">
                                     <Infinity size={18} className="text-[#bf392a]" />
                                 </div>
                                 <p>{descriptionParts[2]}</p>
@@ -132,13 +140,13 @@ items-center gap-10 md:gap-14 lg:gap-20">
 
                     </div>
 
-                    <div className="mt-10">
+                    <div className="mt-8 xl:mt-10">
                         <a
                             href="#how-it-works"
                             className="inline-flex items-center gap-3 bg-[#bf392a] text-white hover:bg-[#f1ece9] hover:text-[#bf392a] hover:border-2 hover:border-[#bf392a] px-7 py-4 rounded-full text-[16px] font-medium tracking-wide transition"
-                        >
+                        >    
                             {cta}
-                            <span>→</span>
+                            <span>{"→"}</span>
                         </a>
                     </div>
 

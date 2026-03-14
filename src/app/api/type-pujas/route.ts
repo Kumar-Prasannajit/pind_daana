@@ -1,24 +1,13 @@
 import { NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';
-import mongoose from "mongoose";
+import dbConnect from "@/lib/db";
 import PujaService from "@/models/PujaService";
-
-// Helper function to connect to DB
-const connectToDB = async () => {
-    if (mongoose.connection.readyState >= 1) return;
-    try {
-        await mongoose.connect(process.env.MONGODB_URI as string);
-    } catch (error) {
-        console.error("DB Connection Error:", error);
-    }
-};
-
 import imagekit from "@/lib/imagekit";
 
 export async function POST(req: Request) {
     try {
-        await connectToDB();
+        await dbConnect();
         
         const contentType = req.headers.get("content-type") || "";
         let data: any;
@@ -77,7 +66,7 @@ export async function POST(req: Request) {
 
 export async function GET() {
     try {
-        await connectToDB();
+        await dbConnect();
         const typePujas = await PujaService.find({}).sort({ createdAt: -1 });
         return NextResponse.json(typePujas);
     } catch (error) {
@@ -88,7 +77,7 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
     try {
-        await connectToDB();
+        await dbConnect();
         
         const contentType = req.headers.get("content-type") || "";
         let data: any;

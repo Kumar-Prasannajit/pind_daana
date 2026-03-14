@@ -56,6 +56,10 @@ export async function POST(req: Request) {
       data.imageUrl = uploadResponse.url;
     }
 
+    if (data.priority !== undefined) {
+      data.priority = Number(data.priority);
+    }
+
     const puja = await Puja.create(data);
 
     return NextResponse.json(
@@ -79,11 +83,25 @@ export async function GET() {
     await dbConnect();
 
     const pujas = await Puja.find()
-      .populate("services.service", "name significance")
-      .sort({ createdAt: -1 });
+      .populate("services.service", "name significance");
+
+    // Sort in code to safely handle legacy pujas missing the priority field
+    const sortedPujas = pujas.sort((a: any, b: any) => {
+        const priorityA = a.priority !== undefined && a.priority !== null ? Number(a.priority) : 8;
+        const priorityB = b.priority !== undefined && b.priority !== null ? Number(b.priority) : 8;
+        
+        if (priorityA !== priorityB) {
+            return priorityA - priorityB; // 1 (Highest) -> 8 (Standard)
+        }
+        
+        // Tie-breaker: Newest first
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA; 
+    });
 
     return NextResponse.json(
-      { success: true, data: pujas },
+      { success: true, data: sortedPujas },
       { status: 200 }
     );
   } catch (error: any) {
@@ -130,6 +148,10 @@ export async function PATCH(req: Request) {
     }
 
     const id = data.id || data._id;
+
+    if (data.priority !== undefined) {
+      data.priority = Number(data.priority);
+    }
 
     if (fileToUpload) {
       let fileData: string | Buffer = fileToUpload as string;

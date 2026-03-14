@@ -141,13 +141,6 @@ const AboutManima = () => {
                     </div>
 
                     <div className="mt-8 xl:mt-10">
-                        <a
-                            href="#how-it-works"
-                            className="inline-flex items-center gap-3 bg-[#bf392a] text-white hover:bg-[#f1ece9] hover:text-[#bf392a] hover:border-2 hover:border-[#bf392a] px-7 py-4 rounded-full text-[16px] font-medium tracking-wide transition"
-                        >    
-                            {cta}
-                            <span>{"→"}</span>
-                        </a>
                     </div>
 
                 </div>

@@ -1,15 +1,16 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Loader2, Save, Trash2, Upload, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import toast from "react-hot-toast";
 
-export default function EditTypePujaPage({ params }: { params: Promise<{ id: string }> }) {
+export default function EditTypePujaPage() {
     const router = useRouter();
-    const resolvedParams = use(params);
+    const params = useParams<{ id: string }>();
+    const resolvedParams = params || { id: "" };
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);

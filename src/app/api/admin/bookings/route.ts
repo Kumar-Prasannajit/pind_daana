@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';
-import mongoose from "mongoose";
+import dbConnect from "@/lib/db";
 import Booking from "@/models/Booking";
 import Agent from "@/models/Agent";
 import Client from "@/models/Client";
@@ -11,20 +11,10 @@ import Location from "@/models/Location";
 import { jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { sendBookingConfirmationEmail } from "@/lib/email";
-
-const connectToDB = async () => {
-    if (mongoose.connection.readyState >= 1) return;
-    try {
-        await mongoose.connect(process.env.MONGODB_URI as string);
-    } catch (error) {
-        console.error("DB Connection Error:", error);
-    }
-};
-
 // GET: Fetch all bookings for Admin
 export async function GET() {
     try {
-        await connectToDB();
+        await dbConnect();
         // Ensure models are registered for populate
         const _models = [Client, Service, Location, Agent];
 
@@ -57,7 +47,7 @@ export async function GET() {
 // PATCH: Verify Payment or Assign Agent
 export async function PATCH(req: Request) {
     try {
-        await connectToDB();
+        await dbConnect();
 
         // Verify Admin Token
         const cookieStore = await cookies();

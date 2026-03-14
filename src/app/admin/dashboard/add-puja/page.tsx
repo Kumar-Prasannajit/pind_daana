@@ -32,6 +32,7 @@ export default function AddPujaPage() {
         name: "",
         location: "",
         templeType: "",
+        priority: "8",
     });
 
     const [file, setFile] = useState<File | null>(null);
@@ -89,8 +90,6 @@ export default function AddPujaPage() {
 
     const handleAddPackage = (serviceIndex: number) => {
         const newServicePackages = [...servicePackages];
-        if (newServicePackages[serviceIndex].packages.length >= 3) return;
-
         newServicePackages[serviceIndex].packages.push({ name: "", priceAmount: "", features: [] });
         setServicePackages(newServicePackages);
     };
@@ -129,6 +128,7 @@ export default function AddPujaPage() {
             data.append("name", formData.name);
             data.append("location", formData.location);
             data.append("templeType", formData.templeType);
+            data.append("priority", formData.priority);
 
             // Clean service packages (remove empty features and parse numbers)
             const cleanedServices = servicePackages.map(sp => ({
@@ -192,7 +192,7 @@ export default function AddPujaPage() {
                                     placeholder="e.g. Sri Kashi Vishwanath Temple"
                                 />
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Location</label>
                                     <input
@@ -206,7 +206,7 @@ export default function AddPujaPage() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Deity / Temple Type</label>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Deity / Temple</label>
                                     <input
                                         type="text"
                                         name="templeType"
@@ -216,6 +216,24 @@ export default function AddPujaPage() {
                                         className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-manima-red/20 focus:border-manima-red outline-none transition-all placeholder:text-gray-400"
                                         placeholder="e.g. Shiva"
                                     />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Display Priority</label>
+                                    <select
+                                        name="priority"
+                                        value={formData.priority}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
+                                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-manima-red/20 focus:border-manima-red outline-none transition-all text-sm font-medium text-gray-700"
+                                    >
+                                        <option value="1">Highest Priority</option>
+                                        <option value="2">Higher Priority</option>
+                                        <option value="3">High Priority</option>
+                                        <option value="4">Medium Priority</option>
+                                        <option value="5">Low Priority</option>
+                                        <option value="6">Lower Priority</option>
+                                        <option value="7">Lowest Priority</option>
+                                        <option value="8">Standard (Default)</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -246,19 +264,15 @@ export default function AddPujaPage() {
                                         <button
                                             type="button"
                                             onClick={() => handleAddPackage(sIndex)}
-                                            disabled={sp.packages.length >= 3}
-                                            className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition-all ${sp.packages.length >= 3
-                                                ? "text-gray-400 border border-gray-200 cursor-not-allowed"
-                                                : "text-manima-red hover:text-white hover:bg-manima-red border border-manima-red"
-                                                }`}
+                                            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition-all text-manima-red hover:text-white hover:bg-manima-red border border-manima-red"
                                         >
-                                            <Plus size={14} /> ADD PACKAGE {sp.packages.length}/3
+                                            <Plus size={14} /> ADD PACKAGE ({sp.packages.length})
                                         </button>
                                     </div>
 
                                     <div className="space-y-6">
                                         {sp.packages.map((pkg, pIndex) => (
-                                            <div key={pIndex} className="flex flex-col sm:flex-row gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200 relative group">
+                                            <div key={`package-${sIndex}-${pIndex}`} className="flex flex-col sm:flex-row gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200 relative group">
                                                 <div className="absolute -left-1 top-4 w-10 h-6 bg-gray-200 rounded-r text-[10px] flex items-center justify-center font-bold text-gray-500 rotate-90 -translate-x-full group-hover:translate-x-0 transition-transform">
                                                     #{pIndex + 1}
                                                 </div>
@@ -308,7 +322,7 @@ export default function AddPujaPage() {
                                                         />
                                                         <div className="flex flex-wrap gap-2 mt-2">
                                                             {pkg.features?.map((feature, fIndex) => (
-                                                                <span key={fIndex} className="inline-flex items-center px-2 py-1.5 rounded bg-white border border-gray-200 text-xs text-gray-700 font-medium">
+                                                                <span key={`feature-${sIndex}-${pIndex}-${fIndex}`} className="inline-flex items-center px-2 py-1.5 rounded bg-white border border-gray-200 text-xs text-gray-700 font-medium">
                                                                     {feature}
                                                                     <button
                                                                         type="button"

@@ -62,8 +62,8 @@ export default async function Home() {
   return (
     <>
       <Hero />
-      <AboutManima />
       <Services />
+      <AboutManima />
       <ProcessFlow />
       <WhyChooseUs />
     </>

@@ -1,22 +1,12 @@
 import { NextResponse } from "next/server";
-import mongoose from "mongoose";
+import dbConnect from "@/lib/db";
 import Client from "@/models/Client";
 import PendingClient from "@/models/PendingClient";
 import bcrypt from "bcryptjs";
 import { sendOtpEmail } from "@/lib/email";
-
-const connectToDB = async () => {
-    if (mongoose.connection.readyState >= 1) return;
-    try {
-        await mongoose.connect(process.env.MONGODB_URI as string);
-    } catch (error) {
-        console.error("DB Connection Error:", error);
-    }
-};
-
 export async function POST(req: Request) {
     try {
-        await connectToDB();
+        await dbConnect();
         const { name, email, phone, password } = await req.json();
 
         if (!name || !email || !phone || !password) {

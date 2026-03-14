@@ -1,23 +1,12 @@
 import { NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';
-import mongoose from "mongoose";
+import dbConnect from "@/lib/db";
 import PujaService from "@/models/PujaService";
-
-// Helper function to connect to DB
-const connectToDB = async () => {
-    if (mongoose.connection.readyState >= 1) return;
-    try {
-        await mongoose.connect(process.env.MONGODB_URI as string);
-    } catch (error) {
-        console.error("DB Connection Error:", error);
-    }
-};
-
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const resolvedParams = await params;
-        await connectToDB();
+        await dbConnect();
         const typePuja = await PujaService.findById(resolvedParams.id);
 
         if (!typePuja) {
@@ -34,7 +23,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const resolvedParams = await params;
-        await connectToDB();
+        await dbConnect();
         const deletedTypePuja = await PujaService.findByIdAndDelete(resolvedParams.id);
 
         if (!deletedTypePuja) {

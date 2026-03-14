@@ -1,25 +1,15 @@
 
 import { NextResponse } from "next/server";
-import mongoose from "mongoose";
+import dbConnect from "@/lib/db";
 import Booking from "@/models/Booking";
 import { jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import Service from "@/models/Service";
 import Location from "@/models/Location";
 import Agent from "@/models/Agent";
-
-const connectToDB = async () => {
-    if (mongoose.connection.readyState >= 1) return;
-    try {
-        await mongoose.connect(process.env.MONGODB_URI as string);
-    } catch (error) {
-        console.error("DB Connection Error:", error);
-    }
-};
-
 export async function GET() {
     try {
-        await connectToDB();
+        await dbConnect();
 
         // Verify Client Token
         const cookieStore = await cookies();
@@ -36,7 +26,6 @@ export async function GET() {
         }
 
         // Ensure models are registered involved in populate
-
 
         // Force usage of imported models to prevent tree-shaking (though explicit import should be enough)
         const _models = [Agent, Service, Location];

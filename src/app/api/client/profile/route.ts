@@ -1,23 +1,13 @@
 import { NextResponse } from "next/server";
-import mongoose from "mongoose";
+import dbConnect from "@/lib/db";
 import Client from "@/models/Client";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
-
-const connectToDB = async () => {
-    if (mongoose.connection.readyState >= 1) return;
-    try {
-        await mongoose.connect(process.env.MONGODB_URI as string);
-    } catch (error) {
-        console.error("DB Connection Error:", error);
-    }
-};
-
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
 export async function PUT(req: Request) {
     try {
-        await connectToDB();
+        await dbConnect();
 
         const cookieStore = await cookies();
         const token = cookieStore.get("client_auth_token")?.value;

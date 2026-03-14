@@ -17,6 +17,7 @@ export interface IPuja extends Document {
   name: string;
   location: string;
   templeType: string;
+  priority: number;
   services: {
     service: mongoose.Types.ObjectId;
     packages: IPackage[];
@@ -72,6 +73,11 @@ const pujaSchema = new Schema<IPuja>(
     },
     templeType: {
       type: String,
+      required: true,
+    },
+    priority: {
+      type: Number,
+      default: 8, // 1: Highest, ..., 8: Standard
       required: true,
     },
     services: {

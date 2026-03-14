@@ -1,22 +1,11 @@
 import { NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';
-import mongoose from "mongoose";
+import dbConnect from "@/lib/db";
 import Service from "@/models/Service";
-
-// Helper function to connect to DB
-const connectToDB = async () => {
-    if (mongoose.connection.readyState >= 1) return;
-    try {
-        await mongoose.connect(process.env.MONGODB_URI as string);
-    } catch (error) {
-        console.error("DB Connection Error:", error);
-    }
-};
-
 export async function POST(req: Request) {
     try {
-        await connectToDB();
+        await dbConnect();
         const { name, details } = await req.json();
 
         if (!name || !details) {
@@ -37,7 +26,7 @@ export async function POST(req: Request) {
 
 export async function GET() {
     try {
-        await connectToDB();
+        await dbConnect();
         const services = await Service.find({}).sort({ createdAt: -1 });
         return NextResponse.json(services);
     } catch (error) {
@@ -48,7 +37,7 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
     try {
-        await connectToDB();
+        await dbConnect();
         const { id, _id, name, details } = await req.json();
 
         const serviceId = id || _id;
@@ -76,7 +65,7 @@ export async function PATCH(req: Request) {
 
 export async function DELETE(req: Request) {
     try {
-        await connectToDB();
+        await dbConnect();
         const { searchParams } = new URL(req.url);
         const id = searchParams.get("id");
 

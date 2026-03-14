@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { Loader2, Plus, Trash2, IndianRupee, Save, ArrowLeft, MapPin, Tag, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 
@@ -22,10 +22,10 @@ interface ServicePricing {
     packages: Package[];
 }
 
-export default function EditPujaPage({ params }: { params: Promise<{ id: string }> }) {
+export default function EditPujaPage() {
     const router = useRouter();
-    const resolvedParams = use(params);
-    const id = resolvedParams.id;
+    const params = useParams<{ id: string }>();
+    const id = params?.id;
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -37,6 +37,7 @@ export default function EditPujaPage({ params }: { params: Promise<{ id: string 
         name: "",
         location: "",
         templeType: "",
+        priority: "8",
     });
 
     const [file, setFile] = useState<File | null>(null);
@@ -64,6 +65,7 @@ export default function EditPujaPage({ params }: { params: Promise<{ id: string 
                             name: puja.name || "",
                             location: puja.location || "",
                             templeType: puja.templeType || "",
+                            priority: puja.priority ? puja.priority.toString() : "8",
                         });
                         setPreviewUrl(puja.imageUrl);
 
@@ -139,8 +141,6 @@ export default function EditPujaPage({ params }: { params: Promise<{ id: string 
 
     const handleAddPackage = (serviceIndex: number) => {
         const newServicePackages = [...servicePackages];
-        if (newServicePackages[serviceIndex].packages.length >= 3) return;
-
         newServicePackages[serviceIndex].packages.push({ name: "", priceAmount: "", features: [] });
         setServicePackages(newServicePackages);
     };
@@ -180,6 +180,7 @@ export default function EditPujaPage({ params }: { params: Promise<{ id: string 
             data.append("name", formData.name);
             data.append("location", formData.location);
             data.append("templeType", formData.templeType);
+            data.append("priority", formData.priority);
 
             // Clean service packages
             const cleanedServices = servicePackages.map(sp => ({
@@ -278,7 +279,7 @@ export default function EditPujaPage({ params }: { params: Promise<{ id: string 
                                     placeholder="e.g. Sri Kashi Vishwanath Temple"
                                 />
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Location</label>
                                     <input
@@ -303,6 +304,24 @@ export default function EditPujaPage({ params }: { params: Promise<{ id: string 
                                         placeholder="e.g. Shiva"
                                     />
                                 </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Display Priority</label>
+                                    <select
+                                        name="priority"
+                                        value={formData.priority}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
+                                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-manima-red/20 focus:border-manima-red outline-none transition-all text-sm font-medium text-gray-700"
+                                    >
+                                        <option value="1">Highest Priority</option>
+                                        <option value="2">Higher Priority</option>
+                                        <option value="3">High Priority</option>
+                                        <option value="4">Medium Priority</option>
+                                        <option value="5">Low Priority</option>
+                                        <option value="6">Lower Priority</option>
+                                        <option value="7">Lowest Priority</option>
+                                        <option value="8">Standard (Default)</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -324,7 +343,7 @@ export default function EditPujaPage({ params }: { params: Promise<{ id: string 
                             </div>
                         ) : (
                             servicePackages.map((sp, sIndex) => (
-                                <div key={sp.serviceId} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 relative overflow-hidden">
+                                <div key={`service-${sIndex}-${sp.serviceId || 'unknown'}`} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 relative overflow-hidden">
                                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-manima-gold"></div>
 
                                     <div className="flex justify-between items-center mb-6 border-b border-dashed pb-3">
@@ -332,19 +351,15 @@ export default function EditPujaPage({ params }: { params: Promise<{ id: string 
                                         <button
                                             type="button"
                                             onClick={() => handleAddPackage(sIndex)}
-                                            disabled={sp.packages.length >= 3}
-                                            className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition-all ${sp.packages.length >= 3
-                                                ? "text-gray-400 border border-gray-200 cursor-not-allowed"
-                                                : "text-manima-red hover:text-white hover:bg-manima-red border border-manima-red"
-                                                }`}
+                                            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition-all text-manima-red hover:text-white hover:bg-manima-red border border-manima-red"
                                         >
-                                            <Plus size={14} /> ADD PACKAGE {sp.packages.length}/3
+                                            <Plus size={14} /> ADD PACKAGE ({sp.packages.length})
                                         </button>
                                     </div>
 
                                     <div className="space-y-6">
                                         {sp.packages.map((pkg, pIndex) => (
-                                            <div key={pIndex} className="flex flex-col sm:flex-row gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200 relative group">
+                                            <div key={`package-${sIndex}-${pIndex}`} className="flex flex-col sm:flex-row gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200 relative group">
                                                 <div className="absolute -left-1 top-4 w-10 h-6 bg-gray-200 rounded-r text-[10px] flex items-center justify-center font-bold text-gray-500 rotate-90 -translate-x-full group-hover:translate-x-0 transition-transform">
                                                     #{pIndex + 1}
                                                 </div>
@@ -394,7 +409,7 @@ export default function EditPujaPage({ params }: { params: Promise<{ id: string 
                                                         />
                                                         <div className="flex flex-wrap gap-2 mt-2">
                                                             {pkg.features?.map((feature, fIndex) => (
-                                                                <span key={fIndex} className="inline-flex items-center px-2 py-1.5 rounded bg-white border border-gray-200 text-xs text-gray-700 font-medium">
+                                                                <span key={`feature-${sIndex}-${pIndex}-${fIndex}`} className="inline-flex items-center px-2 py-1.5 rounded bg-white border border-gray-200 text-xs text-gray-700 font-medium">
                                                                     {feature}
                                                                     <button
                                                                         type="button"

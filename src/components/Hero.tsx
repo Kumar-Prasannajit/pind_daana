@@ -162,7 +162,7 @@ const Hero = () => {
         </div>
 
         {/* Services Grid */}
-        <div className="w-full">
+        {/* <div className="w-full">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 justify-items-center">
             {services.map((item, i) => {
               const Icon = item.icon;
@@ -189,7 +189,7 @@ const Hero = () => {
               );
             })}
           </div>
-        </div>
+        </div> */}
       </div>
 
       <PujaModal isOpen={openModal} onClose={() => setOpenModal(false)} />

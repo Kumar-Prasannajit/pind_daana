@@ -2,79 +2,48 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 
-interface Service {
+interface StaticService {
     _id: string;
     name: string;
-    details: string;
-    link?: string;
-    comingSoon?: boolean;
-    image?: string;
+    comingSoon: true;
+    image: string;
+}
+
+interface PujaService {
+    _id: string;
+    name: string;
+    significance: string;
+    imageUrl?: string;
 }
 
 interface ServicesProps {
     onServiceClick?: (id: string) => void;
 }
 
+const staticServices: StaticService[] = [
+    { _id: 'online-asthi-visarjan', name: 'Online Asthi Visarjan', comingSoon: true, image: '/assets/asthi_visarjan.jpeg' },
+    { _id: 'online-pind-daan', name: 'Online Pind Daan', comingSoon: true, image: '/assets/pind_daan_websiteimg.jpeg' },
+    { _id: 'book-a-pandit', name: 'Book a Pandit', comingSoon: true, image: '/assets/book_pandit.jpeg' },
+];
+
 const Services = ({ onServiceClick }: ServicesProps) => {
-    const [services, setServices] = useState<Service[]>([]);
+    const [typePujas, setTypePujas] = useState<PujaService[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchServices = async () => {
-            // Static services definition
-            const ritualPuja: Service = {
-                _id: 'ritual-puja-static',
-                name: 'Puja for Special Occasions',
-                details: 'Perform authentic Vedic Pujas with experienced Pandits.',
-                link: '/special-pujas',
-                image: '/assets/special_puja.jpeg'
-            };
-
-            const asthiVisarjan: Service = {
-                _id: 'online-asthi-visarjan',
-                name: 'Online Asthi Visarjan',
-                details: 'Perform Asthi Visarjan rituals remotely.',
-                comingSoon: true,
-                image: '/assets/asthi_visarjan.jpeg'
-            };
-
-            const pindDaan: Service = {
-                _id: 'online-pind-daan',
-                name: 'Online Pind Daan',
-                details: 'Perform Pind Daan for your ancestors.',
-                comingSoon: true,
-                image: '/assets/pind_daan_websiteimg.jpeg'
-            };
-
-            const bookPandit: Service = {
-                _id: 'book-a-pandit',
-                name: 'Book a Pandit',
-                details: 'Connect with knowledgeable Pandits.',
-                comingSoon: true,
-                image: '/assets/book_pandit.jpeg'
-            };
-
-            let apiServices: Service[] = [];
-
+        const fetchTypePujas = async () => {
             try {
-                const res = await fetch('/api/services');
-                if (res.ok) {
-                    apiServices = await res.json();
-                }
+                const res = await fetch('/api/type-pujas');
+                if (res.ok) setTypePujas(await res.json());
             } catch (error) {
-                console.error("Failed to fetch services:", error);
+                console.error("Failed to fetch type-pujas:", error);
             } finally {
-                // Ensure apiServices also have images if possible or use default
-                const processedApiServices = apiServices.map(s => ({
-                    ...s,
-                    image: s.image || '/assets/manima_logo.png' // Fallback
-                }));
-                setServices([ritualPuja, asthiVisarjan, pindDaan, bookPandit, ...processedApiServices]);
                 setLoading(false);
             }
         };
-        fetchServices();
+        fetchTypePujas();
     }, []);
 
     return (
@@ -88,79 +57,64 @@ const Services = ({ onServiceClick }: ServicesProps) => {
                 </div>
 
                 {loading ? (
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         {[1, 2, 3, 4].map((i) => (
-                            <div key={i} className="block h-64 w-full rounded-[2rem] bg-gray-200 animate-pulse relative shadow-md" />
-                        ))}
-                    </div>
-                ) : services.length > 0 ? (
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                        {services.slice(0, 4).map((service, index) => (
-                            <div key={service._id} className={`relative group ${service.comingSoon ? 'opacity-90' : ''}`}>
-                                {service.comingSoon ? (
-                                    <div className="block h-64 w-full rounded-[2rem] overflow-hidden relative shadow-md cursor-default">
-                                        {/* Background Image */}
-                                        <div
-                                            className="absolute inset-0 bg-cover bg-center transition-transform duration-700"
-                                            style={{ backgroundImage: `url(${service.image})` }}
-                                        />
-                                        {/* Overlay */}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-
-                                        {/* Content */}
-                                        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center z-10">
-                                            {/* Capsule Container for Coming Soon */}
-                                            <div className="bg-white/20 backdrop-blur-sm border border-white/30 px-4 py-1.5 rounded-full mb-3 shadow-lg">
-                                                <span className="text-white text-[10px] tracking-[0.2em] font-medium uppercase drop-shadow-sm block">COMING SOON</span>
-                                            </div>
-
-                                            <h3 className="text-white text-2xl font-[family-name:var(--font-dm-serif)] leading-tight drop-shadow-md">
-                                                {service.name.split(' ').map((word, i) => (
-                                                    <span key={i} className="block">{word}</span>
-                                                ))}
-                                            </h3>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <Link
-                                        href={service.link || `/services?serviceId=${service._id}`}
-                                        className="block h-64 w-full rounded-[2rem] overflow-hidden relative shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-                                    >
-                                        {/* Background Image */}
-                                        <div
-                                            className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-                                            style={{ backgroundImage: `url(${service.image})` }}
-                                        />
-                                        {/* Overlay */}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
-
-                                        {/* Content */}
-                                        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center z-10">
-                                            {/* Capsule Container for Explore */}
-                                            <div className="bg-white/20 backdrop-blur-sm border border-white/30 px-4 py-1.5 rounded-full mb-3 shadow-lg group-hover:bg-white/30 transition-colors">
-                                                <span className="text-white text-[10px] tracking-[0.2em] font-medium uppercase drop-shadow-sm block">EXPLORE</span>
-                                            </div>
-
-                                            <h3 className="text-white text-2xl font-[family-name:var(--font-dm-serif)] leading-tight drop-shadow-md">
-                                                {service.name.split(' ').map((word, i) => (
-                                                    <span key={i} className="block">{word}</span>
-                                                ))}
-                                            </h3>
-                                        </div>
-                                    </Link>
-                                )}
-                            </div>
+                            <div key={i} className="h-64 w-full rounded-[2rem] bg-gray-200 animate-pulse shadow-md" />
                         ))}
                     </div>
                 ) : (
-                    <div className="w-full text-center py-10 text-gray-400">No services available.</div>
-                )}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        {/* Type-puja cards from API */}
+                        {typePujas.map((puja) => (
+                            <Link
+                                key={puja._id}
+                                href={`/pujas?serviceId=${puja._id}&serviceName=${encodeURIComponent(puja.name)}&serviceDesc=${encodeURIComponent(puja.significance)}`}
+                                className="group block h-64 w-full rounded-[2rem] overflow-hidden relative shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                            >
+                                <div
+                                    className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
+                                    style={{ backgroundImage: `url(${puja.imageUrl || '/assets/marjana.jpeg'})` }}
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
+                                <div className="absolute inset-0 flex flex-col justify-between p-6 z-10">
+                                    <div className="bg-white/20 backdrop-blur-sm border border-white/30 px-4 py-1.5 rounded-full self-start shadow-lg group-hover:bg-white/30 transition-colors">
+                                        <span className="text-white text-[10px] tracking-[0.2em] font-medium uppercase drop-shadow-sm">EXPLORE</span>
+                                    </div>
+                                    <div className="flex items-end justify-between">
+                                        <h3 className="text-white text-xl font-serif font-bold leading-tight drop-shadow-md group-hover:text-[#FFD700] transition-colors">
+                                            {puja.name}
+                                        </h3>
+                                        <div className="w-9 h-9 rounded-full bg-orange-50 text-[#D35400] flex items-center justify-center group-hover:bg-[#D35400] group-hover:text-white transition-all duration-300 transform group-hover:rotate-[-45deg] shadow-sm shrink-0 ml-2">
+                                            <ArrowRight size={16} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </Link>
+                        ))}
 
-                {/* <div className="text-center mt-8">
-                    <Link href="/services" className="inline-block p-3 bg-[#D35400] text-white rounded-full hover:bg-[#E67E22] transition-colors duration-300 shadow-lg group">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down group-hover:translate-y-1 transition-transform"><path d="m6 9 6 6 6-6" /></svg>
-                    </Link>
-                </div> */}
+                        {/* Static coming-soon cards */}
+                        {staticServices.map((service) => (
+                            <div
+                                key={service._id}
+                                className="group block h-64 w-full rounded-[2rem] overflow-hidden relative shadow-md cursor-default"
+                            >
+                                <div
+                                    className="absolute inset-0 bg-cover bg-center"
+                                    style={{ backgroundImage: `url(${service.image})` }}
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                                <div className="absolute inset-0 flex flex-col justify-between p-6 z-10">
+                                    <div className="bg-white/20 backdrop-blur-sm border border-white/30 px-4 py-1.5 rounded-full self-start shadow-lg">
+                                        <span className="text-white text-[10px] tracking-[0.2em] font-medium uppercase drop-shadow-sm">COMING SOON</span>
+                                    </div>
+                                    <h3 className="text-white text-xl font-serif font-bold leading-tight drop-shadow-md">
+                                        {service.name}
+                                    </h3>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </section>
     );

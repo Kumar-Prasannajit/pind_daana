@@ -137,14 +137,25 @@ export default function PujaServicesContent({
     const filteredPujas = pujas.filter((p) => {
         const matchesLocation = locationFilter ? p.location === locationFilter : true;
         const matchesType = templeTypeFilter ? p.templeType === templeTypeFilter : true;
-        const matchesService = serviceFilter ? p.services?.some(s => s.service?._id === serviceFilter) : true;
+        const matchesService = serviceFilter 
+            ? p.services?.some(s => {
+                if (!s || !s.service) return false;
+                // Safely handle if service is populated object or just string ID
+                const sId = typeof s.service === 'object' ? s.service._id : s.service;
+                return String(sId) === String(serviceFilter);
+            }) 
+            : true;
         return matchesLocation && matchesType && matchesService;
     });
 
     // Derive active service info from any puja that has the filtered service,
     // or fall back to independently fetched service info (for services with no temples yet)
     const activeServiceInfo = serviceFilter
-        ? (pujas.flatMap(p => p.services).find(s => s.service?._id === serviceFilter)?.service || fetchedServiceInfo)
+        ? (pujas.flatMap(p => p.services).find(s => {
+              if (!s || !s.service) return false;
+              const sId = typeof s.service === 'object' ? s.service._id : s.service;
+              return String(sId) === String(serviceFilter);
+          })?.service || fetchedServiceInfo)
         : null;
 
     // Derived title/description for the hero
@@ -177,7 +188,11 @@ export default function PujaServicesContent({
 
     // Helper to get package details
     const getPackage = (puja: Puja, type: string) => {
-        const activeService = puja.services?.find(s => s.service?._id === selectedServiceId) || puja.services?.[0];
+        const activeService = puja.services?.find(s => {
+            if (!s || !s.service) return false;
+            const sId = typeof s.service === 'object' ? s.service._id : s.service;
+            return String(sId) === String(selectedServiceId);
+        }) || puja.services?.[0];
         const activePackages = activeService?.packages || [];
         return activePackages.find(p => p.name === type) || activePackages[0];
     };
@@ -191,8 +206,14 @@ export default function PujaServicesContent({
     useEffect(() => {
         if (selectedPuja && selectedPuja.services?.length > 0) {
             // Default to the filtered service if it exists in this temple, otherwise the first one
-            const targetService = selectedPuja.services.find(s => s.service?._id === serviceFilter) || selectedPuja.services[0];
-            setSelectedServiceId(targetService.service?._id);
+            const targetService = selectedPuja.services.find(s => {
+                if (!s || !s.service) return false;
+                const sId = typeof s.service === 'object' ? s.service._id : s.service;
+                return String(sId) === String(serviceFilter);
+            }) || selectedPuja.services[0];
+            
+            const targetServiceId = typeof targetService.service === 'object' ? targetService.service._id : targetService.service;
+            setSelectedServiceId(targetServiceId);
             const sorted = [...(targetService.packages || [])].sort((a, b) => a.priceAmount - b.priceAmount);
             if (sorted.length > 0) {
                 setSelectedPackage(sorted[0].name);
@@ -203,7 +224,11 @@ export default function PujaServicesContent({
     // Reset selected package when service changes
     useEffect(() => {
         if (selectedPuja && selectedServiceId) {
-            const activeService = selectedPuja.services?.find(s => s.service?._id === selectedServiceId);
+            const activeService = selectedPuja.services?.find(s => {
+                if (!s || !s.service) return false;
+                const sId = typeof s.service === 'object' ? s.service._id : s.service;
+                return String(sId) === String(selectedServiceId);
+            });
             const sorted = [...(activeService?.packages || [])].sort((a, b) => a.priceAmount - b.priceAmount);
             if (sorted.length > 0) {
                 setSelectedPackage(sorted[0].name);
@@ -348,9 +373,15 @@ export default function PujaServicesContent({
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                         {filteredPujas.map((puja, i) => {
-                            const applicablePackages = serviceFilter
-                                ? puja.services?.find(s => s.service?._id === serviceFilter)?.packages || []
-                                : puja.services?.flatMap(s => s.packages) || [];
+                            const applicableService = serviceFilter
+                                ? puja.services?.find(s => {
+                                    if (!s || !s.service) return false;
+                                    const sId = typeof s.service === 'object' ? s.service._id : s.service;
+                                    return String(sId) === String(serviceFilter);
+                                  })
+                                : null;
+                                
+                            const applicablePackages = applicableService?.packages || puja.services?.flatMap(s => s.packages) || [];
                             const minPrice = applicablePackages.length > 0 ? Math.min(...applicablePackages.map(p => p.priceAmount)) : 0;
 
                             return (
@@ -442,11 +473,15 @@ export default function PujaServicesContent({
                                             onChange={(e) => setSelectedServiceId(e.target.value)}
                                             className="w-full appearance-none bg-gray-50 border border-gray-100 rounded-xl pl-4 pr-10 py-3.5 md:py-4 text-sm font-bold text-gray-900 border-2 hover:border-orange-200 focus:border-[#D35400] focus:bg-white focus:ring-4 focus:ring-orange-50 transition-all outline-none cursor-pointer shadow-sm"
                                         >
-                                            {selectedPuja.services?.map((svc) => (
-                                                <option key={svc.service?._id} value={svc.service?._id}>
-                                                    {svc.service?.name || "Unnamed Service"}
-                                                </option>
-                                            ))}
+                                            {selectedPuja.services?.map((svc) => {
+                                                const sId = typeof svc.service === 'object' ? svc.service?._id : svc.service;
+                                                const sName = typeof svc.service === 'object' ? svc.service?.name : "Unnamed Service";
+                                                return (
+                                                    <option key={String(sId)} value={String(sId)}>
+                                                        {sName || "Unnamed Service"}
+                                                    </option>
+                                                );
+                                            })}
                                         </select>
                                         <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 group-focus-within:text-[#D35400]">
                                             <ChevronDown size={20} />
@@ -458,7 +493,11 @@ export default function PujaServicesContent({
                                             <h3 className="text-xs md:text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Choose Your Package</h3>
                                             {/* Package toggle buttons */}
                                             <div className="flex flex-wrap gap-3 mb-6">
-                                                {selectedPuja.services?.find(s => s.service?._id === selectedServiceId)?.packages.map((pkg) => (
+                                                {selectedPuja.services?.find(s => {
+                                                    if (!s || !s.service) return false;
+                                                    const sId = typeof s.service === 'object' ? s.service._id : s.service;
+                                                    return String(sId) === String(selectedServiceId);
+                                                })?.packages.map((pkg) => (
                                                     <button
                                                         key={pkg.name}
                                                         onClick={() => setSelectedPackage(pkg.name)}
@@ -479,7 +518,11 @@ export default function PujaServicesContent({
                                             </div>
 
                                             {/* Features of selected package shown below buttons */}
-                                            {selectedPuja.services?.find(s => s.service?._id === selectedServiceId)?.packages.filter(p => p.name === selectedPackage).map((pkg) => (
+                                            {selectedPuja.services?.find(s => {
+                                                if (!s || !s.service) return false;
+                                                const sId = typeof s.service === 'object' ? s.service._id : s.service;
+                                                return String(sId) === String(selectedServiceId);
+                                            })?.packages.filter(p => p.name === selectedPackage).map((pkg) => (
                                                 <div key={pkg.name} className="rounded-2xl bg-orange-50/40 border border-orange-100 p-4">
                                                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">What&apos;s Included</p>
                                                     <ul className="flex flex-col gap-2.5">
@@ -499,7 +542,11 @@ export default function PujaServicesContent({
 
                             {/* Footer / CTA with Package Details */}
                             <div className="p-5 md:p-8 border-t border-gray-100 bg-white shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] z-10 shrink-0">
-                                {selectedPuja.services?.find(s => s.service?._id === selectedServiceId)?.packages.filter(p => p.name === selectedPackage).map((pkg) => (
+                                {selectedPuja.services?.find(s => {
+                                    if (!s || !s.service) return false;
+                                    const sId = typeof s.service === 'object' ? s.service._id : s.service;
+                                    return String(sId) === String(selectedServiceId);
+                                })?.packages.filter(p => p.name === selectedPackage).map((pkg) => (
                                     <div key={pkg.name} className="flex items-center gap-3 mb-5">
                                         <span className="text-3xl font-bold text-[#2C0E0F]">₹{pkg.priceAmount.toLocaleString('en-IN')}</span>
                                         <span className="text-sm text-gray-400 font-medium">{pkg.name} Package</span>

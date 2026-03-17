@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 export const dynamic = 'force-dynamic';
 import dbConnect from "@/lib/db";
 import Puja from "@/models/Puja";
+import PujaService from "@/models/PujaService"; // Required so Mongoose can populate services.service refs
 
 import imagekit from "@/lib/imagekit";
 

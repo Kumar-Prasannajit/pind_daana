@@ -119,7 +119,7 @@ function CheckoutContent() {
                 setClient(userData);
 
                 // --- NEW: Puja Booking Flow ---
-                if (pujaId && packageName) {
+                if (pujaId) {
                     const pRes = await fetch('/api/puja');
                     if (pRes.ok) {
                         const pData = await pRes.json();
@@ -130,24 +130,29 @@ function CheckoutContent() {
                             setServiceName(foundPuja.name);
                             setLocationName(foundPuja.location);
 
-                            // Find the package within the puja's services array
-                            let foundPackage = null;
-                            if (foundPuja.services && Array.isArray(foundPuja.services)) {
-                                for (const svc of foundPuja.services) {
-                                    if (svc.packages && Array.isArray(svc.packages)) {
-                                        const pkg = svc.packages.find((p: any) => p.name === packageName);
-                                        if (pkg) {
-                                            foundPackage = pkg;
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
+                            // Find service matching serviceId from URL (preferred), else use first service
+                            const targetService = serviceId
+                                ? foundPuja.services?.find((svc: any) => {
+                                    if (!svc || !svc.service) return false;
+                                    const sId = typeof svc.service === 'object' ? svc.service._id : svc.service;
+                                    return String(sId) === String(serviceId);
+                                }) || foundPuja.services?.[0]
+                                : foundPuja.services?.[0];
 
-                            if (foundPackage) {
-                                setFetchedPrice(foundPackage.priceAmount);
+                            if (targetService) {
+                                const packages = targetService.packages || [];
+                                // Match by name if provided; otherwise use first package as fallback
+                                const foundPackage = packageName
+                                    ? packages.find((p: any) => p.name === packageName) || packages[0]
+                                    : packages[0];
+
+                                if (foundPackage) {
+                                    setFetchedPrice(foundPackage.priceAmount);
+                                } else {
+                                    console.error("Could not find any package in service for puja", pujaId);
+                                }
                             } else {
-                                console.error("Could not find package", packageName, "in puja", pujaId);
+                                console.error("Could not find any service in puja", pujaId);
                             }
                         }
                     }

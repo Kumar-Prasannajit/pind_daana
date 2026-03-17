@@ -7,6 +7,7 @@ import { cookies } from "next/headers";
 import Service from "@/models/Service";
 import Location from "@/models/Location";
 import Agent from "@/models/Agent";
+import Puja from "@/models/Puja";
 export async function GET() {
     try {
         await dbConnect();
@@ -28,7 +29,7 @@ export async function GET() {
         // Ensure models are registered involved in populate
 
         // Force usage of imported models to prevent tree-shaking (though explicit import should be enough)
-        const _models = [Agent, Service, Location];
+        const _models = [Agent, Service, Location, Puja];
 
         const bookings = await Booking.find({ client: clientId as any })
             .populate("service", "name")

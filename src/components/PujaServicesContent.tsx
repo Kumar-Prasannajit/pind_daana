@@ -199,7 +199,13 @@ export default function PujaServicesContent({
 
     const handleBookNow = (puja: Puja) => {
         const pkg = getPackage(puja, selectedPackage);
-        router.push(`/checkout?pujaId=${puja._id}&serviceId=${selectedServiceId}&packageName=${pkg?.name || ''}`);
+        // Ensure packageName is never empty — fallback to first available package if needed
+        const packageName = pkg?.name || puja.services?.[0]?.packages?.[0]?.name || '';
+        // Ensure serviceId is never empty — fallback to first available service id
+        const svcId = selectedServiceId || (typeof puja.services?.[0]?.service === 'object'
+            ? puja.services?.[0]?.service?._id
+            : puja.services?.[0]?.service) || '';
+        router.push(`/checkout?pujaId=${puja._id}&serviceId=${encodeURIComponent(String(svcId))}&packageName=${encodeURIComponent(packageName)}`);
     };
 
     // Reset selected service and package when modal opens
@@ -475,10 +481,11 @@ export default function PujaServicesContent({
                                         >
                                             {selectedPuja.services?.map((svc) => {
                                                 const sId = typeof svc.service === 'object' ? svc.service?._id : svc.service;
-                                                const sName = typeof svc.service === 'object' ? svc.service?.name : "Unnamed Service";
+                                                const sName = typeof svc.service === 'object' ? svc.service?.name : null;
+                                                if (!sName) return null; // skip un-populated service entries
                                                 return (
                                                     <option key={String(sId)} value={String(sId)}>
-                                                        {sName || "Unnamed Service"}
+                                                        {sName}
                                                     </option>
                                                 );
                                             })}

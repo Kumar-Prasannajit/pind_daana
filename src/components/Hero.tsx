@@ -145,7 +145,7 @@ const Hero = () => {
       <div className="relative z-20 max-w-4xl md:ml-auto md:mr-[15%] flex flex-col items-center text-center px-6 md:px-0 pt-24">
         <div
           ref={placeholderRef}
-          className="mx-auto md:mx-0 mb-6 w-[250px] sm:w-[320px] md:w-[550px] aspect-[4.5] opacity-0"
+          className="mx-auto md:mx-0 mb-10 w-[250px] sm:w-[320px] md:w-[550px] aspect-[4.5] opacity-0"
         />
 
         <h1 className="text-2xl md:text-[2rem] mb-6 leading-tight text-[#f1c40f] drop-shadow-lg font-normal">
@@ -155,7 +155,7 @@ const Hero = () => {
         <div className="mb-14">
           <button
             onClick={() => router.push("/client/signup")}
-            className="px-6 py-3 rounded font-semibold bg-[#D35400] hover:bg-[#E67E22] transition-colors"
+            className="px-6 py-4 rounded font-semibold bg-[#D35400] hover:bg-[#E67E22] transition-colors"
           >
             Book Ritual Now
           </button>

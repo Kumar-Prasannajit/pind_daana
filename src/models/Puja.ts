@@ -105,10 +105,6 @@ const pujaSchema = new Schema<IPuja>(
 /* -------------------- */
 
 // Delete the cached model if it exists so Next.js HMR uses the updated schema
-if (mongoose.models.Puja) {
-  delete mongoose.models.Puja;
-}
-
-const Puja = mongoose.model<IPuja>("Puja", pujaSchema);
+const Puja = (mongoose.models.Puja as mongoose.Model<IPuja>) || mongoose.model<IPuja>("Puja", pujaSchema);
 
 export default Puja;

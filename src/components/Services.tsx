@@ -23,9 +23,9 @@ interface ServicesProps {
 }
 
 const staticServices: StaticService[] = [
-    { _id: 'online-asthi-visarjan', name: 'Online Asthi Visarjan', comingSoon: true, image: '/assets/asthi_visarjan.jpeg' },
-    { _id: 'online-pind-daan', name: 'Online Pind Daan', comingSoon: true, image: '/assets/pind_daan_websiteimg.jpeg' },
-    { _id: 'book-a-pandit', name: 'Book a Pandit', comingSoon: true, image: '/assets/book_pandit.jpeg' },
+    { _id: 'online-asthi-visarjan', name: 'Asthi Visarjan', comingSoon: true, image: '/assets/asthi_visarjan.jpeg' },
+    { _id: 'online-pind-daan', name: 'Pind Daan', comingSoon: true, image: '/assets/pind_daan_websiteimg.jpeg' },
+    { _id: 'book-a-pandit', name: 'Book A Pandit', comingSoon: true, image: '/assets/book_pandit.jpeg' },
 ];
 
 const Services = ({ onServiceClick }: ServicesProps) => {
@@ -75,18 +75,31 @@ const Services = ({ onServiceClick }: ServicesProps) => {
                                     className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
                                     style={{ backgroundImage: `url(${puja.imageUrl || '/assets/marjana.jpeg'})` }}
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
-                                <div className="absolute inset-0 flex flex-col justify-between p-6 z-10">
-                                    <div className="bg-white/20 backdrop-blur-sm border border-white/30 px-4 py-1.5 rounded-full self-start shadow-lg group-hover:bg-white/30 transition-colors">
-                                        <span className="text-white text-[10px] tracking-[0.2em] font-medium uppercase drop-shadow-sm">EXPLORE</span>
+
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent opacity-90" />
+
+                                <div className="absolute inset-0 flex flex-col justify-between p-4 sm:p-6 z-10">
+
+                                    {/* Badge */}
+                                    <div className="bg-white/20 backdrop-blur-sm border border-white/30 px-3 py-1 rounded-full self-start shadow-md group-hover:bg-white/30 transition-colors">
+                                        <span className="text-white text-[9px] sm:text-[10px] tracking-widest font-medium uppercase drop-shadow-sm">
+                                            EXPLORE
+                                        </span>
                                     </div>
-                                    <div className="flex items-end justify-between">
-                                        <h3 className="text-white text-xl font-serif font-bold leading-tight drop-shadow-md group-hover:text-[#FFD700] transition-colors">
+
+                                    {/* Bottom Section */}
+                                    <div className="flex items-end justify-start sm:justify-between gap-2 min-h-[48px]">
+
+                                        {/* Title */}
+                                        <h3 className="text-white text-base sm:text-xl font-serif font-semibold leading-snug drop-shadow-md group-hover:text-[#FFD700] transition-colors text-center w-full">
                                             {puja.name}
                                         </h3>
-                                        <div className="w-9 h-9 rounded-full bg-orange-50 text-[#D35400] flex items-center justify-center group-hover:bg-[#D35400] group-hover:text-white transition-all duration-300 transform group-hover:rotate-[-45deg] shadow-sm shrink-0 ml-2">
+
+                                        {/* Arrow (hidden on mobile) */}
+                                        <div className="hidden sm:flex w-9 h-9 rounded-full bg-orange-50 text-[#D35400] items-center justify-center group-hover:bg-[#D35400] group-hover:text-white transition-all duration-300 transform group-hover:rotate-[-45deg] shadow-sm shrink-0 ml-2">
                                             <ArrowRight size={16} />
                                         </div>
+
                                     </div>
                                 </div>
                             </Link>
@@ -105,9 +118,11 @@ const Services = ({ onServiceClick }: ServicesProps) => {
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
                                 <div className="absolute inset-0 flex flex-col justify-between p-6 z-10">
                                     <div className="bg-white/20 backdrop-blur-sm border border-white/30 px-4 py-1.5 rounded-full self-start shadow-lg">
-                                        <span className="text-white text-[10px] tracking-[0.2em] font-medium uppercase drop-shadow-sm">COMING SOON</span>
+                                        <span className="text-white text-[8px] sm:text-[10px] tracking-[0.15em] sm:tracking-[0.2em] font-medium uppercase drop-shadow-sm whitespace-nowrap">
+                                            COMING SOON
+                                        </span>
                                     </div>
-                                    <h3 className="text-white text-xl font-serif font-bold leading-tight drop-shadow-md">
+                                    <h3 className="text-white text-base sm:text-lg font-serif font-semibold leading-snug drop-shadow-md group-hover:text-[#FFD700] transition-colors text-center w-full">
                                         {service.name}
                                     </h3>
                                 </div>

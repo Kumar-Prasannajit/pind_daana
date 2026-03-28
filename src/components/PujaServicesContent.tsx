@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Search, MapPin, Filter, X, Check, ArrowRight, Loader2, ShieldCheck, ArrowLeft, ChevronDown, Sparkles } from "lucide-react";
+import { Search, MapPin, Filter, X, Check, ArrowRight, Loader2, ShieldCheck, ArrowLeft, ChevronDown, Sparkles, WifiOff } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { fetchWithRetry, NetworkError } from "@/lib/fetchWithRetry";
 
 // Interface matches the API response structure
 interface Package {
@@ -44,6 +45,7 @@ export default function PujaServicesContent({
     const searchParams = useSearchParams();
     const [pujas, setPujas] = useState<Puja[]>([]);
     const [loading, setLoading] = useState(true);
+    const [fetchError, setFetchError] = useState("");
     const [selectedPuja, setSelectedPuja] = useState<Puja | null>(null);
 
     // Filters
@@ -102,7 +104,7 @@ export default function PujaServicesContent({
             return;
         }
 
-        fetch("/api/type-pujas")
+        fetchWithRetry("/api/type-pujas")
             .then(r => r.json())
             .then(data => {
                 const services = data.data || data;
@@ -116,14 +118,24 @@ export default function PujaServicesContent({
 
     const fetchPujas = async () => {
         try {
-            const res = await fetch("/api/puja");
+            setFetchError("");
+            const res = await fetchWithRetry("/api/puja");
             if (!res.ok) throw new Error("Failed to fetch pujas");
             const data = await res.json();
             if (data.success) {
                 setPujas(data.data);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error fetching pujas:", error);
+            if (error instanceof NetworkError) {
+                setFetchError(error.isRetryExhausted
+                    ? "Request failed after retry. Please check your network."
+                    : error.isTimeout
+                        ? "Slow network detected. Please try again."
+                        : error.message);
+            } else {
+                setFetchError("Failed to load pujas. Please try again.");
+            }
         } finally {
             setLoading(false);
         }
@@ -362,7 +374,7 @@ export default function PujaServicesContent({
                             </div>
                         ))}
                     </div>
-                ) : filteredPujas.length === 0 ? (
+                ) : filteredPujas.length === 0 && !fetchError ? (
                     <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200 mt-4">
                         <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4">
                             <Search className="text-[#D35400]" size={24} />
@@ -374,6 +386,21 @@ export default function PujaServicesContent({
                             className="text-[#D35400] font-bold hover:underline"
                         >
                             Reset all filters
+                        </button>
+                    </div>
+                ) : fetchError ? (
+                    <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-red-200 mt-4">
+                        <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <WifiOff className="text-red-500" size={24} />
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900 mb-2">Connection Issue</h3>
+                        <p className="text-gray-500 mb-6">{fetchError}</p>
+                        <button
+                            onClick={() => { setLoading(true); fetchPujas(); }}
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-[#D35400] text-white font-bold rounded-xl hover:bg-[#b04600] transition-colors"
+                        >
+                            <Loader2 size={16} className={loading ? 'animate-spin' : ''} />
+                            Retry
                         </button>
                     </div>
                 ) : (

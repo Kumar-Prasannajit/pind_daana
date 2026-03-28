@@ -14,6 +14,32 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
+        // --- DUPLICATE BOOKING PREVENTION (Task 5) ---
+        // Prevent duplicate bookings created within a 5-minute window
+        // (e.g. from double-clicks or retry on slow networks)
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+        const duplicateQuery: any = {
+            client: body.client,
+            priceCategory: body.priceCategory,
+            createdAt: { $gte: fiveMinutesAgo },
+        };
+
+        if (body.puja) {
+            duplicateQuery.puja = body.puja;
+        } else {
+            duplicateQuery.service = body.service;
+            duplicateQuery.location = body.location;
+        }
+
+        const existingBooking = await Booking.findOne(duplicateQuery);
+        if (existingBooking) {
+            return NextResponse.json(
+                { message: "Booking already exists", booking: existingBooking },
+                { status: 200 }
+            );
+        }
+        // --- END DUPLICATE PREVENTION ---
+
         const bookingData = {
             ...body,
             isPaymentVerified: false,

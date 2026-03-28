@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Loader2, CreditCard, ScanLine, ArrowLeft, ShieldCheck, MapPin, Calendar, CheckCircle2, X, Tag } from 'lucide-react';
+import { Loader2, CreditCard, ScanLine, ArrowLeft, ShieldCheck, MapPin, Calendar, CheckCircle2, X, Tag, WifiOff } from 'lucide-react';
+import { fetchWithRetry, NetworkError } from '@/lib/fetchWithRetry';
 import Image from 'next/image';
 
 interface ClientProfile {
@@ -53,6 +54,10 @@ function CheckoutContent() {
     const [couponError, setCouponError] = useState("");
     const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
     const [discountAmount, setDiscountAmount] = useState(0);
+
+    // Network resilience state
+    const [networkError, setNetworkError] = useState("");
+    const bookingInProgress = useRef(false); // Prevents duplicate booking submissions
 
     // Calculate GST on the discounted price or base price? 
     // Usually GST is on the final taxable value. 
@@ -106,8 +111,10 @@ function CheckoutContent() {
     useEffect(() => {
         const initCheckout = async () => {
             try {
-                // 1. Fetch User Profile
-                const userRes = await fetch("/api/client/me");
+                setNetworkError("");
+
+                // 1. Fetch User Profile (no retry — auth check)
+                const userRes = await fetchWithRetry("/api/client/me", { retries: 1 });
                 if (!userRes.ok) {
                     // Preserve all current search parameters for the redirect
                     const currentParams = searchParams.toString();
@@ -120,7 +127,7 @@ function CheckoutContent() {
 
                 // --- NEW: Puja Booking Flow ---
                 if (pujaId) {
-                    const pRes = await fetch('/api/puja');
+                    const pRes = await fetchWithRetry('/api/puja');
                     if (pRes.ok) {
                         const pData = await pRes.json();
                         // @ts-ignore
@@ -164,7 +171,7 @@ function CheckoutContent() {
 
                 // 2. Fetch Service Name
                 if (serviceId) {
-                    const sRes = await fetch('/api/services');
+                    const sRes = await fetchWithRetry('/api/services');
                     const services = await sRes.json();
                     const s = services.find((i: any) => i._id === serviceId);
                     if (s) setServiceName(s.name);
@@ -172,7 +179,7 @@ function CheckoutContent() {
 
                 // 3. Fetch Location & Validate Price
                 if (locationId) {
-                    const lRes = await fetch('/api/locations');
+                    const lRes = await fetchWithRetry('/api/locations');
                     const locations = await lRes.json();
                     const l = locations.find((i: any) => i._id === locationId);
                     if (l) {
@@ -197,8 +204,15 @@ function CheckoutContent() {
                     }
                 }
 
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Checkout init error:", error);
+                if (error instanceof NetworkError) {
+                    setNetworkError(error.isRetryExhausted
+                        ? "Request failed after retry. Please check your network and refresh."
+                        : error.isTimeout
+                            ? "Slow network detected. Please try refreshing."
+                            : error.message);
+                }
             } finally {
                 setLoading(false);
             }
@@ -273,7 +287,11 @@ function CheckoutContent() {
     };
 
     const processBooking = async (txnId?: string) => {
+        // --- DUPLICATE SUBMISSION GUARD (Tasks 4, 9, 10) ---
+        if (bookingInProgress.current) return;
+        bookingInProgress.current = true;
         setIsProcessing(true);
+        setNetworkError("");
 
         try {
             const bookingData: any = {
@@ -294,10 +312,11 @@ function CheckoutContent() {
             }
 
 
-            const res = await fetch('/api/bookings', {
+            const res = await fetchWithRetry('/api/bookings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(bookingData)
+                body: JSON.stringify(bookingData),
+                retries: 0, // No retry for mutations to prevent duplicates
             });
 
             if (res.ok) {
@@ -310,11 +329,18 @@ function CheckoutContent() {
                 setQrError("Failed to create booking. Please try again.");
             }
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("Booking failed", error);
-            setQrError("An error occurred. Please try again.");
+            if (error instanceof NetworkError) {
+                setQrError(error.isTimeout
+                    ? "Slow network detected. Your booking request timed out. Please try again."
+                    : "Network error. Check your connection and try again.");
+            } else {
+                setQrError("An error occurred. Please try again.");
+            }
         } finally {
             setIsProcessing(false);
+            bookingInProgress.current = false;
         }
     };
 
@@ -342,6 +368,21 @@ function CheckoutContent() {
 
     return (
         <div className="min-h-screen bg-[#F5F6F8] pb-12 relative">
+            {/* Network Error Banner */}
+            {networkError && (
+                <div className="bg-red-50 border-b border-red-200 px-4 py-3">
+                    <div className="max-w-6xl mx-auto flex items-center gap-3">
+                        <WifiOff size={18} className="text-red-500 shrink-0" />
+                        <p className="text-red-700 text-sm font-medium flex-1">{networkError}</p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="text-red-600 text-sm font-bold hover:underline shrink-0"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                </div>
+            )}
             {/* Professional Header */}
             <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
                 <div className="max-w-6xl mx-auto px-4 h-20 flex items-center justify-between">

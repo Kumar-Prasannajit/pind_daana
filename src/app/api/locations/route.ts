@@ -25,7 +25,7 @@ export async function POST(req: Request) {
 export async function GET() {
     try {
         await dbConnect();
-        const locations = await Location.find({}).sort({ name: 1 });
+        const locations = await Location.find({}).sort({ name: 1 }).lean();
         return NextResponse.json(locations);
     } catch (error) {
         console.error("Error fetching locations:", error);

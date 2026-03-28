@@ -6,7 +6,7 @@ import Coupon from "@/models/Coupon";
 export async function GET() {
     await dbConnect();
     try {
-        const coupons = await Coupon.find({}).sort({ createdAt: -1 });
+        const coupons = await Coupon.find({}).sort({ createdAt: -1 }).lean();
         return NextResponse.json({ success: true, data: coupons });
     } catch (error) {
         return NextResponse.json({ success: false, error: "Failed to fetch coupons" }, { status: 500 });

@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 export async function GET() {
     try {
         await dbConnect();
-        const services = await Service.find({}).sort({ createdAt: -1 });
+        const services = await Service.find({}).sort({ createdAt: -1 }).lean();
         return NextResponse.json(services);
     } catch (error) {
         console.error("Error fetching services:", error);

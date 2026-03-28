@@ -36,7 +36,8 @@ export async function GET() {
             .populate("location", "name")
             .populate("puja", "name location imageUrl")
             .populate("agent", "name phone")
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .lean();
 
         return NextResponse.json(bookings);
     } catch (error) {

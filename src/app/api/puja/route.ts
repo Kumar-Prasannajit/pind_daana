@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 export const dynamic = 'force-dynamic';
 import dbConnect from "@/lib/db";
 import Puja from "@/models/Puja";
-import PujaService from "@/models/PujaService"; // Required so Mongoose can populate services.service refs
+import "@/models/PujaService"; // Required so Mongoose can populate services.service refs
 
 import imagekit from "@/lib/imagekit";
 
@@ -84,7 +84,8 @@ export async function GET() {
     await dbConnect();
 
     const pujas = await Puja.find()
-      .populate("services.service", "name significance");
+      .populate("services.service", "name significance")
+      .lean();
 
     // Sort in code to safely handle legacy pujas missing the priority field
     const sortedPujas = pujas.sort((a: any, b: any) => {

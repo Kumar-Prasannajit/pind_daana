@@ -67,7 +67,7 @@ export async function POST(req: Request) {
 export async function GET() {
     try {
         await dbConnect();
-        const typePujas = await PujaService.find({}).sort({ createdAt: -1 });
+        const typePujas = await PujaService.find({}).sort({ createdAt: -1 }).lean();
         return NextResponse.json(typePujas);
     } catch (error) {
         console.error("Error fetching type pujas:", error);

@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
+import "./PujaService"; // Ensure the model is registered to prevent tree-shaking
 
 /* -------------------- */
 /* Package Interface   */

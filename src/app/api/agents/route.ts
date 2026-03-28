@@ -42,7 +42,7 @@ export async function GET(req: Request) {
             query = { location: locationId };
         }
 
-        const agents = await Agent.find(query).sort({ name: 1 });
+        const agents = await Agent.find(query).sort({ name: 1 }).lean();
         return NextResponse.json(agents);
     } catch (error) {
         console.error("Error fetching agents:", error);

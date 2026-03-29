@@ -4,6 +4,7 @@ export interface IPujaService extends Document {
     name: string;
     significance: string;
     imageUrl?: string;
+    milestones: string[];
     createdAt: Date;
 }
 
@@ -21,6 +22,10 @@ const PujaServiceSchema: Schema = new Schema({
     imageUrl: {
         type: String,
         required: false,
+    },
+    milestones: {
+        type: [String],
+        default: [],
     },
     createdAt: {
         type: Date,

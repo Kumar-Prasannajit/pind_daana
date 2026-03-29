@@ -23,6 +23,9 @@ export async function POST(req: Request) {
         }
 
         const { name, significance } = data;
+        const milestones: string[] = data.milestones
+            ? (typeof data.milestones === 'string' ? JSON.parse(data.milestones) : data.milestones)
+            : [];
 
         if (!name || !significance) {
             return NextResponse.json({ error: "Name and significance are required" }, { status: 400 });
@@ -51,6 +54,7 @@ export async function POST(req: Request) {
         const newPujaService = await PujaService.create({ 
             name, 
             significance,
+            milestones,
             ...(data.imageUrl && { imageUrl: data.imageUrl })
         });
 
@@ -93,6 +97,9 @@ export async function PATCH(req: Request) {
         }
 
         const { id, _id, name, significance } = data;
+        const milestones: string[] = data.milestones
+            ? (typeof data.milestones === 'string' ? JSON.parse(data.milestones) : data.milestones)
+            : [];
         const pujaId = id || _id;
 
         if (!pujaId) {
@@ -122,7 +129,7 @@ export async function PATCH(req: Request) {
             }
         }
 
-        const updateData: any = { name, significance };
+        const updateData: any = { name, significance, milestones };
         if (data.imageUrl) {
             updateData.imageUrl = data.imageUrl;
         }

@@ -3,12 +3,28 @@ import React, { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import PujaServicesContent from "@/components/PujaServicesContent";
 import SpecialPujasContent from "@/components/SpecialPujasContent";
+import ServicesSelection from "@/components/ServicesSelection";
 
 function BookPujaInner() {
     const searchParams = useSearchParams();
     const serviceId = searchParams?.get("serviceId");
+    const type = searchParams?.get("type");
 
     if (serviceId) {
+        if (type === "service") {
+            return (
+                <div className="bg-white rounded-3xl p-8 shadow-sm border border-orange-100/50">
+                    <ServicesSelection
+                        initialServiceId={serviceId}
+                        lockServiceSelection
+                        showBackButton={true}
+                        title="Select Location"
+                        subtitle="Choose a sacred location to perform your ritual."
+                    />
+                </div>
+            );
+        }
+
         return (
             <PujaServicesContent
                 showHero={false}

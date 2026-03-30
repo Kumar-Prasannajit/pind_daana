@@ -8,6 +8,7 @@ interface IService {
     _id: string;
     name: string;
     details: string;
+    availability: "explore" | "coming_soon";
 }
 
 export default function ServicesPage() {
@@ -135,6 +136,10 @@ export default function ServicesPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredServices.map((service) => (
                         <div key={service._id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow group relative p-6">
+                            {(() => {
+                                const isExplore = service.availability !== "coming_soon";
+                                return (
+                                    <>
                             <div className="flex justify-between items-start mb-4">
                                 <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center text-manima-red">
                                     <Package size={20} />
@@ -158,9 +163,20 @@ export default function ServicesPage() {
                             </div>
 
                             <h3 className="font-heading font-bold text-lg text-gray-900 mb-2">{service.name}</h3>
+                            <div className="mb-3">
+                                <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider ${isExplore
+                                    ? "bg-green-50 text-green-700 border border-green-100"
+                                    : "bg-amber-50 text-amber-700 border border-amber-100"
+                                    }`}>
+                                    {isExplore ? "Explore" : "Coming Soon"}
+                                </span>
+                            </div>
                             <p className="text-gray-500 text-sm line-clamp-3 mb-4 h-15">
                                 {service.details}
                             </p>
+                                    </>
+                                );
+                            })()}
                         </div>
                     ))}
                 </div>

@@ -20,6 +20,7 @@ export default function EditServicePage() {
         name: "",
         details: "",
         imageUrl: "",
+        availability: "explore",
     });
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -38,6 +39,7 @@ export default function EditServicePage() {
                             name: service.name,
                             details: service.details,
                             imageUrl: service.imageUrl || "",
+                            availability: service.availability || "explore",
                         });
                         if (service.imageUrl) setImagePreview(service.imageUrl);
                         setMilestones(Array.isArray(service.milestones) ? service.milestones : []);
@@ -95,6 +97,7 @@ export default function EditServicePage() {
             formDataToSend.append("id", resolvedParams.id);
             formDataToSend.append("name", formData.name);
             formDataToSend.append("details", formData.details);
+            formDataToSend.append("availability", formData.availability);
             formDataToSend.append("milestones", JSON.stringify(milestones));
 
             if (selectedFile) {
@@ -264,6 +267,45 @@ export default function EditServicePage() {
                             className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-manima-red/20 focus:border-manima-red outline-none transition-all resize-none"
                             placeholder="Detailed description of the service..."
                         />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                            Service Visibility <span className="text-red-500">*</span>
+                        </label>
+                        <div className="grid gap-3 md:grid-cols-2">
+                            {[
+                                {
+                                    value: "explore",
+                                    label: "Explore",
+                                    description: "Users can open this service, choose a location, and continue to booking."
+                                },
+                                {
+                                    value: "coming_soon",
+                                    label: "Coming Soon",
+                                    description: "Users can see the service card, but it remains non-clickable."
+                                }
+                            ].map((option) => (
+                                <label
+                                    key={option.value}
+                                    className={`cursor-pointer rounded-xl border px-4 py-4 transition-all ${formData.availability === option.value
+                                        ? "border-manima-red bg-red-50"
+                                        : "border-gray-200 bg-gray-50"
+                                        }`}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="availability"
+                                        value={option.value}
+                                        checked={formData.availability === option.value}
+                                        onChange={handleInputChange}
+                                        className="sr-only"
+                                    />
+                                    <div className="text-sm font-semibold text-gray-900">{option.label}</div>
+                                    <p className="mt-1 text-xs text-gray-500">{option.description}</p>
+                                </label>
+                            ))}
+                        </div>
                     </div>
 
                     {/* Milestones */}

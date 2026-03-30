@@ -23,6 +23,7 @@ export async function POST(req: Request) {
         }
 
         const { name, details } = data;
+        const availability = data.availability === "coming_soon" ? "coming_soon" : "explore";
         const milestones: string[] = data.milestones
             ? (typeof data.milestones === 'string' ? JSON.parse(data.milestones) : data.milestones)
             : [];
@@ -54,6 +55,7 @@ export async function POST(req: Request) {
         const newService = await Service.create({
             name,
             details,
+            availability,
             milestones,
             ...(data.imageUrl && { imageUrl: data.imageUrl })
         });
@@ -97,6 +99,7 @@ export async function PATCH(req: Request) {
         }
 
         const { id, _id, name, details } = data;
+        const availability = data.availability === "coming_soon" ? "coming_soon" : "explore";
         const milestones: string[] = data.milestones
             ? (typeof data.milestones === 'string' ? JSON.parse(data.milestones) : data.milestones)
             : [];
@@ -129,7 +132,7 @@ export async function PATCH(req: Request) {
             }
         }
 
-        const updateData: any = { name, details, milestones };
+        const updateData: any = { name, details, availability, milestones };
         if (data.imageUrl) {
             updateData.imageUrl = data.imageUrl;
         }

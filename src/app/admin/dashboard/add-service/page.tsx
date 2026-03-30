@@ -13,6 +13,7 @@ export default function AddService() {
     const [formData, setFormData] = useState({
         name: "",
         details: "",
+        availability: "explore",
     });
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -57,6 +58,7 @@ export default function AddService() {
             const formDataToSend = new FormData();
             formDataToSend.append("name", formData.name);
             formDataToSend.append("details", formData.details);
+            formDataToSend.append("availability", formData.availability);
             formDataToSend.append("milestones", JSON.stringify(milestones));
             if (selectedFile) formDataToSend.append("image", selectedFile);
 
@@ -69,7 +71,7 @@ export default function AddService() {
             if (!response.ok) throw new Error(data.error || "Failed to create service");
 
             toast.success("Service created successfully!");
-            setFormData({ name: "", details: "" });
+            setFormData({ name: "", details: "", availability: "explore" });
             setMilestones([]);
             setImagePreview(null);
             setSelectedFile(null);
@@ -173,6 +175,45 @@ export default function AddService() {
                             placeholder="Detailed description of the service..."
                             className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-manima-red/20 focus:border-manima-red outline-none transition-all resize-none"
                         />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                            Service Visibility <span className="text-red-500">*</span>
+                        </label>
+                        <div className="grid gap-3 md:grid-cols-2">
+                            {[
+                                {
+                                    value: "explore",
+                                    label: "Explore",
+                                    description: "Visible to users and clickable for location selection, package selection, and payment."
+                                },
+                                {
+                                    value: "coming_soon",
+                                    label: "Coming Soon",
+                                    description: "Visible on the site but locked until you switch it live."
+                                }
+                            ].map((option) => (
+                                <label
+                                    key={option.value}
+                                    className={`cursor-pointer rounded-xl border px-4 py-4 transition-all ${formData.availability === option.value
+                                        ? "border-manima-red bg-red-50"
+                                        : "border-gray-200 bg-gray-50"
+                                        }`}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="availability"
+                                        value={option.value}
+                                        checked={formData.availability === option.value}
+                                        onChange={handleChange}
+                                        className="sr-only"
+                                    />
+                                    <div className="text-sm font-semibold text-gray-900">{option.label}</div>
+                                    <p className="mt-1 text-xs text-gray-500">{option.description}</p>
+                                </label>
+                            ))}
+                        </div>
                     </div>
 
                     {/* Milestones */}

@@ -32,7 +32,7 @@ export async function GET() {
         const _models = [Agent, Service, Location, Puja];
 
         const bookings = await Booking.find({ client: clientId as any })
-            .populate("service", "name")
+            .populate("service", "name milestones availability")
             .populate("location", "name")
             .populate("puja", "name location imageUrl")
             .populate("agent", "name phone")

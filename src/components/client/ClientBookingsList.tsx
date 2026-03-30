@@ -5,7 +5,7 @@ import { Loader2, Calendar, MapPin, ShieldCheck, Clock, User } from "lucide-reac
 
 interface Booking {
     _id: string;
-    service?: { name: string };
+    service?: { name: string; milestones?: string[] };
     location?: { name: string };
     puja?: { name: string; location: string };
     price: number;
@@ -156,6 +156,26 @@ export default function ClientBookingsList() {
 
                         {/* Divider */}
                         <div className="h-px bg-gray-50 my-5"></div>
+
+                        {booking.service?.milestones && booking.service.milestones.length > 0 && (
+                            <>
+                                <div className="space-y-3">
+                                    <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">Milestones</span>
+                                    <div className="space-y-2">
+                                        {booking.service.milestones.map((milestone, index) => (
+                                            <div key={`${booking._id}-${index}`} className="flex items-start gap-3">
+                                                <div className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-[#2C0E0F] text-[11px] font-bold text-[#DAA520]">
+                                                    {index + 1}
+                                                </div>
+                                                <p className="text-sm text-gray-600 leading-6">{milestone}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="h-px bg-gray-50 my-5"></div>
+                            </>
+                        )}
 
                         {/* Bottom Info */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

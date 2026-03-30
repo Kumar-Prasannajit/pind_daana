@@ -4,43 +4,65 @@ import React, { useState, useEffect } from "react";
 import { Loader2, ArrowRight, Sparkles, Filter } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-interface PujaService {
+interface Offering {
     _id: string;
     name: string;
-    significance: string;
+    significance?: string; // from type-puja
+    details?: string; // from service
     imageUrl?: string;
+    kind: "type-puja" | "service";
 }
 
 export default function SpecialPujasContent({ basePath }: { basePath?: string }) {
     const router = useRouter();
-    const [services, setServices] = useState<PujaService[]>([]);
+    const [offerings, setOfferings] = useState<Offering[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
-        const fetchServices = async () => {
+        const fetchOfferings = async () => {
             try {
-                const res = await fetch("/api/type-pujas");
-                if (res.ok) {
-                    const data = await res.json();
-                    setServices(data);
+                const [typePujasRes, servicesRes] = await Promise.all([
+                    fetch("/api/type-pujas"),
+                    fetch("/api/services"),
+                ]);
+
+                let combined: Offering[] = [];
+
+                if (typePujasRes.ok) {
+                    const data = await typePujasRes.json();
+                    const list = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+                    combined.push(...list.map((item: any) => ({ ...item, kind: "type-puja" as const })));
                 }
+
+                if (servicesRes.ok) {
+                    const data = await servicesRes.json();
+                    const list = Array.isArray(data) ? data : [];
+                    // Only show services that are not "coming_soon"
+                    combined.push(...list.filter((s: any) => s.availability !== "coming_soon").map((item: any) => ({ ...item, kind: "service" as const })));
+                }
+
+                setOfferings(combined);
             } catch (error) {
-                console.error("Error fetching services:", error);
+                console.error("Error fetching offerings:", error);
             } finally {
                 setLoading(false);
             }
         };
-        fetchServices();
+        fetchOfferings();
     }, []);
 
-    const handleServiceClick = (service: PujaService) => {
+    const handleOfferingClick = (offering: Offering) => {
         const path = basePath || "/pujas";
-        router.push(`${path}?serviceId=${service._id}&serviceName=${encodeURIComponent(service.name)}&serviceDesc=${encodeURIComponent(service.significance)}`);
+        if (offering.kind === "service") {
+            router.push(`${path}?serviceId=${offering._id}&type=service`);
+        } else {
+            router.push(`${path}?serviceId=${offering._id}&serviceName=${encodeURIComponent(offering.name)}&serviceDesc=${encodeURIComponent(offering.significance || "")}`);
+        }
     };
 
-    const filteredServices = services.filter((s) =>
-        s.name.toLowerCase().includes(searchQuery.toLowerCase())
+    const filteredOfferings = offerings.filter((o) =>
+        o.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     return (
@@ -69,11 +91,6 @@ export default function SpecialPujasContent({ basePath }: { basePath?: string })
                 <div className="container mx-auto px-4 py-4">
                     <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
                         {/* Results Count */}
-                        <div className="flex w-full md:w-auto items-center justify-center md:justify-start gap-2 bg-orange-50 text-[#D35400] px-4 py-2 rounded-full text-xs md:text-sm font-bold shadow-sm border border-orange-100 order-2 md:order-1">
-                            <span className="w-2 h-2 rounded-full bg-[#D35400] animate-pulse"></span>
-                            {filteredServices.length} {filteredServices.length === 1 ? "Service" : "Services"} Available
-                        </div>
-
                         {/* Dropdown Filter */}
                         <div className="relative w-full md:w-[240px] order-1 md:order-2 group">
                             <select
@@ -82,8 +99,8 @@ export default function SpecialPujasContent({ basePath }: { basePath?: string })
                                 className="w-full pl-9 pr-4 py-2.5 bg-white border-2 border-gray-100 rounded-xl text-sm font-bold text-gray-700 hover:border-[#F1C40F] focus:border-[#D35400] focus:ring-4 focus:ring-orange-50 transition-all outline-none cursor-pointer appearance-none shadow-sm"
                             >
                                 <option value="">All Services</option>
-                                {services.map(s => (
-                                    <option key={s._id} value={s.name}>{s.name}</option>
+                                {offerings.map(o => (
+                                    <option key={o._id} value={o.name}>{o.name}</option>
                                 ))}
                             </select>
                             <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#D35400] transition-colors pointer-events-none" size={14} />
@@ -111,7 +128,7 @@ export default function SpecialPujasContent({ basePath }: { basePath?: string })
                             </div>
                         ))}
                     </div>
-                ) : filteredServices.length === 0 ? (
+                ) : filteredOfferings.length === 0 ? (
                     <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200 mt-4 max-w-3xl mx-auto">
                         <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4">
                             <Filter className="text-[#D35400]" size={24} />
@@ -132,17 +149,17 @@ export default function SpecialPujasContent({ basePath }: { basePath?: string })
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8 max-w-7xl mx-auto">
-                        {filteredServices.map((service, index) => (
+                        {filteredOfferings.map((offering, index) => (
                             <div
-                                key={service._id}
-                                onClick={() => handleServiceClick(service)}
+                                key={offering._id}
+                                onClick={() => handleOfferingClick(offering)}
                                 className="group rounded-3xl p-8 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-500 border border-gray-100 cursor-pointer flex flex-col h-full relative overflow-hidden"
                             >
                                 {/* Background Image with Zoom Effect */}
                                 <div 
                                     className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
                                     style={{
-                                        backgroundImage: `url(${service.imageUrl || '/assets/marjana.jpeg'})`,
+                                        backgroundImage: `url(${offering.imageUrl || '/assets/marjana.jpeg'})`,
                                     }}
                                 ></div>
                                 
@@ -154,13 +171,13 @@ export default function SpecialPujasContent({ basePath }: { basePath?: string })
 
                                 <div className="flex-1 relative z-10">
                                     <h3 className="font-serif font-bold text-2xl text-white group-hover:text-[#FFD700] transition-colors mb-4 leading-tight">
-                                        {service.name}
+                                        {offering.name}
                                     </h3>
                                 </div>
 
                                 <div className="pt-8 mt-auto flex items-center justify-between relative z-10">
                                     <span className="text-sm font-bold text-white group-hover:underline underline-offset-4 pointer-events-none">
-                                        View Temples
+                                        {offering.kind === 'type-puja' ? 'View Temples' : 'Explore Packages'}
                                     </span>
                                     <div className="w-10 h-10 rounded-full bg-orange-50 text-[#D35400] flex items-center justify-center group-hover:bg-[#D35400] group-hover:text-white transition-all duration-300 transform group-hover:rotate-[-45deg] shadow-sm">
                                         <ArrowRight size={18} />

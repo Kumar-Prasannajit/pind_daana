@@ -3,6 +3,7 @@ import mongoose, { Schema, Model, Document } from "mongoose";
 export interface ILocation extends Document {
     name: string;
     description: string;
+    imageUrl?: string;
     city: string;
     state: string;
     services: {
@@ -24,6 +25,9 @@ const LocationSchema: Schema = new Schema({
         trim: true,
     },
     description: {
+        type: String,
+    },
+    imageUrl: {
         type: String,
     },
     city: {

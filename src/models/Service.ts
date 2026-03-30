@@ -4,6 +4,7 @@ export interface IService extends Document {
     name: string;
     details: string;
     imageUrl?: string;
+    availability: "explore" | "coming_soon";
     milestones: string[];
     createdAt: Date;
 }
@@ -23,6 +24,11 @@ const ServiceSchema: Schema = new Schema({
         type: String,
         required: false,
     },
+    availability: {
+        type: String,
+        enum: ["explore", "coming_soon"],
+        default: "explore",
+    },
     milestones: {
         type: [String],
         default: [],
@@ -33,6 +39,10 @@ const ServiceSchema: Schema = new Schema({
     },
 });
 
-const Service: Model<IService> = mongoose.models.Service || mongoose.model<IService>("Service", ServiceSchema);
+if (mongoose.models.Service) {
+    delete mongoose.models.Service;
+}
+
+const Service: Model<IService> = mongoose.model<IService>("Service", ServiceSchema);
 
 export default Service;

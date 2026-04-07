@@ -5,9 +5,9 @@ import { ArrowUpRight } from "lucide-react";
 import ServiceModal from "@/components/ServiceModal";
 
 const services = [
-  { name: "Sarva Kalyan Puja", price: 5999 },
-  { name: "Ekadashi Puja", price: 4999 },
-  { name: "Sankranti Puja", price: 4999 },
+  { name: "Sarva Kalyan Puja", price: 5999, image: "/assets/sarv_kalyan.jpeg" },
+  { name: "Ekadashi Puja", price: 4999, image: "/assets/ekadashi.jpeg" },
+  { name: "Sankranti Puja", price: 4999, image: "/assets/sankranti.jpeg" },
 ];
 
 export default function JagannathFeaturedSection() {
@@ -22,7 +22,7 @@ export default function JagannathFeaturedSection() {
               className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
               style={{
                 backgroundImage:
-                  "url('https://source.unsplash.com/800x600/?jagannath,temple')",
+                  "url('/assets/jagannath_Temple.jpeg')",
               }}
             />
             <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/45 to-[#5B2D12]/60" />
@@ -54,10 +54,10 @@ export default function JagannathFeaturedSection() {
                 className="group relative flex min-h-[190px] flex-col justify-between overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.07] p-5 text-left text-[#FDFAF0] shadow-[0_16px_35px_rgba(0,0,0,0.18)] backdrop-blur-md transition duration-300 hover:-translate-y-1 hover:bg-white/[0.11] hover:shadow-[0_20px_45px_rgba(0,0,0,0.24)] sm:p-6"
               >
                 <div
-                  className="absolute inset-0 opacity-20 transition duration-500 group-hover:opacity-30"
+                  className="absolute inset-0 opacity-20 transition duration-500 group-hover:opacity-40"
                   style={{
                     backgroundImage:
-                      "linear-gradient(180deg, rgba(255,255,255,0.18), transparent 55%), url('https://source.unsplash.com/400x300/?hindu,puja')",
+                      `linear-gradient(180deg, rgba(255,255,255,0.18), transparent 55%), url('${service.image}')`,
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                   }}

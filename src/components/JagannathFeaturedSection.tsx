@@ -5,9 +5,24 @@ import { ArrowUpRight } from "lucide-react";
 import ServiceModal from "@/components/ServiceModal";
 
 const services = [
-  { name: "Sarva Kalyan Puja", price: 5999, image: "/assets/sarv_kalyan.jpeg" },
-  { name: "Ekadashi Puja", price: 4999, image: "/assets/ekadashi.jpeg" },
-  { name: "Sankranti Puja", price: 4999, image: "/assets/sankranti.jpeg" },
+  {
+    name: "Sarva Kalyan Puja",
+    price: 5999,
+    image: "/assets/sarv_kalyan.jpeg",
+    position: "center",
+  },
+  {
+    name: "Ekadashi Puja",
+    price: 4999,
+    image: "/assets/ekadashi.jpeg",
+    position: "center",
+  },
+  {
+    name: "Sankranti Puja",
+    price: 4999,
+    image: "/assets/sankranti.jpeg",
+    position: "center",
+  },
 ];
 
 export default function JagannathFeaturedSection() {
@@ -15,20 +30,22 @@ export default function JagannathFeaturedSection() {
 
   return (
     <>
-      <div className="mb-6 overflow-hidden rounded-[2rem] border border-[#C9B7A4]/60 bg-[linear-gradient(135deg,_#2A1C14_0%,_#1B120D_45%,_#2D1F15_100%)] p-4 shadow-[0_22px_60px_rgba(72,43,20,0.16)] sm:rounded-[2.25rem] sm:p-6 lg:p-7">
+      <div className="mb-6 overflow-hidden rounded-[2rem] border border-[#C9B7A4]/55 bg-[radial-gradient(circle_at_top,_rgba(245,211,137,0.18),_transparent_30%),linear-gradient(135deg,_#2A1C14_0%,_#1B120D_45%,_#2D1F15_100%)] p-4 shadow-[0_26px_80px_rgba(72,43,20,0.22)] sm:rounded-[2.25rem] sm:p-6 lg:p-7">
         <div className="grid gap-4 lg:grid-cols-[minmax(300px,1.15fr)_minmax(0,1.85fr)]">
-          <div className="group relative min-h-[320px] overflow-hidden rounded-[1.75rem]">
+          <div className="group relative min-h-[320px] overflow-hidden rounded-[1.75rem] border border-white/8 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
             <div
-              className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+              className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-[1.06]"
               style={{
                 backgroundImage:
                   "url('/assets/jagannath_Temple.jpeg')",
               }}
             />
-            <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/45 to-[#5B2D12]/60" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_22%,rgba(255,214,140,0.26),transparent_24%),linear-gradient(110deg,rgba(12,8,6,0.82)_8%,rgba(18,11,8,0.38)_45%,rgba(91,45,18,0.48)_100%)]" />
+            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#150C08]/90 via-[#150C08]/35 to-transparent" />
+            <div className="absolute inset-0 opacity-35 mix-blend-screen bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.16),transparent_34%)]" />
 
             <div className="relative flex h-full flex-col justify-between p-6 text-[#FDFAF0] sm:p-8">
-              <span className="inline-flex w-fit rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.3em] backdrop-blur-md">
+              <span className="inline-flex w-fit rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.3em] shadow-[0_10px_25px_rgba(0,0,0,0.16)] backdrop-blur-md">
                 Sacred Spotlight
               </span>
 
@@ -51,22 +68,27 @@ export default function JagannathFeaturedSection() {
                 key={service.name}
                 type="button"
                 onClick={() => setSelectedService(service)}
-                className="group relative flex min-h-[190px] flex-col justify-between overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.07] p-5 text-left text-[#FDFAF0] shadow-[0_16px_35px_rgba(0,0,0,0.18)] backdrop-blur-md transition duration-300 hover:-translate-y-1 hover:bg-white/[0.11] hover:shadow-[0_20px_45px_rgba(0,0,0,0.24)] sm:p-6"
+                className="group relative flex min-h-[190px] flex-col justify-between overflow-hidden rounded-[1.75rem] border border-white/12 bg-white/[0.08] p-5 text-left text-[#FDFAF0] shadow-[0_18px_38px_rgba(0,0,0,0.2)] backdrop-blur-md transition duration-300 hover:-translate-y-1 hover:bg-white/[0.11] hover:shadow-[0_22px_52px_rgba(0,0,0,0.28)] sm:p-6"
               >
                 <div
-                  className="absolute inset-0 opacity-20 transition duration-500 group-hover:opacity-40"
+                  className="absolute inset-0 scale-100 opacity-[0.68] transition duration-500 group-hover:scale-[1.04] group-hover:opacity-[0.78]"
                   style={{
-                    backgroundImage:
-                      `linear-gradient(180deg, rgba(255,255,255,0.18), transparent 55%), url('${service.image}')`,
+                    backgroundImage: `url('${service.image}')`,
                     backgroundSize: "cover",
-                    backgroundPosition: "center",
+                    backgroundPosition: service.position,
                   }}
                 />
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,_rgba(255,255,255,0.05),_rgba(0,0,0,0.12))]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,244,214,0.22),transparent_30%),linear-gradient(180deg,rgba(20,12,7,0.16)_0%,rgba(20,12,7,0.38)_52%,rgba(20,12,7,0.72)_100%)]" />
+                <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.12)_0%,transparent_38%,rgba(255,215,145,0.08)_100%)] mix-blend-screen opacity-80" />
+                <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/35 to-transparent" />
 
                 <div className="relative space-y-3">
-                  <h3 className="text-xl font-semibold leading-snug text-white">{service.name}</h3>
-                  <p className="text-2xl font-semibold text-[#F6D58C]">&#8377;{service.price}</p>
+                  <h3 className="text-xl font-semibold leading-snug text-white drop-shadow-[0_8px_24px_rgba(0,0,0,0.42)]">
+                    {service.name}
+                  </h3>
+                  <p className="text-2xl font-semibold text-[#F6D58C] drop-shadow-[0_6px_18px_rgba(0,0,0,0.32)]">
+                    &#8377;{service.price}
+                  </p>
                 </div>
 
                 <div className="relative flex items-center justify-between gap-3">

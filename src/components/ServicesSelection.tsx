@@ -298,16 +298,16 @@ export default function ServicesSelection({
                         <button
                             type="button"
                             onClick={() => setIsPackagesOpen(false)}
-                            className="absolute right-6 top-6 z-20 rounded-full bg-black/5 hover:bg-[#D35400] p-3 text-black hover:text-white transition-all duration-300 hover:rotate-90 group shadow-sm"
+                            className="absolute right-4 top-4 md:right-6 md:top-6 z-20 rounded-full bg-white/20 backdrop-blur-md p-3 text-white border border-white/30 hover:bg-[#D35400] transition-all duration-300 hover:rotate-90 group shadow-lg"
                         >
                             <X size={20} />
                         </button>
 
-                        <div className="grid max-h-[92vh] grid-cols-1 overflow-y-auto lg:grid-cols-[0.9fr_1.1fr] custom-scrollbar">
-                            <div className="relative min-h-[400px] lg:h-auto bg-[#2C0E0F] overflow-hidden">
+                        <div className="flex flex-col max-h-[92vh] overflow-y-auto scrollbar-hide">
+                            <div className="relative min-h-[350px] md:min-h-[450px] bg-[#2C0E0F] overflow-hidden shrink-0">
                                 <div
                                     className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 scale-105"
-                                    style={{ backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%), url(${activeLocation.imageUrl || "/assets/marjana.jpeg"})` }}
+                                    style={{ backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.8) 100%), url(${activeLocation.imageUrl || "/assets/marjana.jpeg"})` }}
                                 />
                                 <div className="relative flex h-full flex-col justify-end p-10 md:p-14 text-white">
                                     <div className="flex items-center gap-3 mb-6">
@@ -344,11 +344,11 @@ export default function ServicesSelection({
                                     </div>
                                 </div>
 
-                                <div className="grid gap-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
                                     {activePackages.map((pkg, index) => (
                                         <div
                                             key={index}
-                                            className={`group relative flex flex-col md:flex-row md:items-center justify-between rounded-[2.5rem] border-2 p-8 transition-all duration-300 ${pkg.recommended 
+                                            className={`group relative flex flex-col justify-between rounded-[2.5rem] border-2 p-8 transition-all duration-300 ${pkg.recommended 
                                                 ? "border-[#D35400] bg-white shadow-[0_20px_50px_rgba(211,84,0,0.1)] ring-1 ring-[#D35400]/20" 
                                                 : "border-[#E5E7EB] bg-white hover:border-[#D35400]/30 hover:shadow-xl"}`}
                                         >
@@ -365,7 +365,7 @@ export default function ServicesSelection({
                                                     <span className="text-3xl font-black text-[#2C0E0F]">₹{pkg.price.toLocaleString("en-IN")}</span>
                                                     <span className="text-gray-400 text-sm font-medium">/ ritual</span>
                                                 </div>
-                                                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-4">
+                                                <ul className="flex flex-col gap-y-3 mb-8">
                                                     {pkg.features.map((feature, featureIndex) => (
                                                         <li key={featureIndex} className="flex items-start gap-2.5 text-sm text-[#4B5563]">
                                                             <div className="mt-1 flex-shrink-0 w-4 h-4 rounded-full bg-[#D35400]/10 flex items-center justify-center text-[#D35400]">
@@ -377,11 +377,11 @@ export default function ServicesSelection({
                                                 </ul>
                                             </div>
 
-                                            <div className="mt-8 md:mt-0 md:ml-8 flex flex-col items-center">
+                                            <div className="mt-auto flex flex-col items-center pt-6 border-t border-gray-100">
                                                 <button
                                                     type="button"
                                                     onClick={() => handleBookNow(pkg)}
-                                                    className={`w-full md:w-auto inline-flex items-center justify-center gap-3 rounded-2xl px-10 py-5 font-bold text-center transition-all duration-300 transform active:scale-95 ${pkg.recommended 
+                                                    className={`w-full inline-flex items-center justify-center gap-3 rounded-2xl px-10 py-5 font-bold text-center transition-all duration-300 transform active:scale-95 ${pkg.recommended 
                                                         ? "bg-[#D35400] text-white shadow-lg shadow-[#D35400]/30 hover:bg-[#B84A00] hover:-translate-y-1" 
                                                         : "bg-[#2C0E0F] text-white hover:bg-[#1A1A1A] hover:-translate-y-1"}`}
                                                 >

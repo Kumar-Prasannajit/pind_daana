@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import JagannathFeaturedSection from "@/components/JagannathFeaturedSection";
 
 interface TypePuja {
     _id: string;
@@ -88,6 +89,8 @@ export default function HomeFeaturedOfferings() {
                         Select the puja or ritual that feels right for you from our curated list of temples and services.
                     </p>
                 </div>
+
+                <JagannathFeaturedSection />
 
                 {loading ? (
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

@@ -154,6 +154,17 @@ export default function ServiceModal({ isOpen, onClose, service }: ServiceModalP
                 Book Now
               </button>
             </div>
+
+            <div className="flex items-start gap-2.5 rounded-xl border border-[#DAA520]/20 bg-[#DAA520]/[0.06] px-4 py-3">
+              <span className="mt-0.5 shrink-0 text-[#DAA520]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+              </span>
+              <p className="text-[11px] leading-relaxed text-white/50">
+                As per the sacred rules and regulations of Jagannath Temple, Puri, video recording and photography inside the temple premises are strictly prohibited. Therefore, devotional video updates and geotagged visuals will be captured and shared from outside the temple premises before the puja is performed.
+              </p>
+            </div>
           </div>
         </div>
       </div>

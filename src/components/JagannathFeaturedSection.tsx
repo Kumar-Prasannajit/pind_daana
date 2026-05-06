@@ -134,22 +134,22 @@ export default function JagannathFeaturedSection() {
                     <h3 className="text-xl font-semibold leading-snug text-white drop-shadow-[0_8px_24px_rgba(0,0,0,0.42)]">
                       {service.name}
                     </h3>
-                    <p className="text-2xl font-semibold text-[#F6D58C] drop-shadow-[0_6px_18px_rgba(0,0,0,0.32)]">
-                      {service.pricing && service.pricing.length > 0 ? (
-                        <>
-                          {service.pricing.length > 1 && <span className="text-sm text-white/70 mr-1">Starting at</span>}
-                          &#8377;{Math.min(...service.pricing.map(p => p.amount))}
-                        </>
-                      ) : (
-                        "Price on request"
-                      )}
-                    </p>
+
                   </div>
 
-                  <div className="relative flex items-center justify-between gap-3">
-                    <span className="inline-flex items-center justify-center rounded-full border border-[#F0D8A0]/35 bg-[#F0D8A0]/10 px-4 py-2 text-sm font-semibold text-[#FFF7E4] transition group-hover:bg-[#F0D8A0]/15">
-                      Explore
-                    </span>
+                  <div className="relative flex items-end justify-between gap-3">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[8px] font-medium text-white/55 uppercase tracking-widest leading-none pl-4">
+                        just at
+                      </span>
+                      <span className="inline-flex items-center rounded-full border border-[#F0D8A0]/35 bg-[#F0D8A0]/10 px-4 py-2 transition group-hover:bg-[#F0D8A0]/15">
+                        <span className="text-sm font-semibold text-[#F6D58C]">
+                          {service.pricing && service.pricing.length > 0
+                            ? `₹${Math.min(...service.pricing.map((p) => p.amount))}`
+                            : "Price on request"}
+                        </span>
+                      </span>
+                    </div>
                     <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:bg-white/15">
                       <ArrowUpRight size={18} />
                     </span>

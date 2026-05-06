@@ -23,6 +23,8 @@ function CheckoutContent() {
     const locationId = searchParams.get('locationId');
     const packageName = searchParams.get('packageName');
     const pujaId = searchParams.get('pujaId'); // NEW
+    const source = searchParams.get('source');
+    const urlPrice = searchParams.get('price');
 
     // State
     const [client, setClient] = useState<ClientProfile | null>(null);
@@ -125,6 +127,18 @@ function CheckoutContent() {
                 const userData = await userRes.json();
                 setClient(userData);
 
+                // --- NEW: Puri Puja Flow ---
+                if (source === 'puri-puja') {
+                    setServiceName("Jagannath Temple, Puri");
+                    setLocationName("Puri");
+                    if (urlPrice) {
+                        setFetchedPrice(Number(urlPrice));
+                    }
+                    setLoading(false);
+                    return;
+                }
+                // -----------------------------
+
                 // --- NEW: Puja Booking Flow ---
                 if (pujaId) {
                     const pRes = await fetchWithRetry('/api/puja');
@@ -219,7 +233,7 @@ function CheckoutContent() {
         };
 
         initCheckout();
-    }, [router, serviceId, locationId, packageName, pujaId]);
+    }, [router, serviceId, locationId, packageName, pujaId, source, urlPrice]);
 
     const handlePayment = async () => {
 

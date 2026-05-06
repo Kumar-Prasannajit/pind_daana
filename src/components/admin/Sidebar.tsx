@@ -45,6 +45,7 @@ export default function Sidebar() {
         { href: "/admin/dashboard/add-pandit", label: "Add Pandit", icon: UserCog },
         { href: "/admin/dashboard/services", label: "All Services", icon: PackagePlus },
         { href: "/admin/dashboard/type-pujas", label: "Type Puja", icon: PackagePlus },
+        { href: "/admin/dashboard/puri-pujas", label: "Puri Pujas", icon: PackagePlus },
         { href: "/admin/dashboard/pujas", label: "All Temples", icon: PackagePlus },
         { href: "/admin/dashboard/coupons", label: "Coupons", icon: Tag },
     ];

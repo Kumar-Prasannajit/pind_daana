@@ -1,20 +1,58 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface ServiceModalProps {
   isOpen: boolean;
   onClose: () => void;
   service: {
     name: string;
-    price: number;
+    pricing: { name: string; amount: number }[];
+    significance?: string;
   } | null;
 }
 
 export default function ServiceModal({ isOpen, onClose, service }: ServiceModalProps) {
-  if (!isOpen || !service) {
+  const router = useRouter();
+  const [selectedPackage, setSelectedPackage] = useState<{ name: string; amount: number } | null>(null);
+
+  useEffect(() => {
+    if (service && service.pricing && service.pricing.length > 0) {
+      setSelectedPackage(service.pricing[0]);
+    } else {
+      setSelectedPackage(null);
+    }
+  }, [service]);
+
+  if (!isOpen || !service || !selectedPackage) {
     return null;
   }
+
+  const handleBookNow = () => {
+    const hasAuthCookie = document.cookie
+      .split(";")
+      .some((item) => item.trim().startsWith("client_auth_status="));
+
+    const fullPackageName = selectedPackage.name === "Standard" 
+      ? service.name 
+      : `${service.name} (${selectedPackage.name})`;
+
+    const queryParams = new URLSearchParams({
+      packageName: fullPackageName,
+      price: String(selectedPackage.amount),
+      source: "puri-puja",
+    }).toString();
+
+    const checkoutUrl = `/checkout?${queryParams}`;
+
+    if (hasAuthCookie) {
+      router.push(checkoutUrl);
+    } else {
+      router.push(`/client/login?redirect=${encodeURIComponent(checkoutUrl)}`);
+    }
+  };
 
   return (
     <div
@@ -58,19 +96,59 @@ export default function ServiceModal({ isOpen, onClose, service }: ServiceModalP
             </div>
 
             <p className="max-w-xl text-sm leading-7 text-white/80 sm:text-base">
-              A sacred temple ritual curated for peace, blessings, and spiritual wellbeing. This is a
-              preview offering for the Jagannath Temple experience and will be connected to booking
-              flows later.
+              {service.significance ? service.significance : (
+                <>
+                  A sacred temple ritual curated for peace, blessings, and spiritual wellbeing. This is a
+                  preview offering for the Jagannath Temple experience and will be connected to booking
+                  flows later.
+                </>
+              )}
             </p>
+
+            {service.pricing.length > 1 ? (
+              <div className="space-y-3 mt-4">
+                <p className="text-sm font-medium text-white/90 mb-2">Select Package</p>
+                {service.pricing.map((pkg, idx) => (
+                  <label
+                    key={idx}
+                    onClick={() => setSelectedPackage(pkg)}
+                    className={`flex cursor-pointer items-center justify-between rounded-xl border p-4 transition-all ${
+                      selectedPackage.name === pkg.name
+                        ? "border-[#DAA520] bg-[#DAA520]/10"
+                        : "border-white/10 bg-white/5 hover:bg-white/10"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`flex h-5 w-5 items-center justify-center rounded-full border ${
+                          selectedPackage.name === pkg.name
+                            ? "border-[#DAA520]"
+                            : "border-white/40"
+                        }`}
+                      >
+                        {selectedPackage.name === pkg.name && (
+                          <div className="h-2.5 w-2.5 rounded-full bg-[#DAA520]" />
+                        )}
+                      </div>
+                      <span className="text-white/90">{pkg.name}</span>
+                    </div>
+                    <span className="font-semibold text-[#F7D58B]">&#8377;{pkg.amount}</span>
+                  </label>
+                ))}
+              </div>
+            ) : null}
 
             <div className="flex flex-col gap-4 rounded-[1.5rem] border border-white/10 bg-white/5 p-5 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.28em] text-white/55">Offering Price</p>
-                <p className="mt-2 text-3xl font-semibold text-[#F7D58B]">&#8377;{service.price}</p>
+                <p className="text-xs uppercase tracking-[0.28em] text-white/55">
+                  {service.pricing.length > 1 ? "Selected Price" : "Offering Price"}
+                </p>
+                <p className="mt-2 text-3xl font-semibold text-[#F7D58B]">&#8377;{selectedPackage.amount}</p>
               </div>
 
               <button
                 type="button"
+                onClick={handleBookNow}
                 className="inline-flex items-center justify-center rounded-full bg-[#DAA520] px-6 py-3 text-sm font-semibold text-[#2C1A0F] transition hover:bg-[#E5B93D]"
               >
                 Book Now

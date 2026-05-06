@@ -463,7 +463,7 @@ export default function PujaServicesContent({
             {/* Puja Details Modal - Enhanced */}
             {selectedPuja && (
                 <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center sm:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-white w-full max-w-6xl h-[90vh] sm:h-auto sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300 relative border border-white/20">
+                    <div className="bg-white w-full max-w-5xl h-[90vh] sm:h-auto sm:max-h-[90vh] md:h-[85vh] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300 relative border border-white/20">
                         {/* Close Button */}
                         <button
                             onClick={() => setSelectedPuja(null)}
@@ -473,7 +473,7 @@ export default function PujaServicesContent({
                         </button>
 
                         {/* Left: Image (Top on Mobile) */}
-                        <div className="w-full md:w-1/2 h-64 md:h-auto bg-gray-200 relative group shrink-0">
+                        <div className="w-full md:w-1/2 h-64 md:h-full bg-gray-200 relative group shrink-0">
                             <img
                                 src={selectedPuja.imageUrl}
                                 alt={selectedPuja.name}
@@ -494,7 +494,7 @@ export default function PujaServicesContent({
                         </div>
 
                         {/* Right: Details & Packages (Bottom on Mobile) */}
-                        <div className="w-full md:w-1/2 flex flex-col h-full bg-white relative overflow-hidden">
+                        <div className="w-full md:w-1/2 flex flex-col min-h-0 md:h-full bg-white relative overflow-hidden">
                             {/* Scrollable Content */}
                             <div className="p-6 md:p-8 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
                                 <div className="mb-4">

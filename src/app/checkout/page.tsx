@@ -32,7 +32,7 @@ function CheckoutContent() {
     const [locationName, setLocationName] = useState("");
     const [loading, setLoading] = useState(true);
     const [verifying, setVerifying] = useState(false);
-    const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'qr'>('qr'); // Default to QR
+    const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'qr'>('razorpay'); // Default to Razorpay
     const [isProcessing, setIsProcessing] = useState(false);
     const [fetchedPrice, setFetchedPrice] = useState<number>(0);
 
@@ -458,7 +458,7 @@ function CheckoutContent() {
                             </h2>
 
                             <div className="space-y-4">
-                                {/* QR Code Option - NOW FIRST */}
+                                {/* QR Code Option - NOW FIRST
                                 <label
                                     className={`relative flex items-center p-5 border-2 rounded-xl cursor-pointer transition-all duration-200 group ${paymentMethod === 'qr'
                                         ? 'border-[#D35400] bg-orange-50/30'
@@ -480,6 +480,7 @@ function CheckoutContent() {
                                         <ScanLine className="text-[#D35400]" size={28} />
                                     </div>
                                 </label>
+                                */}
 
                                 {/* Razorpay Option - NOW SECOND */}
                                 <label
@@ -498,14 +499,13 @@ function CheckoutContent() {
                                     <div className="flex-1">
                                         <div className="flex items-center justify-between mb-1">
                                             <span className="font-bold text-gray-800 text-lg">Razorpay</span>
-                                            <span className="text-[10px] font-bold text-white bg-[#3399CC] px-2 py-1 rounded-full uppercase tracking-wider">Fastest</span>
                                         </div>
                                         <p className="text-sm text-gray-500">Credit/Debit Card, UPI, NetBanking</p>
                                     </div>
                                     <div className="hidden md:block opacity-80 pl-4 border-l border-gray-200 ml-4">
-                                        <div className="flex gap-2">
-                                            <div className="w-8 h-5 bg-gray-200 rounded"></div>
-                                            <div className="w-8 h-5 bg-gray-200 rounded"></div>
+                                        <div className="flex gap-3">
+                                            <CreditCard size={24} className="text-gray-400" />
+                                            <ShieldCheck size={24} className="text-green-600" />
                                         </div>
                                     </div>
                                 </label>

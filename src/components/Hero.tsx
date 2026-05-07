@@ -154,7 +154,14 @@ const Hero = () => {
 
         <div className="mb-14">
           <button
-            onClick={() => router.push("/client/signup")}
+            onClick={() => {
+              const hasAuthCookie = document.cookie.split(';').some((item) => item.trim().startsWith('client_auth_status='));
+              if (hasAuthCookie) {
+                router.push("/client/dashboard/bookpuja");
+              } else {
+                router.push("/client/signup");
+              }
+            }}
             className="px-6 py-4 rounded font-semibold bg-[#D35400] hover:bg-[#E67E22] transition-colors"
           >
             Book Ritual Now

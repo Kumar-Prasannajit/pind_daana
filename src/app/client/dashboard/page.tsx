@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import {
     User, Mail, Phone, MapPin, Loader2, Calendar,
     Clock, LogOut, LayoutDashboard, Settings,
-    HelpCircle, Bell, ChevronDown, ShieldCheck, Search, Menu, X
+    HelpCircle, Bell, ChevronDown, ShieldCheck, Search, Menu, X, Home
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
@@ -110,10 +110,10 @@ export default function ClientDashboard() {
     if (!client) return null;
 
     const navItems = [
+        { id: "home", label: "Home", icon: Home },
         { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
         { id: "bookings", label: "My Bookings", icon: Calendar },
-        { id: "history", label: "History", icon: Clock },
-        { id: "profile", label: "My Profile", icon: User },
+        { id: "profile", label: "Account", icon: User },
         { id: "support", label: "Support", icon: HelpCircle },
     ];
 
@@ -335,8 +335,12 @@ export default function ClientDashboard() {
                         <button
                             key={item.id}
                             onClick={() => {
-                                setActiveTab(item.id);
-                                setIsSidebarOpen(false);
+                                if (item.id === "home") {
+                                    window.location.href = "/";
+                                } else {
+                                    setActiveTab(item.id);
+                                    setIsSidebarOpen(false);
+                                }
                             }}
                             className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-200 group text-left ${activeTab === item.id
                                 ? "bg-[#DAA520] text-[#2C0E0F] shadow-lg font-semibold"

@@ -48,7 +48,7 @@ function ClientLoginContent() {
             // Redirect to destination or client dashboard
             window.dispatchEvent(new Event("auth-change"));
 
-            const redirectUrl = searchParams.get("redirect") || "/client/dashboard";
+            const redirectUrl = searchParams.get("redirect") || "/";
             router.push(redirectUrl);
             router.refresh();
         } catch (err: any) {

@@ -35,11 +35,6 @@ export default async function Home() {
     if (isValid) redirect("/agent/dashboard");
   }
 
-  // Verify Client Token
-  if (clientToken) {
-    const isValid = await verifyToken(clientToken, process.env.JWT_SECRET || "default_secret");
-    if (isValid) redirect("/client/dashboard");
-  }
 
   return (
     <>

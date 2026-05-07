@@ -66,7 +66,7 @@ function CheckoutContent() {
     // If discount is applied on base price: (Base - Discount) + GST
     // Let's assume discount reduces taxable amount.
     const taxableAmount = Math.max(0, basePrice - discountAmount);
-    const gstRate = paymentMethod === 'razorpay' ? 0.18 : 0;
+    const gstRate = 0;
     const gstAmount = taxableAmount * gstRate;
     const totalAmount = taxableAmount + gstAmount;
 
@@ -501,7 +501,6 @@ function CheckoutContent() {
                                             <span className="text-[10px] font-bold text-white bg-[#3399CC] px-2 py-1 rounded-full uppercase tracking-wider">Fastest</span>
                                         </div>
                                         <p className="text-sm text-gray-500">Credit/Debit Card, UPI, NetBanking</p>
-                                        <p className="text-xs text-[#D35400] mt-1 font-medium bg-orange-50 inline-block px-2 py-0.5 rounded">+18% GST Applicable</p>
                                     </div>
                                     <div className="hidden md:block opacity-80 pl-4 border-l border-gray-200 ml-4">
                                         <div className="flex gap-2">
@@ -514,9 +513,9 @@ function CheckoutContent() {
                         </div>
                     </div>
 
-                    {/* Right Column: Order Summary (Sticky) */}
+                    {/* Right Column: Order Summary */}
                     <div className="lg:col-span-1">
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 sticky top-28 relative overflow-hidden">
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 h-full flex flex-col justify-between relative overflow-hidden">
                             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#D35400] to-[#F1C40F]"></div>
 
                             <div>

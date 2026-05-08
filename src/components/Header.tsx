@@ -105,15 +105,17 @@ const Header: React.FC<HeaderProps> = ({ onOpenPuja }) => {
                 <div className="container mx-auto px-6 flex justify-between items-center">
 
                     <div className="flex items-center">
-                        <Image
-                            id="header-logo"
-                            src="/assets/manima_logo.png"
-                            alt="Manima Logo"
-                            width={180}
-                            height={50}
-                            className={`h-[35px] md:h-[50px] w-auto transition-opacity duration-300 ${!isHome && !mobileMenuOpen ? 'opacity-100' : 'opacity-0'}`}
-                            unoptimized
-                        />
+                        <a href="https://manimaonline.com" target="_blank" rel="noopener noreferrer">
+                            <Image
+                                id="header-logo"
+                                src="/assets/manima_logo.png"
+                                alt="Manima Logo"
+                                width={180}
+                                height={50}
+                                className={`h-[35px] md:h-[50px] w-auto transition-opacity duration-300 ${!isHome && !mobileMenuOpen ? 'opacity-100' : 'opacity-0'}`}
+                                unoptimized
+                            />
+                        </a>
                     </div>
 
                     {/* Desktop Menu */}
@@ -212,14 +214,16 @@ const Header: React.FC<HeaderProps> = ({ onOpenPuja }) => {
                 >
                     {/* Logo in Menu */}
                     <div className="mb-8">
-                        <Image
-                            src="/assets/manima_logo.png"
-                            alt="Manima"
-                            width={160}
-                            height={50}
-                            className="h-[50px] w-auto"
-                            unoptimized
-                        />
+                        <a href="https://manimaonline.com" target="_blank" rel="noopener noreferrer">
+                            <Image
+                                src="/assets/manima_logo.png"
+                                alt="Manima"
+                                width={160}
+                                height={50}
+                                className="h-[50px] w-auto"
+                                unoptimized
+                            />
+                        </a>
                     </div>
 
                     {/* Menu Links */}

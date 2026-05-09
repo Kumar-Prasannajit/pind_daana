@@ -7,6 +7,7 @@ import Footer from './Footer';
 import PujaModal from './PujaModal';
 import Loader from './Loader';
 import CouponStack from './CouponStack';
+import FloatingWhatsApp from './FloatingWhatsApp';
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
     const [openPujaModal, setOpenPujaModal] = useState(false);
@@ -50,6 +51,9 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
 
             {/* GLOBAL COUPON NOTIFICATIONS */}
             <CouponStack />
+
+            {/* Floating WhatsApp Action Button */}
+            <FloatingWhatsApp />
         </div>
     );
 };

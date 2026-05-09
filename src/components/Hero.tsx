@@ -2,6 +2,7 @@
 
 import React, { useState, useLayoutEffect, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import PujaModal from "./PujaModal";
@@ -128,10 +129,8 @@ const Hero = () => {
     >
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-[#D35400]/30 z-10" />
 
-      <a
-        href="https://manimaonline.com"
-        target="_blank"
-        rel="noopener noreferrer"
+      <Link
+        href="/"
         className="fixed z-[99] pointer-events-auto" // Added pointer-events-auto
       >
         <img
@@ -140,7 +139,7 @@ const Hero = () => {
           alt="Manima Logo"
           className="h-auto drop-shadow-2xl"
         />
-      </a>
+      </Link>
 
       <div className="relative z-20 max-w-4xl md:ml-auto md:mr-[15%] flex flex-col items-center text-center px-6 md:px-0 pt-24">
         <div

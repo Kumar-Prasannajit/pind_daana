@@ -162,7 +162,7 @@ export default function ServiceModal({ isOpen, onClose, service }: ServiceModalP
                 </svg>
               </span>
               <p className="text-[11px] leading-relaxed text-white/50">
-                As per the sacred rules and regulations of Jagannath Temple, Puri, video recording and photography inside the temple premises are strictly prohibited. Therefore, devotional video updates and geotagged visuals will be captured and shared from outside the temple premises before the puja is performed.
+                Due to the sacred rules and regulations of the Jagannath Temple, photography and video recording inside the temple premises are strictly prohibited. Therefore, one of the Manima representatives will visit the temple on your behalf to perform the puja and respectfully record devotional video updates and geotagged visuals from outside the temple premises and share them with the devotee. The puja will be performed as per temple traditions, however, only videos captured from outside the temple premises can be provided, as shooting inside the temple is not permitted.
               </p>
             </div>
           </div>

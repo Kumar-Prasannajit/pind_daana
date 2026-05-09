@@ -25,16 +25,16 @@ export async function PUT(req: Request) {
 
         const clientId = decoded.clientId;
         const body = await req.json();
-        const { name, phone, address } = body;
+        const { name, address } = body;
 
         // Validation
-        if (!name || !phone) {
-            return NextResponse.json({ error: "Name and Phone are required" }, { status: 400 });
+        if (!name) {
+            return NextResponse.json({ error: "Name is required" }, { status: 400 });
         }
 
         const updatedClient = await Client.findByIdAndUpdate(
             clientId,
-            { name, phone, address },
+            { name, address },
             { new: true, runValidators: true }
         ).select("-password");
 

@@ -17,7 +17,7 @@ export async function GET() {
         const token = cookieStore.get("client_token")?.value;
         if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        const secret = new TextEncoder().encode(process.env.JWT_SECRET || "default_secret");
+        const secret = new TextEncoder().encode(process.env.JWT_SECRET || "your-secret-key");
         let clientId;
         try {
             const { payload } = await jwtVerify(token, secret);

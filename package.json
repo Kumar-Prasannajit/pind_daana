@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@fortawesome/react-fontawesome": "^3.2.0",
+    "@supabase/ssr": "^0.10.3",
+    "@supabase/supabase-js": "^2.105.4",
     "@types/jsonwebtoken": "^9.0.10",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.2.3",

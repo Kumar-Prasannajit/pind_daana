@@ -8,6 +8,7 @@ export interface IClient extends Document {
     is_verified: boolean;
     address?: string;
     isBooked: boolean;
+    authProvider?: string;
     createdAt: Date;
 }
 
@@ -48,6 +49,11 @@ const ClientSchema: Schema = new Schema({
     isBooked: {
         type: Boolean,
         default: false,
+    },
+    authProvider: {
+        type: String,
+        enum: ['otp', 'google', 'facebook'],
+        default: 'otp'
     },
     createdAt: { 
         type: Date, 

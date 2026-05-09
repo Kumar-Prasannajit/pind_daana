@@ -3,7 +3,7 @@ import React from "react";
 
 const FloatingWhatsApp = () => {
   // Replace with the actual WhatsApp number you want to use
-  const phoneNumber = "919999999999"; 
+  const phoneNumber = "918280638830"; 
   const defaultMessage = "Hi! I would like to know more about your rituals and services.";
   
   const encodedMessage = encodeURIComponent(defaultMessage);

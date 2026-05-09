@@ -4,47 +4,70 @@ export interface IPendingClient extends Document {
     name: string;
     email: string;
     phone: string;
-    password: string;
-    otp: string;
-    otpExpiry: Date;
+    whatsapp_number: string;
+    ref_id: string;
+    otp_hash: string;
+    otp_attempts: number;
+    can_resend_at: Date;
     createdAt: Date;
 }
 
 const PendingClientSchema: Schema = new Schema({
-    name: {
-        type: String,
-        required: [true, "Please provide a client name"],
-        trim: true,
+    name: { 
+        type: String, 
+        required: true, 
+        trim: true, 
+        minlength: 2, 
+        maxlength: 100 
     },
-    email: {
-        type: String,
-        required: [true, "Please provide an email"],
-        unique: true,
-        trim: true,
-        lowercase: true,
+    email: { 
+        type: String, 
+        required: true, 
+        lowercase: true, 
+        trim: true 
     },
-    phone: {
-        type: String,
-        required: [true, "Please provide a phone number"],
+    phone: { 
+        type: String, 
+        required: true, 
+        trim: true 
     },
-    password: {
-        type: String,
-        required: [true, "Please provide a password"],
+    whatsapp_number: { 
+        type: String, 
+        required: true, 
+        trim: true 
     },
-    otp: {
-        type: String,
-        required: true,
+    ref_id: { 
+        type: String, 
+        required: true, 
+        unique: true 
     },
-    otpExpiry: {
-        type: Date,
-        required: true,
+    otp_hash: { 
+        type: String, 
+        required: true 
     },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-        expires: 86400, // Documents expire after 24 hours (86400 seconds)
+    otp_attempts: { 
+        type: Number, 
+        default: 0 
     },
-});
+    can_resend_at: { 
+        type: Date, 
+        required: true 
+    },
+    createdAt: { 
+        type: Date, 
+        default: Date.now 
+    }
+}, { strict: true });
+
+// TTL: MongoDB auto-deletes entire document (signup data + OTP together) after 10 minutes
+PendingClientSchema.index({ createdAt: 1 }, { expireAfterSeconds: 600 });
+// Removed manual index for ref_id and email to prevent duplicate index warnings since unique: true is used in schema
+
+
+// Delete cached model in dev so schema changes are always applied on hot-reload
+if (process.env.NODE_ENV !== 'production' && mongoose.models.PendingClient) {
+    delete mongoose.models.PendingClient;
+}
 
 const PendingClient: Model<IPendingClient> = mongoose.models.PendingClient || mongoose.model<IPendingClient>("PendingClient", PendingClientSchema);
 

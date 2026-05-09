@@ -1,11 +1,10 @@
-
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 import PujaModal from "@/components/PujaModal";
 
 function ClientLoginContent() {
@@ -13,39 +12,71 @@ function ClientLoginContent() {
     const searchParams = useSearchParams();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-    const [formData, setFormData] = useState({
-        email: "",
-        password: "",
-    });
-    const [showPassword, setShowPassword] = useState(false);
+    const [message, setMessage] = useState("");
+    
+    const [step, setStep] = useState(1);
+    const [email, setEmail] = useState("");
+    const [otp, setOtp] = useState("");
+    const [refId, setRefId] = useState("");
+    const [resendCooldown, setResendCooldown] = useState(0);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
+    useEffect(() => {
+        let timer: NodeJS.Timeout;
+        if (resendCooldown > 0) {
+            timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+        }
+        return () => clearTimeout(timer);
+    }, [resendCooldown]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSendOtp = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError("");
+        setMessage("");
 
         try {
-            const res = await fetch("/api/client/login", {
+            const res = await fetch("/api/client/auth/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({ identifier: email }),
             });
 
             const data = await res.json();
 
             if (!res.ok) {
-                if (data.code === "ACCOUNT_NOT_VERIFIED") {
-                    throw new Error(`Your account is not verified. <a href="/client/verify-otp?email=${data.email}" class="underline font-bold">Verify Now</a>`);
-                }
-                throw new Error(data.error || "Login failed");
+                throw new Error(data.message || data.errors?.[0] || "Failed to send OTP");
             }
 
-            // Redirect to destination or client dashboard
+            setRefId(data.ref_id);
+            setMessage(data.message);
+            setStep(2);
+            setResendCooldown(120); // 2 minutes cooldown
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleVerifyOtp = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError("");
+
+        try {
+            const res = await fetch("/api/client/auth/verify-login-otp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ref_id: refId, otp }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.message || "Invalid OTP");
+            }
+
             window.dispatchEvent(new Event("auth-change"));
 
             const redirectUrl = searchParams.get("redirect") || "/";
@@ -58,21 +89,59 @@ function ClientLoginContent() {
         }
     };
 
+    const handleResendOtp = async () => {
+        if (resendCooldown > 0) return;
+        
+        setLoading(true);
+        setError("");
+        setMessage("");
+
+        try {
+            const res = await fetch("/api/client/auth/login-resend-otp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ref_id: refId }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                if (data.retry_after_seconds) {
+                    setResendCooldown(data.retry_after_seconds);
+                }
+                throw new Error(data.message || "Failed to resend OTP");
+            }
+
+            setMessage("New OTP sent successfully");
+            setResendCooldown(120);
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-[#FDFAF0] relative overflow-hidden">
-            {/* Background Decorative Elements */}
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-5">
                 <div className="absolute -top-20 -left-20 w-96 h-96 rounded-full bg-[#DAA520] blur-3xl"></div>
                 <div className="absolute top-1/2 right-0 w-80 h-80 rounded-full bg-[#D35400] blur-3xl"></div>
             </div>
 
             <div className="relative z-10 w-full max-w-md p-8 mx-4">
-                <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#DAA520]/20 p-8">
+                <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#DAA520]/20 p-8 relative">
 
-                    {/* Header Section */}
+                    {step === 2 && (
+                        <button 
+                            onClick={() => { setStep(1); setOtp(""); setError(""); setMessage(""); }}
+                            className="absolute top-6 left-6 text-[#8B4513]/60 hover:text-[#D35400] transition-colors"
+                        >
+                            <ArrowLeft size={24} />
+                        </button>
+                    )}
+
                     <div className="text-center mb-8">
                         <div className="mx-auto w-16 h-16 mb-4 relative">
-                            {/* Placeholder for Diya/Logo - using the main logo for now */}
                             <Image
                                 src="/assets/logo.png"
                                 alt="Manima Logo"
@@ -83,10 +152,11 @@ function ClientLoginContent() {
                             />
                         </div>
                         <h1 className="font-serif text-3xl text-[#D35400] mb-2 font-bold tracking-wide">Welcome</h1>
-                        <p className="text-[#8B4513] text-sm font-medium">Sign in to manage your bookings</p>
+                        <p className="text-[#8B4513] text-sm font-medium">
+                            {step === 1 ? "Sign in to manage your bookings" : "Enter the OTP sent to your email & WhatsApp"}
+                        </p>
                     </div>
 
-                    {/* Error Message */}
                     {error && (
                         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 text-sm flex items-center gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
@@ -94,76 +164,94 @@ function ClientLoginContent() {
                         </div>
                     )}
 
-                    {/* Form */}
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div>
-                            <label className="block text-sm font-semibold text-[#5D4037] mb-2 uppercase tracking-wider text-xs">Email Address</label>
-                            <input
-                                type="email"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                required
-                                className="w-full px-4 py-3 rounded-lg bg-[#FDFAF0] border border-[#E0E0E0] focus:border-[#DAA520] focus:ring-1 focus:ring-[#DAA520] outline-none transition-all placeholder:text-gray-400 text-gray-800"
-                                placeholder="Enter your email"
-                            />
+                    {message && (
+                        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6 text-sm flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                            <span>{message}</span>
                         </div>
+                    )}
 
-                        <div>
-                            <label className="block text-sm font-semibold text-[#5D4037] mb-2 uppercase tracking-wider text-xs">Password</label>
-                            <div className="relative">
+                    {step === 1 && (
+                        <form onSubmit={handleSendOtp} className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-semibold text-[#5D4037] mb-2 uppercase tracking-wider text-xs">Email Address</label>
                                 <input
-                                    type={showPassword ? "text" : "password"}
-                                    name="password"
-                                    value={formData.password}
-                                    onChange={handleChange}
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
                                     required
-                                    className="w-full px-4 py-3 rounded-lg bg-[#FDFAF0] border border-[#E0E0E0] focus:border-[#DAA520] focus:ring-1 focus:ring-[#DAA520] outline-none transition-all placeholder:text-gray-400 text-gray-800 pr-10"
-                                    placeholder="Enter your password"
+                                    className="w-full px-4 py-3 rounded-lg bg-[#FDFAF0] border border-[#E0E0E0] focus:border-[#DAA520] focus:ring-1 focus:ring-[#DAA520] outline-none transition-all placeholder:text-gray-400 text-gray-800"
+                                    placeholder="Enter your email"
                                 />
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full bg-gradient-to-r from-[#D35400] to-[#E67E22] text-white font-bold py-3.5 rounded-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                            >
+                                {loading ? <Loader2 size={20} className="animate-spin" /> : "Send OTP"}
+                            </button>
+                        </form>
+                    )}
+
+                    {step === 2 && (
+                        <form onSubmit={handleVerifyOtp} className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-semibold text-[#5D4037] mb-2 uppercase tracking-wider text-xs">6-Digit OTP</label>
+                                <input
+                                    type="text"
+                                    maxLength={6}
+                                    value={otp}
+                                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                                    required
+                                    className="w-full px-4 py-3 text-center text-xl tracking-[0.5em] rounded-lg bg-[#FDFAF0] border border-[#E0E0E0] focus:border-[#DAA520] focus:ring-1 focus:ring-[#DAA520] outline-none transition-all placeholder:text-gray-400 text-gray-800 font-mono"
+                                    placeholder="------"
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={loading || otp.length < 6}
+                                className="w-full bg-gradient-to-r from-[#D35400] to-[#E67E22] text-white font-bold py-3.5 rounded-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                            >
+                                {loading ? <Loader2 size={20} className="animate-spin" /> : "Verify & Sign In"}
+                            </button>
+
+                            <div className="text-center">
                                 <button
                                     type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#D35400] transition-colors"
+                                    onClick={handleResendOtp}
+                                    disabled={resendCooldown > 0 || loading}
+                                    className="text-sm font-medium text-[#D35400] hover:underline disabled:opacity-50 disabled:no-underline"
                                 >
-                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                    {resendCooldown > 0 ? `Resend OTP in ${resendCooldown}s` : "Resend OTP"}
                                 </button>
                             </div>
+                        </form>
+                    )}
+
+                    {step === 1 && (
+                        <div className="mt-8 text-center space-y-2">
+                            <p className="text-gray-500 text-sm">
+                                Don't have an account?{" "}
+                                <Link href="/client/signup" className="text-[#D35400] font-semibold hover:underline">
+                                    Sign up
+                                </Link>
+                            </p>
+                            <p className="text-gray-500 text-sm pt-2">
+                                Need help?{" "}
+                                <button
+                                    onClick={() => setIsModalOpen(true)}
+                                    className="text-[#D35400] font-semibold hover:underline"
+                                >
+                                    Contact Support
+                                </button>
+                            </p>
                         </div>
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full bg-gradient-to-r from-[#D35400] to-[#E67E22] text-white font-bold py-3.5 rounded-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                        >
-                            {loading ? <Loader2 size={20} className="animate-spin" /> : "Sign In"}
-                        </button>
-                    </form>
-
-                    {/* Footer / Links */}
-                    <div className="mt-8 text-center space-y-2">
-                        <Link href="/client/forgot-password" className="text-sm text-gray-600 hover:text-[#D35400] font-medium transition-colors mb-4 block">
-                            Forgot Password?
-                        </Link>
-                        <p className="text-gray-500 text-sm">
-                            Don't have an account?{" "}
-                            <Link href="/client/signup" className="text-[#D35400] font-semibold hover:underline">
-                                Sign up
-                            </Link>
-                        </p>
-                        <p className="text-gray-500 text-sm pt-2">
-                            Need help?{" "}
-                            <button
-                                onClick={() => setIsModalOpen(true)}
-                                className="text-[#D35400] font-semibold hover:underline"
-                            >
-                                Contact Support
-                            </button>
-                        </p>
-                    </div>
+                    )}
                 </div>
 
-                {/* Cultural Footer Text */}
                 <p className="text-center text-[#8B4513]/60 text-xs mt-6 font-serif italic">
                     "Serve your ancestors with devotion"
                 </p>

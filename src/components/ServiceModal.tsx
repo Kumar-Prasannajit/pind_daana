@@ -56,7 +56,7 @@ export default function ServiceModal({ isOpen, onClose, service }: ServiceModalP
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6 backdrop-blur-sm"
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 px-4 py-6 backdrop-blur-sm"
       onClick={onClose}
       role="dialog"
       aria-modal="true"

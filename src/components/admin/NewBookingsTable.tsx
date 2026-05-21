@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, CheckCircle, UserPlus, Calendar, MapPin, DollarSign, Search, Filter, ShieldCheck, UserCheck, Eye, X, Flag } from "lucide-react";
+import MilestoneProgress from "@/components/shared/MilestoneProgress";
 
 interface LocationService {
     service: string | { _id: string; name: string };
@@ -12,7 +13,7 @@ interface Booking {
     _id: string;
     client: { _id: string; name: string; email: string; phone: string };
     service: { name: string };
-    location: { 
+    location: {
         name: string;
         services?: LocationService[];
     };
@@ -55,7 +56,7 @@ export default function NewBookingsTable() {
     // Helper: Get available milestones from booking (from location.services)
     const getAvailableMilestones = (booking: Booking): string[] => {
         if (!booking.location?.services) return [];
-        
+
         // Iterate through services and collect milestones
         for (const entry of booking.location.services) {
             if (entry.milestones?.length) return entry.milestones;
@@ -412,143 +413,22 @@ export default function NewBookingsTable() {
                 </div>
             )}
 
-            {/* Milestone Modal */}
-            {milestoneModalBooking && (() => {
-                const availableMilestones = getAvailableMilestones(milestoneModalBooking);
-                const completedMilestones = milestoneModalBooking.completedMilestones || [];
-                const completed = completedMilestones.length;
-                const total = availableMilestones.length;
-                const percentage = (completed / total) * 100;
-
-                return (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                        <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                            {/* Header */}
-                            <div className="bg-gradient-to-r from-yellow-50 to-amber-50 p-6 border-b border-gray-200">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-3 bg-yellow-100 rounded-lg">
-                                            <Flag size={20} className="text-yellow-700" />
-                                        </div>
-                                        <div>
-                                            <h3 className="font-bold text-gray-900 text-lg">Ritual Milestones</h3>
-                                            <p className="text-xs text-gray-600 mt-0.5">Updated by {milestoneModalBooking.agent?.name || "Agent"}</p>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => setMilestoneModalBooking(null)}
-                                        className="text-gray-400 hover:text-gray-600 transition-colors"
-                                    >
-                                        <X size={24} />
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Content */}
-                            <div className="p-6 space-y-6">
-                                {/* Booking Info */}
-                                <div className="bg-gray-50 rounded-xl p-4 space-y-2">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-600">Service</span>
-                                        <span className="font-semibold text-gray-900">{milestoneModalBooking.service?.name}</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-600">Location</span>
-                                        <span className="font-semibold text-gray-900">{milestoneModalBooking.location?.name}</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-600">Client</span>
-                                        <span className="font-semibold text-gray-900">{milestoneModalBooking.client?.name}</span>
-                                    </div>
-                                </div>
-
-                                {/* Progress Overview */}
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-sm font-semibold text-gray-700">Progress</span>
-                                        <span className="text-lg font-bold text-yellow-700">{completed}/{total} Completed</span>
-                                    </div>
-                                    <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full bg-gradient-to-r from-green-400 to-green-500 transition-all duration-300"
-                                            style={{ width: `${percentage}%` }}
-                                        />
-                                    </div>
-                                    <div className="flex justify-between text-xs text-gray-600">
-                                        <span>0%</span>
-                                        <span className="font-semibold text-gray-900">{Math.round(percentage)}%</span>
-                                        <span>100%</span>
-                                    </div>
-                                </div>
-
-                                {/* Milestones List */}
-                                <div className="space-y-2 max-h-96 overflow-y-auto">
-                                    {availableMilestones.map((milestone, idx) => {
-                                        const isCompleted = completedMilestones.includes(milestone);
-                                        return (
-                                            <div
-                                                key={idx}
-                                                className={`p-4 rounded-lg border-2 transition-all ${
-                                                    isCompleted
-                                                        ? "bg-green-50 border-green-200"
-                                                        : "bg-gray-50 border-gray-200"
-                                                }`}
-                                            >
-                                                <div className="flex items-start gap-3">
-                                                    {/* Status Icon */}
-                                                    <div
-                                                        className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold mt-0.5 ${
-                                                            isCompleted
-                                                                ? "bg-green-500 text-white"
-                                                                : "bg-gray-300 text-gray-600"
-                                                        }`}
-                                                    >
-                                                        {isCompleted ? "✓" : idx + 1}
-                                                    </div>
-                                                    {/* Milestone Text */}
-                                                    <div className="flex-1">
-                                                        <p
-                                                            className={`text-sm font-medium ${
-                                                                isCompleted
-                                                                    ? "text-green-700 line-through"
-                                                                    : "text-gray-700"
-                                                            }`}
-                                                        >
-                                                            {milestone}
-                                                        </p>
-                                                        {isCompleted && (
-                                                            <p className="text-xs text-green-600 mt-1">✓ Completed</p>
-                                                        )}
-                                                        {!isCompleted && (
-                                                            <p className="text-xs text-gray-500 mt-1">⏳ Pending</p>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-
-                                {/* Footer Info */}
-                                <div className="pt-4 border-t border-gray-200 text-xs text-gray-600 space-y-1">
-                                    <p>Agent: <span className="font-semibold text-gray-900">{milestoneModalBooking.agent?.name || "Not assigned"}</span></p>
-                                    <p>Updated: <span className="font-semibold text-gray-900">{new Date(milestoneModalBooking.createdAt).toLocaleDateString('en-IN')}</span></p>
-                                </div>
-                            </div>
-
-                            {/* Close Button */}
-                            <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
-                                <button
-                                    onClick={() => setMilestoneModalBooking(null)}
-                                    className="w-full py-2 bg-gray-900 text-white font-semibold rounded-lg hover:bg-black transition-colors"
-                                >
-                                    Close
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                );
-            })()}
+            {/* Shared Milestone Modal */}
+            {milestoneModalBooking && (
+                <MilestoneProgress
+                    milestones={getAvailableMilestones(milestoneModalBooking)}
+                    completedMilestones={
+                        milestoneModalBooking.completedMilestones || []
+                    }
+                    agentName={milestoneModalBooking.agent?.name}
+                    serviceName={milestoneModalBooking.service?.name}
+                    locationName={milestoneModalBooking.location?.name}
+                    clientName={milestoneModalBooking.client?.name}
+                    createdAt={milestoneModalBooking.createdAt}
+                    isOpen={!!milestoneModalBooking}
+                    onClose={() => setMilestoneModalBooking(null)}
+                />
+            )}
         </div>
     );
 }

@@ -33,7 +33,7 @@ export async function GET() {
 
         const bookings = await Booking.find({ client: clientId as any })
             .populate("service", "name milestones availability")
-            .populate("location", "name")
+            .populate("location", "name services")
             .populate("puja", "name location imageUrl")
             .populate("agent", "name phone")
             .sort({ createdAt: -1 })

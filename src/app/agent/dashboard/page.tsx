@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import {
     LayoutDashboard, Calendar, User,
     LogOut, Menu, X, Bell, ShieldCheck, MapPin, Loader2,
-    CheckCircle2, Clock, XCircle, AlertCircle, Phone, Mail, BookOpen
+    CheckCircle2, Clock, XCircle, AlertCircle, Phone, Mail, BookOpen, Flag, Save
 } from "lucide-react";
 
 interface AgentProfile {
@@ -16,17 +16,23 @@ interface AgentProfile {
     role: string;
 }
 
+interface LocationService {
+    service: string | { _id: string; name: string };
+    milestones: string[];
+}
+
 interface AssignedBooking {
     _id: string;
     client?: { name: string; email: string; phone: string };
-    service?: { name: string };
+    service?: { _id: string; name: string };
     puja?: { name: string };
-    location?: { name: string };
+    location?: { _id: string; name: string; services: LocationService[] };
     priceCategory: string;
     price: number;
     status: "Pending" | "Confirmed" | "Completed" | "Cancelled";
     paymentStatus: "Pending" | "Completed";
     isPaymentVerified: boolean;
+    completedMilestones: string[];
     bookingDate: string;
     createdAt: string;
 }
@@ -46,6 +52,13 @@ export default function AgentDashboard() {
     const [bookingsLoading, setBookingsLoading] = useState(true);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [activeView, setActiveView] = useState<"dashboard" | "assignments" | "profile">("dashboard");
+    // milestone panel state: bookingId -> open
+    const [milestonePanelOpen, setMilestonePanelOpen] = useState<Record<string, boolean>>({});
+    // per-booking checked milestones (local edits before save)
+    const [localMilestones, setLocalMilestones] = useState<Record<string, string[]>>({});
+    const [savingMilestones, setSavingMilestones] = useState<Record<string, boolean>>({});
+    const [savedMilestones, setSavedMilestones] = useState<Record<string, boolean>>({});
+    
 
     useEffect(() => {
         const fetchAgent = async () => {
@@ -80,6 +93,74 @@ export default function AgentDashboard() {
         };
         fetchBookings();
     }, [agent]);
+
+    // Helper: get milestones available for a booking (from its location+service)
+    const getAvailableMilestones = (booking: AssignedBooking): string[] => {
+        if (!booking.location?.services) return [];
+        // If we have a specific service, find milestones for that service
+        if (booking.service) {
+            const serviceId = String((booking.service as any)._id || booking.service);
+            const entry = booking.location.services.find((ls) => {
+                const svc = ls.service as any;
+                const sid = typeof svc === "string" ? svc : String(svc?._id || svc);
+                return sid === serviceId;
+            });
+            if (entry?.milestones?.length) return entry.milestones;
+        }
+        // Fallback: return milestones from any service entry that has them
+        for (const ls of booking.location.services) {
+            if (ls.milestones?.length) return ls.milestones;
+        }
+        return [];
+    };
+
+    const toggleMilestonePanel = (bookingId: string, booking: AssignedBooking) => {
+        setMilestonePanelOpen((prev) => {
+            const next = { ...prev, [bookingId]: !prev[bookingId] };
+            // init local state from saved milestones
+            if (next[bookingId] && localMilestones[bookingId] === undefined) {
+                setLocalMilestones((lm) => ({ ...lm, [bookingId]: [...(booking.completedMilestones || [])] }));
+            }
+            return next;
+        });
+    };
+
+    const toggleMilestoneCheck = (bookingId: string, milestone: string) => {
+        setLocalMilestones((prev) => {
+            const current = prev[bookingId] || [];
+            const updated = current.includes(milestone)
+                ? current.filter((m) => m !== milestone)
+                : [...current, milestone];
+            return { ...prev, [bookingId]: updated };
+        });
+    };
+
+    const saveMilestones = async (bookingId: string) => {
+        setSavingMilestones((prev) => ({ ...prev, [bookingId]: true }));
+        try {
+            const res = await fetch("/api/agent/bookings", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ bookingId, completedMilestones: localMilestones[bookingId] || [] }),
+            });
+            if (!res.ok) throw new Error("Failed to save");
+            // Sync back into bookings state
+            setBookings((prev) =>
+                prev.map((b) =>
+                    b._id === bookingId
+                        ? { ...b, completedMilestones: localMilestones[bookingId] || [] }
+                        : b
+                )
+            );
+            // Show success badge then clear after 2s
+            setSavedMilestones((prev) => ({ ...prev, [bookingId]: true }));
+            setTimeout(() => setSavedMilestones((prev) => ({ ...prev, [bookingId]: false })), 2000);
+        } catch (err) {
+            console.error("Save milestones error:", err);
+        } finally {
+            setSavingMilestones((prev) => ({ ...prev, [bookingId]: false }));
+        }
+    };
 
     const handleLogout = async () => {
         try {
@@ -397,14 +478,93 @@ export default function AgentDashboard() {
                                                         </div>
                                                     </div>
 
-                                                    {/* Right: Date */}
-                                                    <div className="text-right flex-shrink-0">
-                                                        <p className="text-xs font-semibold text-gray-700">
-                                                            {new Date(booking.bookingDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                                        </p>
-                                                        <p className="text-xs text-gray-400 mt-0.5">Booking Date</p>
+                                                    {/* Right: Date + Milestones toggle */}
+                                                    <div className="text-right flex-shrink-0 flex flex-col items-end gap-2">
+                                                        <div>
+                                                            <p className="text-xs font-semibold text-gray-700">
+                                                                {new Date(booking.bookingDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                            </p>
+                                                            <p className="text-xs text-gray-400 mt-0.5">Booking Date</p>
+                                                        </div>
+                                                        {getAvailableMilestones(booking).length > 0 && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => toggleMilestonePanel(booking._id, booking)}
+                                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors"
+                                                                style={milestonePanelOpen[booking._id]
+                                                                    ? { background: '#DAA520', color: '#1a1a1a', borderColor: '#DAA520' }
+                                                                    : { background: 'transparent', color: '#DAA520', borderColor: '#DAA520' }}
+                                                            >
+                                                                <Flag size={11} />
+                                                                Milestones ({(booking.completedMilestones || []).length}/{getAvailableMilestones(booking).length})
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </div>
+
+                                                {/* Milestones expandable panel */}
+                                                {milestonePanelOpen[booking._id] && (() => {
+                                                    const available = getAvailableMilestones(booking);
+                                                    const checked = localMilestones[booking._id] || booking.completedMilestones || [];
+                                                    const isSaving = savingMilestones[booking._id];
+                                                    const isSaved = savedMilestones[booking._id];
+                                                    return (
+                                                        <div className="mt-4 pt-4 border-t border-dashed border-gray-200">
+                                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                                                                <Flag size={12} className="text-[#DAA520]" /> Ritual Milestones
+                                                            </p>
+                                                            <div className="space-y-2 mb-4">
+                                                                {available.map((milestone, idx) => {
+                                                                    const isChecked = checked.includes(milestone);
+                                                                    return (
+                                                                        <label
+                                                                            key={idx}
+                                                                            className={`flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-colors ${
+                                                                                isChecked ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'
+                                                                            }`}
+                                                                        >
+                                                                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                                                                                isChecked ? 'bg-green-500 border-green-500' : 'border-gray-300 bg-white'
+                                                                            }`}>
+                                                                                {isChecked && <CheckCircle2 size={12} className="text-white" />}
+                                                                                <input
+                                                                                    type="checkbox"
+                                                                                    checked={isChecked}
+                                                                                    onChange={() => toggleMilestoneCheck(booking._id, milestone)}
+                                                                                    className="sr-only"
+                                                                                />
+                                                                            </div>
+                                                                            <span className={`text-sm flex-1 ${
+                                                                                isChecked ? 'text-green-700 font-medium line-through' : 'text-gray-700'
+                                                                            }`}>
+                                                                                <span className="w-5 h-5 inline-flex items-center justify-center bg-gray-200 text-gray-600 text-[10px] font-bold rounded-full mr-1.5">{idx + 1}</span>
+                                                                                {milestone}
+                                                                            </span>
+                                                                        </label>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => saveMilestones(booking._id)}
+                                                                disabled={isSaving || isSaved}
+                                                                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                                                                    isSaved
+                                                                        ? 'bg-green-500 text-white cursor-default'
+                                                                        : 'bg-[#DAA520] hover:bg-[#c49a1a] text-[#1a1a1a] disabled:opacity-50'
+                                                                }`}
+                                                            >
+                                                                {isSaving ? (
+                                                                    <><Loader2 size={15} className="animate-spin" /> Saving…</>
+                                                                ) : isSaved ? (
+                                                                    <><CheckCircle2 size={15} /> Saved!</>
+                                                                ) : (
+                                                                    <><Save size={15} /> Save Milestones</>
+                                                                )}
+                                                            </button>
+                                                        </div>
+                                                    );
+                                                })()}
                                             </div>
                                         );
                                     })}

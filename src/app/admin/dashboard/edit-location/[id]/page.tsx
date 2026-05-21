@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle2, Loader2, MapPin, Plus, Save, Tag, Trash2, Upload, X } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2, MapPin, Plus, Save, Tag, Trash2, Upload, X, Flag } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -21,6 +21,8 @@ interface ServicePricing {
     serviceId: string;
     serviceName: string;
     pricing: Pricing[];
+    milestones: string[];
+    milestoneInput?: string;
 }
 
 export default function EditLocationPage() {
@@ -82,6 +84,8 @@ export default function EditLocationPage() {
                                 price: pkg.price,
                                 features: pkg.features || [],
                             })),
+                            milestones: serviceEntry.milestones || [],
+                            milestoneInput: "",
                         };
                     }),
                 });
@@ -128,7 +132,13 @@ export default function EditLocationPage() {
                 ...prev,
                 servicePackages: [
                     ...prev.servicePackages,
-                    { serviceId: service._id, serviceName: service.name, pricing: [{ name: "", price: "", features: [] }] },
+                    { 
+                        serviceId: service._id, 
+                        serviceName: service.name, 
+                        pricing: [{ name: "", price: "", features: [] }],
+                        milestones: [],
+                        milestoneInput: "",
+                    },
                 ],
             };
         });
@@ -166,6 +176,33 @@ export default function EditLocationPage() {
         setFormData((prev) => ({ ...prev, servicePackages: next }));
     };
 
+    const handleMilestoneInputChange = (serviceIndex: number, value: string) => {
+        const next = [...formData.servicePackages];
+        next[serviceIndex].milestoneInput = value;
+        setFormData((prev) => ({ ...prev, servicePackages: next }));
+    };
+
+    const handleAddMilestone = (serviceIndex: number) => {
+        const next = [...formData.servicePackages];
+        const trimmed = (next[serviceIndex].milestoneInput || "").trim();
+        if (!trimmed) return;
+        
+        if (!next[serviceIndex].milestones) {
+            next[serviceIndex].milestones = [];
+        }
+        if (!next[serviceIndex].milestones.includes(trimmed)) {
+            next[serviceIndex].milestones.push(trimmed);
+        }
+        next[serviceIndex].milestoneInput = "";
+        setFormData((prev) => ({ ...prev, servicePackages: next }));
+    };
+
+    const handleRemoveMilestone = (serviceIndex: number, milestoneIndex: number) => {
+        const next = [...formData.servicePackages];
+        next[serviceIndex].milestones = next[serviceIndex].milestones.filter((_, idx) => idx !== milestoneIndex);
+        setFormData((prev) => ({ ...prev, servicePackages: next }));
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -181,6 +218,7 @@ export default function EditLocationPage() {
             formDataToSend.append("services", JSON.stringify(formData.servicePackages.map((sp) => ({
                 service: sp.serviceId,
                 pricing: sp.pricing.map((pkg) => ({ ...pkg, price: Number(pkg.price) })),
+                milestones: sp.milestones || [],
             }))));
 
             if (selectedFile) {
@@ -325,6 +363,62 @@ export default function EditLocationPage() {
                                                 </button>
                                             </div>
                                         ))}
+                                    </div>
+
+                                    {/* Milestones section */}
+                                    <div className="mt-6 pt-6 border-t border-gray-100">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                            <Flag size={15} className="text-manima-red" />
+                                            Milestones / Checkpoints
+                                        </label>
+
+                                        {sp.milestones && sp.milestones.length > 0 && (
+                                            <div className="flex flex-wrap gap-2 mb-3">
+                                                {sp.milestones.map((m, i) => (
+                                                    <div
+                                                        key={i}
+                                                        className="flex items-center gap-1.5 bg-red-50 border border-red-200 text-red-700 text-sm rounded-full px-3 py-1"
+                                                    >
+                                                        <span className="w-4 h-4 flex items-center justify-center bg-manima-red text-white text-[10px] font-bold rounded-full shrink-0">
+                                                            {i + 1}
+                                                        </span>
+                                                        {m}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveMilestone(serviceIndex, i)}
+                                                            className="ml-0.5 text-red-400 hover:text-red-600 transition-colors"
+                                                        >
+                                                            <X size={13} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={sp.milestoneInput || ""}
+                                                onChange={(e) => handleMilestoneInputChange(serviceIndex, e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === "Enter") {
+                                                        e.preventDefault();
+                                                        handleAddMilestone(serviceIndex);
+                                                    }
+                                                }}
+                                                placeholder="e.g. Ritual Completed"
+                                                className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-manima-red/20 focus:border-manima-red outline-none transition-all text-sm"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => handleAddMilestone(serviceIndex)}
+                                                disabled={!(sp.milestoneInput || "").trim()}
+                                                className="flex items-center gap-1.5 px-4 py-2 bg-gray-100 hover:bg-red-50 hover:text-manima-red border border-gray-200 hover:border-red-200 text-gray-600 rounded-xl text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                            >
+                                                <Plus size={16} />
+                                                Add
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             ))

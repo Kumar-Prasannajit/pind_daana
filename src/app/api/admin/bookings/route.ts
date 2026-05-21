@@ -33,7 +33,14 @@ export async function GET() {
         const bookings = await Booking.find({})
             .populate("client", "name email phone")
             .populate("service", "name")
-            .populate("location", "name")
+            .populate({
+                path: "location",
+                select: "name services",
+                populate: {
+                    path: "services.service",
+                    select: "name"
+                }
+            })
             .populate("agent", "name phone")
             .sort({ createdAt: -1 })
             .lean();

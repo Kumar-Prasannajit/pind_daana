@@ -58,7 +58,7 @@ export default function AgentDashboard() {
     const [localMilestones, setLocalMilestones] = useState<Record<string, string[]>>({});
     const [savingMilestones, setSavingMilestones] = useState<Record<string, boolean>>({});
     const [savedMilestones, setSavedMilestones] = useState<Record<string, boolean>>({});
-    
+
 
     useEffect(() => {
         const fetchAgent = async () => {
@@ -132,7 +132,7 @@ export default function AgentDashboard() {
         const availableMilestones = getAvailableMilestones(booking);
         const current = localMilestones[bookingId] || [];
         const isChecking = !current.includes(milestone);
-{/* build refresh */}
+        {/* build refresh */ }
 
         //if status and paymentStatus is pending prevent checking any milestones and show alert
         if (booking.status === "Pending" || booking.paymentStatus === "Pending") {
@@ -175,7 +175,7 @@ export default function AgentDashboard() {
         // Validation: Check if milestones are completed in order
         for (let i = 0; i < selectedMilestones.length; i++) {
             const currentMilestoneIndex = availableMilestones.indexOf(selectedMilestones[i]);
-            
+
             // Check if all previous milestones are also completed
             for (let j = 0; j < currentMilestoneIndex; j++) {
                 if (!selectedMilestones.includes(availableMilestones[j])) {
@@ -230,7 +230,7 @@ export default function AgentDashboard() {
 
     if (loading) {
         return (
-            <div className="flex h-screen bg-[#F5F6F8] font-sans">
+            <div className="flex min-h-screen bg-[#F5F6F8] font-sans">
                 <aside className="hidden md:flex flex-col w-72 bg-[#1a1a1a] shrink-0 border-r border-white/10 animate-pulse">
                     <div className="h-24 px-8 flex items-center border-b border-white/10">
                         <div className="w-10 h-10 rounded-lg bg-white/10"></div>
@@ -373,276 +373,279 @@ export default function AgentDashboard() {
                 </header>
 
                 {/* Scrollable Content */}
-                <main className="flex-1 overflow-y-auto p-4 md:p-8">
+                <main
+                    className="flex-1 overflow-y-auto p-4 md:p-8"
+                    style={{ overflowAnchor: "none" }}
+                >
                     <div className="max-w-7xl mx-auto space-y-8">
 
 
                         {/* ── DASHBOARD HOME VIEW ── */}
                         {activeView === "dashboard" && (
-                        <>
-                        {/* Stats Row */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-                            <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-all">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-500 mb-1">New Assignments</p>
-                                    <h3 className="text-3xl font-bold text-gray-800">{bookingsLoading ? "—" : pendingCount}</h3>
-                                    <p className="text-xs text-yellow-600 mt-1 font-medium">Awaiting confirmation</p>
-                                </div>
-                                <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                                    <Calendar size={24} />
-                                </div>
-                            </div>
+                            <>
+                                {/* Stats Row */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                                    <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-all">
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-500 mb-1">New Assignments</p>
+                                            <h3 className="text-3xl font-bold text-gray-800">{bookingsLoading ? "—" : pendingCount}</h3>
+                                            <p className="text-xs text-yellow-600 mt-1 font-medium">Awaiting confirmation</p>
+                                        </div>
+                                        <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                                            <Calendar size={24} />
+                                        </div>
+                                    </div>
 
-                            <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-all">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-500 mb-1">Completed</p>
-                                    <h3 className="text-3xl font-bold text-gray-800">{bookingsLoading ? "—" : completedCount}</h3>
-                                    <p className="text-xs text-gray-400 mt-1">Lifetime rituals</p>
-                                </div>
-                                <div className="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
-                                    <ShieldCheck size={24} />
-                                </div>
-                            </div>
+                                    <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-all">
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-500 mb-1">Completed</p>
+                                            <h3 className="text-3xl font-bold text-gray-800">{bookingsLoading ? "—" : completedCount}</h3>
+                                            <p className="text-xs text-gray-400 mt-1">Lifetime rituals</p>
+                                        </div>
+                                        <div className="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
+                                            <ShieldCheck size={24} />
+                                        </div>
+                                    </div>
 
-                            <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-all">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-500 mb-1">Total Assigned</p>
-                                    <h3 className="text-3xl font-bold text-gray-800">{bookingsLoading ? "—" : bookings.length}</h3>
-                                    <p className="text-xs text-gray-400 mt-1">All time bookings</p>
+                                    <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-all">
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-500 mb-1">Total Assigned</p>
+                                            <h3 className="text-3xl font-bold text-gray-800">{bookingsLoading ? "—" : bookings.length}</h3>
+                                            <p className="text-xs text-gray-400 mt-1">All time bookings</p>
+                                        </div>
+                                        <div className="w-12 h-12 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
+                                            <MapPin size={24} />
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="w-12 h-12 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
-                                    <MapPin size={24} />
-                                </div>
-                            </div>
-                        </div>
 
-                        {/* Quick-access card to Assignments */}
-                        <div
-                            onClick={() => setActiveView("assignments")}
-                            className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between cursor-pointer hover:shadow-md hover:border-[#DAA520]/30 transition-all group"
-                        >
-                            <div>
-                                <h2 className="text-lg font-bold text-[#1a1a1a] mb-1">My Assignments</h2>
-                                <p className="text-sm text-gray-500">
-                                    {bookingsLoading ? "Loading bookings…" : bookings.length === 0
-                                        ? "No active assignments right now."
-                                        : `You have ${bookings.length} booking${bookings.length !== 1 ? 's' : ''} assigned to you.`
-                                    }
-                                </p>
-                            </div>
-                            <div className="w-12 h-12 rounded-xl bg-[#DAA520]/10 text-[#DAA520] flex items-center justify-center group-hover:bg-[#DAA520] group-hover:text-white transition-colors flex-shrink-0">
-                                <Calendar size={22} />
-                            </div>
-                        </div>
-                        </>
+                                {/* Quick-access card to Assignments */}
+                                <div
+                                    onClick={() => setActiveView("assignments")}
+                                    className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between cursor-pointer hover:shadow-md hover:border-[#DAA520]/30 transition-all group"
+                                >
+                                    <div>
+                                        <h2 className="text-lg font-bold text-[#1a1a1a] mb-1">My Assignments</h2>
+                                        <p className="text-sm text-gray-500">
+                                            {bookingsLoading ? "Loading bookings…" : bookings.length === 0
+                                                ? "No active assignments right now."
+                                                : `You have ${bookings.length} booking${bookings.length !== 1 ? 's' : ''} assigned to you.`
+                                            }
+                                        </p>
+                                    </div>
+                                    <div className="w-12 h-12 rounded-xl bg-[#DAA520]/10 text-[#DAA520] flex items-center justify-center group-hover:bg-[#DAA520] group-hover:text-white transition-colors flex-shrink-0">
+                                        <Calendar size={22} />
+                                    </div>
+                                </div>
+                            </>
                         )}
 
                         {/* ── MY ASSIGNMENTS VIEW ── */}
                         {activeView === "assignments" && (
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                            <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center">
-                                <h2 className="text-lg font-bold text-[#1a1a1a]">My Assignments</h2>
-                                {!bookingsLoading && bookings.length > 0 && (
-                                    <span className="text-xs bg-[#DAA520]/10 text-[#DAA520] font-semibold px-3 py-1 rounded-full">
-                                        {bookings.length} booking{bookings.length !== 1 ? "s" : ""}
-                                    </span>
-                                )}
-                            </div>
-
-                            {bookingsLoading ? (
-                                <div className="p-8 space-y-4">
-                                    {[1, 2, 3].map(i => (
-                                        <div key={i} className="animate-pulse h-24 bg-gray-100 rounded-xl"></div>
-                                    ))}
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                                <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center">
+                                    <h2 className="text-lg font-bold text-[#1a1a1a]">My Assignments</h2>
+                                    {!bookingsLoading && bookings.length > 0 && (
+                                        <span className="text-xs bg-[#DAA520]/10 text-[#DAA520] font-semibold px-3 py-1 rounded-full">
+                                            {bookings.length} booking{bookings.length !== 1 ? "s" : ""}
+                                        </span>
+                                    )}
                                 </div>
-                            ) : bookings.length === 0 ? (
-                                <div className="p-12 text-center">
-                                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 text-gray-400 mb-4">
-                                        <Calendar size={32} />
+
+                                {bookingsLoading ? (
+                                    <div className="p-8 space-y-4">
+                                        {[1, 2, 3].map(i => (
+                                            <div key={i} className="animate-pulse h-24 bg-gray-100 rounded-xl"></div>
+                                        ))}
                                     </div>
-                                    <h3 className="text-lg font-bold text-gray-800 mb-2">No Active Assignments</h3>
-                                    <p className="text-gray-500 max-w-md mx-auto">
-                                        You have no pending rituals at the moment. You will receive a notification when an admin assigns a new booking to you.
-                                    </p>
-                                </div>
-                            ) : (
-                                <div className="divide-y divide-gray-50">
-                                    {bookings.map((booking) => {
-                                        const st = statusConfig[booking.status] || statusConfig.Pending;
-                                        return (
-                                            <div key={booking._id} className="p-5 md:p-6 hover:bg-gray-50/50 transition-colors">
-                                                <div className="flex flex-col md:flex-row md:items-start gap-4">
+                                ) : bookings.length === 0 ? (
+                                    <div className="p-12 text-center">
+                                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 text-gray-400 mb-4">
+                                            <Calendar size={32} />
+                                        </div>
+                                        <h3 className="text-lg font-bold text-gray-800 mb-2">No Active Assignments</h3>
+                                        <p className="text-gray-500 max-w-md mx-auto">
+                                            You have no pending rituals at the moment. You will receive a notification when an admin assigns a new booking to you.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="divide-y divide-gray-50">
+                                        {bookings.map((booking) => {
+                                            const st = statusConfig[booking.status] || statusConfig.Pending;
+                                            return (
+                                                <div key={booking._id} className="p-5 md:p-6 hover:bg-gray-50/50 transition-colors">
+                                                    <div className="flex flex-col md:flex-row md:items-start gap-4">
 
-                                                    {/* Left: Client Avatar + Info */}
-                                                    <div className="flex items-start gap-4 flex-1 min-w-0">
-                                                        <div className="w-11 h-11 rounded-full bg-[#DAA520]/10 text-[#DAA520] flex items-center justify-center font-bold font-serif text-lg flex-shrink-0">
-                                                            {booking.client?.name?.charAt(0).toUpperCase() ?? "?"}
+                                                        {/* Left: Client Avatar + Info */}
+                                                        <div className="flex items-start gap-4 flex-1 min-w-0">
+                                                            <div className="w-11 h-11 rounded-full bg-[#DAA520]/10 text-[#DAA520] flex items-center justify-center font-bold font-serif text-lg flex-shrink-0">
+                                                                {booking.client?.name?.charAt(0).toUpperCase() ?? "?"}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex flex-wrap items-center gap-2 mb-1">
+                                                                    <p className="font-semibold text-gray-800 text-sm">
+                                                                        {booking.client?.name ?? "Unknown Client"}
+                                                                    </p>
+                                                                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${st.bg} ${st.text}`}>
+                                                                        {st.icon} {st.label}
+                                                                    </span>
+                                                                    {booking.isPaymentVerified ? (
+                                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                                                                            <CheckCircle2 size={10} /> Paid
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">
+                                                                            <Clock size={10} /> Unpaid
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+
+                                                                {/* Service / Puja */}
+                                                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 mt-1">
+                                                                    {booking.service?.name && (
+                                                                        <span className="flex items-center gap-1">
+                                                                            <BookOpen size={12} />
+                                                                            {booking.service.name}
+                                                                            {booking.puja?.name && ` — ${booking.puja.name}`}
+                                                                        </span>
+                                                                    )}
+                                                                    {booking.location?.name && (
+                                                                        <span className="flex items-center gap-1">
+                                                                            <MapPin size={12} />
+                                                                            {booking.location.name}
+                                                                        </span>
+                                                                    )}
+                                                                    {booking.priceCategory && (
+                                                                        <span className="text-gray-400">{booking.priceCategory} · ₹{booking.price.toLocaleString('en-IN')}</span>
+                                                                    )}
+                                                                </div>
+
+                                                                {/* Contact */}
+                                                                <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-gray-400">
+                                                                    {booking.client?.phone && (
+                                                                        <a href={`tel:${booking.client.phone}`} className="flex items-center gap-1 hover:text-[#DAA520] transition-colors">
+                                                                            <Phone size={11} /> {booking.client.phone}
+                                                                        </a>
+                                                                    )}
+                                                                    {booking.client?.email && (
+                                                                        <a href={`mailto:${booking.client.email}`} className="flex items-center gap-1 hover:text-[#DAA520] transition-colors">
+                                                                            <Mail size={11} /> {booking.client.email}
+                                                                        </a>
+                                                                    )}
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="flex flex-wrap items-center gap-2 mb-1">
-                                                                <p className="font-semibold text-gray-800 text-sm">
-                                                                    {booking.client?.name ?? "Unknown Client"}
+
+                                                        {/* Right: Date + Milestones toggle */}
+                                                        <div className="text-right flex-shrink-0 flex flex-col items-end gap-2">
+                                                            <div>
+                                                                <p className="text-xs font-semibold text-gray-700">
+                                                                    {new Date(booking.bookingDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                                                                 </p>
-                                                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${st.bg} ${st.text}`}>
-                                                                    {st.icon} {st.label}
-                                                                </span>
-                                                                {booking.isPaymentVerified ? (
-                                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">
-                                                                        <CheckCircle2 size={10} /> Paid
-                                                                    </span>
-                                                                ) : (
-                                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">
-                                                                        <Clock size={10} /> Unpaid
-                                                                    </span>
-                                                                )}
+                                                                <p className="text-xs text-gray-400 mt-0.5">Booking Date</p>
                                                             </div>
-
-                                                            {/* Service / Puja */}
-                                                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 mt-1">
-                                                                {booking.service?.name && (
-                                                                    <span className="flex items-center gap-1">
-                                                                        <BookOpen size={12} />
-                                                                        {booking.service.name}
-                                                                        {booking.puja?.name && ` — ${booking.puja.name}`}
-                                                                    </span>
-                                                                )}
-                                                                {booking.location?.name && (
-                                                                    <span className="flex items-center gap-1">
-                                                                        <MapPin size={12} />
-                                                                        {booking.location.name}
-                                                                    </span>
-                                                                )}
-                                                                {booking.priceCategory && (
-                                                                    <span className="text-gray-400">{booking.priceCategory} · ₹{booking.price.toLocaleString('en-IN')}</span>
-                                                                )}
-                                                            </div>
-
-                                                            {/* Contact */}
-                                                            <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-gray-400">
-                                                                {booking.client?.phone && (
-                                                                    <a href={`tel:${booking.client.phone}`} className="flex items-center gap-1 hover:text-[#DAA520] transition-colors">
-                                                                        <Phone size={11} /> {booking.client.phone}
-                                                                    </a>
-                                                                )}
-                                                                {booking.client?.email && (
-                                                                    <a href={`mailto:${booking.client.email}`} className="flex items-center gap-1 hover:text-[#DAA520] transition-colors">
-                                                                        <Mail size={11} /> {booking.client.email}
-                                                                    </a>
-                                                                )}
-                                                            </div>
+                                                            {getAvailableMilestones(booking).length > 0 && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => toggleMilestonePanel(booking._id, booking)}
+                                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors"
+                                                                    style={milestonePanelOpen[booking._id]
+                                                                        ? { background: '#DAA520', color: '#1a1a1a', borderColor: '#DAA520' }
+                                                                        : { background: 'transparent', color: '#DAA520', borderColor: '#DAA520' }}
+                                                                >
+                                                                    <Flag size={11} />
+                                                                    Milestones ({(booking.completedMilestones || []).length}/{getAvailableMilestones(booking).length})
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </div>
 
-                                                    {/* Right: Date + Milestones toggle */}
-                                                    <div className="text-right flex-shrink-0 flex flex-col items-end gap-2">
-                                                        <div>
-                                                            <p className="text-xs font-semibold text-gray-700">
-                                                                {new Date(booking.bookingDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                                            </p>
-                                                            <p className="text-xs text-gray-400 mt-0.5">Booking Date</p>
-                                                        </div>
-                                                        {getAvailableMilestones(booking).length > 0 && (
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => toggleMilestonePanel(booking._id, booking)}
-                                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors"
-                                                                style={milestonePanelOpen[booking._id]
-                                                                    ? { background: '#DAA520', color: '#1a1a1a', borderColor: '#DAA520' }
-                                                                    : { background: 'transparent', color: '#DAA520', borderColor: '#DAA520' }}
-                                                            >
-                                                                <Flag size={11} />
-                                                                Milestones ({(booking.completedMilestones || []).length}/{getAvailableMilestones(booking).length})
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </div>
+                                                    {/* Milestones expandable panel */}
+                                                    {milestonePanelOpen[booking._id] && (() => {
+                                                        const available = getAvailableMilestones(booking);
+                                                        const checked = localMilestones[booking._id] || booking.completedMilestones || [];
+                                                        const isSaving = savingMilestones[booking._id];
+                                                        const isSaved = savedMilestones[booking._id];
+                                                        return (
+                                                            <div className="mt-4 pt-4 border-t border-dashed border-gray-200">
+                                                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                                                                    <Flag size={12} className="text-[#DAA520]" /> Ritual Milestones
+                                                                </p>
+                                                                <div className="space-y-2 mb-4">
+                                                                    {available.map((milestone, idx) => {
+                                                                        const isChecked = checked.includes(milestone);
+                                                                        // Check if all previous milestones are completed
+                                                                        const canCheck = idx === 0 || available.slice(0, idx).every(m => checked.includes(m));
+                                                                        const isDisabled = !canCheck && !isChecked;
 
-                                                {/* Milestones expandable panel */}
-                                                {milestonePanelOpen[booking._id] && (() => {
-                                                    const available = getAvailableMilestones(booking);
-                                                    const checked = localMilestones[booking._id] || booking.completedMilestones || [];
-                                                    const isSaving = savingMilestones[booking._id];
-                                                    const isSaved = savedMilestones[booking._id];
-                                                    return (
-                                                        <div className="mt-4 pt-4 border-t border-dashed border-gray-200">
-                                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                                                                <Flag size={12} className="text-[#DAA520]" /> Ritual Milestones
-                                                            </p>
-                                                            <div className="space-y-2 mb-4">
-                                                                {available.map((milestone, idx) => {
-                                                                    const isChecked = checked.includes(milestone);
-                                                                    // Check if all previous milestones are completed
-                                                                    const canCheck = idx === 0 || available.slice(0, idx).every(m => checked.includes(m));
-                                                                    const isDisabled = !canCheck && !isChecked;
-                                                                    
-                                                                    return (
-                                                                        <label
-                                                                            key={idx}
-                                                                            className={`flex items-center gap-3 p-2.5 rounded-lg transition-colors ${
-                                                                                isDisabled
+                                                                        return (
+                                                                            <label
+                                                                                key={idx}
+                                                                                onClick={(e) => {
+                                                                                    e.preventDefault();
+                                                                                    if (!isDisabled) {
+                                                                                        toggleMilestoneCheck(booking._id, milestone);
+                                                                                    }
+                                                                                }}
+                                                                                className={`flex items-center gap-3 p-2.5 rounded-lg transition-colors ${isDisabled
                                                                                     ? 'cursor-not-allowed opacity-50'
                                                                                     : 'cursor-pointer'
-                                                                            } ${
-                                                                                isChecked ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'
-                                                                            }`}
-                                                                            title={isDisabled ? `Complete "${available[idx - 1]}" first` : ''}
-                                                                        >
-                                                                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                                                                                isChecked ? 'bg-green-500 border-green-500' : isDisabled ? 'border-gray-200 bg-gray-100' : 'border-gray-300 bg-white'
-                                                                            }`}>
-                                                                                {isChecked && <CheckCircle2 size={12} className="text-white" />}
-                                                                                <input
-                                                                                    type="checkbox"
-                                                                                    checked={isChecked}
-                                                                                    onChange={() => toggleMilestoneCheck(booking._id, milestone)}
-                                                                                    disabled={isDisabled}
-                                                                                    className="sr-only"
-                                                                                />
-                                                                            </div>
-                                                                            <span className={`text-sm flex-1 ${
-                                                                                isChecked ? 'text-green-700 font-medium line-through' : isDisabled ? 'text-gray-400' : 'text-gray-700'
-                                                                            }`}>
-                                                                                <span className={`w-5 h-5 inline-flex items-center justify-center text-[10px] font-bold rounded-full mr-1.5 ${
-                                                                                    isChecked ? 'bg-green-300 text-green-700' : isDisabled ? 'bg-gray-200 text-gray-400' : 'bg-gray-200 text-gray-600'
-                                                                                }`}>{idx + 1}</span>
-                                                                                {milestone}
-                                                                                {isDisabled && (
-                                                                                    <span className="text-[10px] text-orange-600 font-medium ml-2">
-                                                                                        (Complete "{available[idx - 1]}" first)
-                                                                                    </span>
-                                                                                )}
-                                                                            </span>
-                                                                        </label>
-                                                                    );
-                                                                })}
-                                                            </div>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => saveMilestones(booking._id)}
-                                                                disabled={isSaving || isSaved}
-                                                                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                                                                    isSaved
+                                                                                    } ${isChecked ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'
+                                                                                    }`}
+                                                                                title={isDisabled ? `Complete "${available[idx - 1]}" first` : ''}
+                                                                            >
+                                                                                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${isChecked ? 'bg-green-500 border-green-500' : isDisabled ? 'border-gray-200 bg-gray-100' : 'border-gray-300 bg-white'
+                                                                                    }`}>
+                                                                                    {isChecked && <CheckCircle2 size={12} className="text-white" />}
+                                                                                    <input
+                                                                                        type="checkbox"
+                                                                                        checked={isChecked}
+                                                                                        disabled={isDisabled}
+                                                                                        readOnly
+                                                                                        className="sr-only"
+                                                                                    />
+                                                                                </div>
+                                                                                <span className={`text-sm flex-1 ${isChecked ? 'text-green-700 font-medium line-through' : isDisabled ? 'text-gray-400' : 'text-gray-700'
+                                                                                    }`}>
+                                                                                    <span className={`w-5 h-5 inline-flex items-center justify-center text-[10px] font-bold rounded-full mr-1.5 ${isChecked ? 'bg-green-300 text-green-700' : isDisabled ? 'bg-gray-200 text-gray-400' : 'bg-gray-200 text-gray-600'
+                                                                                        }`}>{idx + 1}</span>
+                                                                                    {milestone}
+                                                                                    {isDisabled && (
+                                                                                        <span className="text-[10px] text-orange-600 font-medium ml-2">
+                                                                                            (Complete "{available[idx - 1]}" first)
+                                                                                        </span>
+                                                                                    )}
+                                                                                </span>
+                                                                            </label>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => saveMilestones(booking._id)}
+                                                                    disabled={isSaving || isSaved}
+                                                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${isSaved
                                                                         ? 'bg-green-500 text-white cursor-default'
                                                                         : 'bg-[#DAA520] hover:bg-[#c49a1a] text-[#1a1a1a] disabled:opacity-50'
-                                                                }`}
-                                                            >
-                                                                {isSaving ? (
-                                                                    <><Loader2 size={15} className="animate-spin" /> Saving…</>
-                                                                ) : isSaved ? (
-                                                                    <><CheckCircle2 size={15} /> Saved!</>
-                                                                ) : (
-                                                                    <><Save size={15} /> Save Milestones</>
-                                                                )}
-                                                            </button>
-                                                        </div>
-                                                    );
-                                                })()}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </div>
+                                                                        }`}
+                                                                >
+                                                                    {isSaving ? (
+                                                                        <><Loader2 size={15} className="animate-spin" /> Saving…</>
+                                                                    ) : isSaved ? (
+                                                                        <><CheckCircle2 size={15} /> Saved!</>
+                                                                    ) : (
+                                                                        <><Save size={15} /> Save Milestones</>
+                                                                    )}
+                                                                </button>
+                                                            </div>
+                                                        );
+                                                    })()}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
                         )}
 
                     </div>

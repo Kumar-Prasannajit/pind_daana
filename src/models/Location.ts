@@ -14,6 +14,7 @@ export interface ILocation extends Document {
             features: string[];
             recommended?: boolean;
         }[];
+        milestones: string[];
     }[];
     createdAt: Date;
 }
@@ -48,7 +49,11 @@ const LocationSchema: Schema = new Schema({
             price: { type: Number, required: true },
             features: [String],
             recommended: { type: Boolean, default: false }
-        }]
+        }],
+        milestones: {
+            type: [String],
+            default: [],
+        }
     }],
     // Removed legacy flat pricing field
     createdAt: {

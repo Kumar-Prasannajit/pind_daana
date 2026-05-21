@@ -126,6 +126,38 @@ export default function AgentDashboard() {
     };
 
     const toggleMilestoneCheck = (bookingId: string, milestone: string) => {
+        const booking = bookings.find(b => b._id === bookingId);
+        if (!booking) return;
+
+        const availableMilestones = getAvailableMilestones(booking);
+        const current = localMilestones[bookingId] || [];
+        const isChecking = !current.includes(milestone);
+        console.log("BOOKING STATUS:", booking.status);
+console.log("PAYMENT STATUS:", booking.paymentStatus);
+console.log("FULL BOOKING:", booking);
+
+        //if status and paymentStatus is pending prevent checking any milestones and show alert
+        if (booking.status === "Pending" || booking.paymentStatus === "Pending") {
+            alert("⚠️ Cannot modify milestones for pending bookings.");
+            return;
+        }
+
+        // If trying to CHECK a milestone, validate that previous ones are completed
+        if (isChecking) {
+            const milestoneIndex = availableMilestones.indexOf(milestone);
+            for (let i = 0; i < milestoneIndex; i++) {
+                if (!current.includes(availableMilestones[i])) {
+                    alert(
+                        `⚠️ Cannot skip milestones!\n\n` +
+                        `Please complete "${availableMilestones[i]}" first.\n` +
+                        `All previous milestones must be completed in order.`
+                    );
+                    return; // Prevent check
+                }
+            }
+        }
+
+        // If validation passes (or unchecking), update the state
         setLocalMilestones((prev) => {
             const current = prev[bookingId] || [];
             const updated = current.includes(milestone)
@@ -136,19 +168,43 @@ export default function AgentDashboard() {
     };
 
     const saveMilestones = async (bookingId: string) => {
+        const booking = bookings.find(b => b._id === bookingId);
+        if (!booking) return;
+
+        const availableMilestones = getAvailableMilestones(booking);
+        const selectedMilestones = localMilestones[bookingId] || [];
+
+        // Validation: Check if milestones are completed in order
+        for (let i = 0; i < selectedMilestones.length; i++) {
+            const currentMilestoneIndex = availableMilestones.indexOf(selectedMilestones[i]);
+            
+            // Check if all previous milestones are also completed
+            for (let j = 0; j < currentMilestoneIndex; j++) {
+                if (!selectedMilestones.includes(availableMilestones[j])) {
+                    // Show error toast
+                    alert(
+                        `⚠️ Cannot skip milestones!\n\n` +
+                        `Please complete "${availableMilestones[j]}" before marking "${selectedMilestones[i]}" as completed.\n\n` +
+                        `Milestones must be completed in order.`
+                    );
+                    return; // Prevent save
+                }
+            }
+        }
+
         setSavingMilestones((prev) => ({ ...prev, [bookingId]: true }));
         try {
             const res = await fetch("/api/agent/bookings", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ bookingId, completedMilestones: localMilestones[bookingId] || [] }),
+                body: JSON.stringify({ bookingId, completedMilestones: selectedMilestones }),
             });
             if (!res.ok) throw new Error("Failed to save");
             // Sync back into bookings state
             setBookings((prev) =>
                 prev.map((b) =>
                     b._id === bookingId
-                        ? { ...b, completedMilestones: localMilestones[bookingId] || [] }
+                        ? { ...b, completedMilestones: selectedMilestones || [] }
                         : b
                 )
             );
@@ -321,6 +377,9 @@ export default function AgentDashboard() {
                 {/* Scrollable Content */}
                 <main className="flex-1 overflow-y-auto p-4 md:p-8">
                     <div className="max-w-7xl mx-auto space-y-8">
+                        <div className="bg-red-500 text-white p-4 text-2xl">
+   NEW PRODUCTION BUILD
+</div>
 
                         {/* ── DASHBOARD HOME VIEW ── */}
                         {activeView === "dashboard" && (
@@ -516,29 +575,46 @@ export default function AgentDashboard() {
                                                             <div className="space-y-2 mb-4">
                                                                 {available.map((milestone, idx) => {
                                                                     const isChecked = checked.includes(milestone);
+                                                                    // Check if all previous milestones are completed
+                                                                    const canCheck = idx === 0 || available.slice(0, idx).every(m => checked.includes(m));
+                                                                    const isDisabled = !canCheck && !isChecked;
+                                                                    
                                                                     return (
                                                                         <label
                                                                             key={idx}
-                                                                            className={`flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-colors ${
+                                                                            className={`flex items-center gap-3 p-2.5 rounded-lg transition-colors ${
+                                                                                isDisabled
+                                                                                    ? 'cursor-not-allowed opacity-50'
+                                                                                    : 'cursor-pointer'
+                                                                            } ${
                                                                                 isChecked ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'
                                                                             }`}
+                                                                            title={isDisabled ? `Complete "${available[idx - 1]}" first` : ''}
                                                                         >
                                                                             <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                                                                                isChecked ? 'bg-green-500 border-green-500' : 'border-gray-300 bg-white'
+                                                                                isChecked ? 'bg-green-500 border-green-500' : isDisabled ? 'border-gray-200 bg-gray-100' : 'border-gray-300 bg-white'
                                                                             }`}>
                                                                                 {isChecked && <CheckCircle2 size={12} className="text-white" />}
                                                                                 <input
                                                                                     type="checkbox"
                                                                                     checked={isChecked}
                                                                                     onChange={() => toggleMilestoneCheck(booking._id, milestone)}
+                                                                                    disabled={isDisabled}
                                                                                     className="sr-only"
                                                                                 />
                                                                             </div>
                                                                             <span className={`text-sm flex-1 ${
-                                                                                isChecked ? 'text-green-700 font-medium line-through' : 'text-gray-700'
+                                                                                isChecked ? 'text-green-700 font-medium line-through' : isDisabled ? 'text-gray-400' : 'text-gray-700'
                                                                             }`}>
-                                                                                <span className="w-5 h-5 inline-flex items-center justify-center bg-gray-200 text-gray-600 text-[10px] font-bold rounded-full mr-1.5">{idx + 1}</span>
+                                                                                <span className={`w-5 h-5 inline-flex items-center justify-center text-[10px] font-bold rounded-full mr-1.5 ${
+                                                                                    isChecked ? 'bg-green-300 text-green-700' : isDisabled ? 'bg-gray-200 text-gray-400' : 'bg-gray-200 text-gray-600'
+                                                                                }`}>{idx + 1}</span>
                                                                                 {milestone}
+                                                                                {isDisabled && (
+                                                                                    <span className="text-[10px] text-orange-600 font-medium ml-2">
+                                                                                        (Complete "{available[idx - 1]}" first)
+                                                                                    </span>
+                                                                                )}
                                                                             </span>
                                                                         </label>
                                                                     );

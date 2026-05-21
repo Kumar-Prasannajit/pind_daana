@@ -132,6 +132,9 @@ export default function AgentDashboard() {
         const availableMilestones = getAvailableMilestones(booking);
         const current = localMilestones[bookingId] || [];
         const isChecking = !current.includes(milestone);
+        console.log("BOOKING STATUS:", booking.status);
+console.log("PAYMENT STATUS:", booking.paymentStatus);
+console.log("FULL BOOKING:", booking);
 
         //if status and paymentStatus is pending prevent checking any milestones and show alert
         if (booking.status === "Pending" || booking.paymentStatus === "Pending") {
@@ -374,6 +377,9 @@ export default function AgentDashboard() {
                 {/* Scrollable Content */}
                 <main className="flex-1 overflow-y-auto p-4 md:p-8">
                     <div className="max-w-7xl mx-auto space-y-8">
+                        <div className="bg-red-500 text-white p-4 text-2xl">
+   NEW PRODUCTION BUILD
+</div>
 
                         {/* ── DASHBOARD HOME VIEW ── */}
                         {activeView === "dashboard" && (

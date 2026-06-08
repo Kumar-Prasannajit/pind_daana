@@ -1,6 +1,6 @@
 import Hero from "@/components/Hero";
-import Services from "@/components/Services";
 import AboutManima from "@/components/AboutManima";
+import HomeFeaturedOfferings from "@/components/HomeFeaturedOfferings";
 import ProcessFlow from "@/components/ProcessFlow";
 import WhyChooseUs from "@/components/WhyChooseUs";
 import { cookies } from "next/headers";
@@ -35,17 +35,12 @@ export default async function Home() {
     if (isValid) redirect("/agent/dashboard");
   }
 
-  // Verify Client Token
-  if (clientToken) {
-    const isValid = await verifyToken(clientToken, process.env.JWT_SECRET || "default_secret");
-    if (isValid) redirect("/client/dashboard");
-  }
 
   return (
     <>
       <Hero />
+      <HomeFeaturedOfferings />
       <AboutManima />
-      <Services />
       <ProcessFlow />
       <WhyChooseUs />
     </>

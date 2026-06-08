@@ -4,7 +4,7 @@ import React from 'react';
 
 const steps = [
     {
-        icon: <img src="/assets/puja.png" alt="Select Your Puja" width={48} height={48} />,
+        icon: <img src="/assets/puja1.png" alt="Select Your Puja" width={48} height={48} />,
         title: "Select Your Puja",
         description: "Select the puja or ritual that feels right for you from our curated list of temples and services."
     },

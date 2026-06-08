@@ -34,7 +34,11 @@ export default function AdminLayout({
             case "/admin/dashboard/add-puja":
                 return "Add Puja";
             case "/admin/dashboard/pujas":
-                return "All Pujas";
+                return "All Temples";
+            case "/admin/dashboard/type-pujas":
+                return "Type Pujas";
+            case "/admin/dashboard/add-type-puja":
+                return "Add Type Puja";
             case "/admin/dashboard/add-coupon":
                 return "Add Coupon";
             case "/admin/dashboard/coupons":
@@ -42,6 +46,9 @@ export default function AdminLayout({
             default:
                 if (pathname?.startsWith("/admin/dashboard/edit-puja/")) {
                     return "Edit Puja";
+                }
+                if (pathname?.startsWith("/admin/dashboard/edit-type-puja/")) {
+                    return "Edit Type Puja";
                 }
                 if (pathname?.startsWith("/admin/dashboard/edit-service/")) {
                     return "Edit Service";

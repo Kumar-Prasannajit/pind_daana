@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Check, ChevronRight } from "lucide-react";
-import { useSearchParams, useRouter } from "next/navigation";
-import PujaModal from "./PujaModal";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, ArrowRight, Check, MapPin, ShieldCheck, X } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface Pricing {
     name: string;
@@ -15,9 +14,12 @@ interface Pricing {
 interface Location {
     _id: string;
     name: string;
+    description?: string;
+    imageUrl?: string;
+    city: string;
     state: string;
     services: {
-        service: string | { _id: string, name: string };
+        service: string | { _id: string; name: string };
         pricing: Pricing[];
     }[];
 }
@@ -26,45 +28,36 @@ interface Service {
     _id: string;
     name: string;
     details: string;
+    availability?: "explore" | "coming_soon";
 }
 
 interface ServicesSelectionProps {
     showHeader?: boolean;
     title?: string;
     subtitle?: string;
+    initialServiceId?: string;
+    lockServiceSelection?: boolean;
+    showBackButton?: boolean;
 }
 
 export default function ServicesSelection({
     showHeader = true,
     title = "Our Services",
-    subtitle = "Select a service and location to view our comprehensive packages designed for your spiritual needs."
+    subtitle = "Choose a location, review the available packages, and continue to payment for your ritual booking.",
+    initialServiceId,
+    lockServiceSelection = false,
+    showBackButton = false,
 }: ServicesSelectionProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const initialServiceId = searchParams.get('serviceId');
+    const queryServiceId = searchParams.get("serviceId");
     const [services, setServices] = useState<Service[]>([]);
     const [locations, setLocations] = useState<Location[]>([]);
-    const [selectedServiceId, setSelectedServiceId] = useState<string>("");
-    const [selectedLocationId, setSelectedLocationId] = useState<string>("");
-    const [filteredLocations, setFilteredLocations] = useState<Location[]>([]);
-    const [displayPricing, setDisplayPricing] = useState<Pricing[]>([]);
+    const [selectedServiceId, setSelectedServiceId] = useState("");
+    const [selectedState, setSelectedState] = useState("All");
+    const [activeLocation, setActiveLocation] = useState<Location | null>(null);
+    const [isPackagesOpen, setIsPackagesOpen] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [isPujaModalOpen, setIsPujaModalOpen] = useState(false);
-
-    const handleBookNow = (pkg: Pricing) => {
-        const hasAuthCookie = document.cookie.split(';').some((item) => item.trim().startsWith('client_auth_status='));
-
-        if (hasAuthCookie) {
-            const queryParams = new URLSearchParams({
-                serviceId: selectedServiceId,
-                locationId: selectedLocationId,
-                packageName: pkg.name
-            }).toString();
-            router.push(`/checkout?${queryParams}`);
-        } else {
-            setIsPujaModalOpen(true);
-        }
-    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -77,8 +70,8 @@ export default function ServicesSelection({
                 if (servicesRes.ok && locationsRes.ok) {
                     const servicesData = await servicesRes.json();
                     const locationsData = await locationsRes.json();
-                    setServices(servicesData);
-                    setLocations(locationsData);
+                    setServices(Array.isArray(servicesData) ? servicesData.filter((service: Service) => service.availability !== "coming_soon") : []);
+                    setLocations(Array.isArray(locationsData) ? locationsData : []);
                 }
             } catch (error) {
                 console.error("Error fetching data:", error);
@@ -90,63 +83,70 @@ export default function ServicesSelection({
         fetchData();
     }, []);
 
-    // Effect to auto-select service from URL or default to first
     useEffect(() => {
         if (!loading && services.length > 0) {
-            if (initialServiceId && services.some(s => s._id === initialServiceId)) {
-                setSelectedServiceId(initialServiceId);
+            const preferredServiceId = initialServiceId || queryServiceId;
+            if (preferredServiceId && services.some((service) => service._id === preferredServiceId)) {
+                setSelectedServiceId(preferredServiceId);
             } else if (!selectedServiceId) {
-                // Default to first service
                 setSelectedServiceId(services[0]._id);
             }
         }
-    }, [loading, initialServiceId, services]);
+    }, [initialServiceId, loading, queryServiceId, selectedServiceId, services]);
 
-    // Effect to filter locations when a service is selected
-    useEffect(() => {
-        if (selectedServiceId) {
-            const filtered = locations.filter((loc) =>
-                loc.services.some(s => {
-                    const sId = typeof s.service === 'string' ? s.service : s.service._id;
-                    return sId === selectedServiceId;
-                })
-            );
-            setFilteredLocations(filtered);
+    const selectedService = services.find((service) => service._id === selectedServiceId);
 
-            // Auto-select first location if current selection is invalid
-            if (filtered.length > 0 && !filtered.find(l => l._id === selectedLocationId)) {
-                setSelectedLocationId(filtered[0]._id);
-            } else if (filtered.length === 0) {
-                setSelectedLocationId("");
-            }
-        } else {
-            setFilteredLocations([]);
-            setSelectedLocationId("");
+    const serviceLocations = useMemo(() => {
+        return locations.filter((location) =>
+            location.services.some((entry) => {
+                const serviceId = typeof entry.service === "string" ? entry.service : entry.service._id;
+                return serviceId === selectedServiceId;
+            })
+        );
+    }, [locations, selectedServiceId]);
+
+    const stateOptions = useMemo(() => {
+        return ["All", ...Array.from(new Set(serviceLocations.map((location) => location.state)))];
+    }, [serviceLocations]);
+
+    const visibleLocations = useMemo(() => {
+        if (selectedState === "All") return serviceLocations;
+        return serviceLocations.filter((location) => location.state === selectedState);
+    }, [selectedState, serviceLocations]);
+
+    const activePackages = useMemo(() => {
+        if (!activeLocation) return [];
+        const entry = activeLocation.services.find((item) => {
+            const serviceId = typeof item.service === "string" ? item.service : item.service._id;
+            return serviceId === selectedServiceId;
+        });
+        return entry?.pricing || [];
+    }, [activeLocation, selectedServiceId]);
+
+    const handleLocationClick = (location: Location) => {
+        setActiveLocation(location);
+        setIsPackagesOpen(true);
+    };
+
+    const handleBookNow = (pkg: Pricing) => {
+        if (!activeLocation) return;
+        const hasAuthCookie = document.cookie.split(";").some((item) => item.trim().startsWith("client_auth_status="));
+
+        const queryParams = new URLSearchParams({
+            serviceId: selectedServiceId,
+            locationId: activeLocation._id,
+            packageName: pkg.name,
+        }).toString();
+
+        const checkoutUrl = `/checkout?${queryParams}`;
+
+        if (hasAuthCookie) {
+            router.push(checkoutUrl);
+            return;
         }
-    }, [selectedServiceId, locations]);
 
-
-    // Effect to update pricing when service or location changes
-    useEffect(() => {
-        if (selectedServiceId && selectedLocationId) {
-            const location = locations.find((l) => l._id === selectedLocationId);
-            if (location) {
-                // Find the specific service entry in the location to get its pricing
-                const serviceEntry = location.services.find(s => {
-                    const sId = typeof s.service === 'string' ? s.service : s.service._id;
-                    return sId === selectedServiceId;
-                });
-
-                if (serviceEntry) {
-                    setDisplayPricing(serviceEntry.pricing);
-                } else {
-                    setDisplayPricing([]);
-                }
-            }
-        } else {
-            setDisplayPricing([]);
-        }
-    }, [selectedServiceId, selectedLocationId, locations]);
+        router.push(`/client/login?redirect=${encodeURIComponent(checkoutUrl)}`);
+    };
 
     if (loading) {
         return (
@@ -156,138 +156,255 @@ export default function ServicesSelection({
         );
     }
 
-    const selectedService = services.find(s => s._id === selectedServiceId);
-
     return (
         <div className="w-full">
             {showHeader && (
-                <div className="text-center mb-12">
-                    <h1 className="text-4xl md:text-5xl font-bold text-[#922B21] mb-4 font-serif">
-                        {title}
-                    </h1>
-                    <p className="text-[#566573] max-w-2xl mx-auto text-lg">
-                        {subtitle}
-                    </p>
+                <div className="mb-8 flex items-center gap-4">
+                    {showBackButton && (
+                        <button
+                            onClick={() => router.back()}
+                            className="p-3 rounded-full bg-white border border-[#EADBC8] text-[#D35400] hover:bg-orange-50 transition-colors shadow-sm"
+                            aria-label="Go back"
+                        >
+                            <ArrowLeft size={20} />
+                        </button>
+                    )}
+                    <div className={showBackButton ? "text-left" : "text-center w-full"}>
+                        <h1 className="text-4xl md:text-5xl font-bold text-[#922B21] mb-2 font-serif">
+                            {lockServiceSelection && selectedService ? selectedService.name : title}
+                        </h1>
+                        <p className="text-[#8B4513] text-sm opacity-80 max-w-2xl mx-auto">
+                            {selectedService?.details || subtitle}
+                        </p>
+                    </div>
                 </div>
             )}
 
-            {/* Selection Section */}
-            <div className="bg-white rounded-2xl shadow-xl border border-orange-100 p-8 max-w-5xl mx-auto mb-16 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#D35400] to-[#F1C40F]"></div>
+            {!lockServiceSelection && (
+                <div className="mb-12 max-w-sm mx-auto">
+                    <label className="block text-[#922B21] text-xs font-bold uppercase tracking-[0.2em] mb-4 font-serif text-center">
+                        Choose Your Sacred Ritual
+                    </label>
+                    <div className="relative group">
+                        <select
+                            value={selectedServiceId}
+                            onChange={(e) => setSelectedServiceId(e.target.value)}
+                            className="w-full appearance-none rounded-2xl border-2 border-[#EADBC8] bg-white px-6 py-4 text-[#2C3E50] font-bold shadow-sm outline-none focus:border-[#D35400] transition-all cursor-pointer"
+                        >
+                            {services.map((service) => (
+                                <option key={service._id} value={service._id}>
+                                    {service.name}
+                                </option>
+                            ))}
+                        </select>
+                        <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-[#D35400]">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                </div>
+            )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                    {/* Step 1: Select Service */}
-                    <div>
-                        <label className="block text-[#922B21] text-sm font-bold uppercase tracking-widest mb-3 font-serif">
-                            1. Choose Service
-                        </label>
-                        <div className="relative group">
-                            <select
-                                value={selectedServiceId}
-                                onChange={(e) => setSelectedServiceId(e.target.value)}
-                                className="w-full p-4 bg-[#FDFAF5] border-2 border-orange-100 rounded-xl appearance-none focus:outline-none focus:border-[#D35400] focus:ring-4 focus:ring-orange-100/50 text-[#2C3E50] text-lg font-medium cursor-pointer transition-all hover:border-[#F1C40F]"
-                            >
-                                <option value="" disabled>Select a spiritual service...</option>
-                                {services.map((service) => (
-                                    <option key={service._id} value={service._id}>
-                                        {service.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#D35400] transition-transform group-hover:translate-x-1">
-                                <ChevronRight size={20} />
+            <div className="rounded-[3rem] border border-[#EADBC8]/50 bg-[#FDFAF5] p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.05)] relative overflow-hidden">
+                {/* Decorative background elements */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-orange-100/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+                <div className="absolute bottom-0 left-0 w-96 h-96 bg-yellow-50/50 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4"></div>
+
+                <div className="relative z-10">
+                    <div className="mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between border-b border-[#EADBC8]/30 pb-8">
+                        <div>
+                            <p className="text-[10px] uppercase tracking-[0.5em] text-[#D35400] font-bold mb-3">Select Location</p>
+                            <h2 className="text-3xl md:text-4xl font-serif font-bold text-[#2C0E0F] tracking-wide">
+                                {selectedService?.name || "Divine Rituals"}
+                            </h2>
+                        </div>
+                        <div className="relative min-w-[220px]">
+                            <p className="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-bold mb-2 ml-1">Filter by State</p>
+                            <div className="relative">
+                                <select
+                                    value={selectedState}
+                                    onChange={(e) => setSelectedState(e.target.value)}
+                                    className="w-full appearance-none rounded-xl border-2 border-[#EADBC8]/50 bg-white px-5 py-3 text-sm font-bold text-[#2C0E0F] outline-none focus:border-[#D35400] transition-all cursor-pointer shadow-sm"
+                                >
+                                    {stateOptions.map((state) => (
+                                        <option key={state} value={state}>
+                                            {state === 'All' ? 'All India' : state}
+                                        </option>
+                                    ))}
+                                </select>
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#D35400]">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
                             </div>
                         </div>
-                        {selectedService && (
-                            <p className="mt-3 text-gray-500 text-sm italic leading-relaxed pl-1 border-l-2 border-[#F1C40F]">
-                                &quot;{selectedService.details}&quot;
-                            </p>
-                        )}
                     </div>
 
-                    {/* Step 2: Select Location */}
-                    <div className={`transition-all duration-500 ${!selectedServiceId ? 'opacity-40 pointer-events-none blur-sm' : 'opacity-100 blur-0'}`}>
-                        <label className="block text-[#922B21] text-sm font-bold uppercase tracking-widest mb-3 font-serif">
-                            2. Select Location
-                        </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 lg:grid-cols-4">
+                        {visibleLocations.map((location) => {
+                            // Find minimum price for the selected service at this location
+                            const serviceEntry = location.services.find(s => {
+                                const sId = typeof s.service === 'string' ? s.service : s.service._id;
+                                return String(sId) === String(selectedServiceId);
+                            });
+                            const minPrice = serviceEntry?.pricing?.length 
+                                ? Math.min(...serviceEntry.pricing.map(p => p.price)) 
+                                : 0;
 
-                        {filteredLocations.length > 0 ? (
-                            <div className="flex flex-wrap gap-3">
-                                {filteredLocations.map((location) => (
-                                    <button
-                                        key={location._id}
-                                        onClick={() => setSelectedLocationId(location._id)}
-                                        className={`
-                                            relative px-5 py-3 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2 border-2
-                                            ${selectedLocationId === location._id
-                                                ? 'bg-[#D35400] text-white border-[#D35400] shadow-lg shadow-orange-200 transform scale-105'
-                                                : 'bg-white text-gray-600 border-gray-100 hover:border-[#F1C40F] hover:text-[#D35400] hover:shadow-md'
-                                            }
-                                        `}
-                                    >
-                                        {location.name}
-                                        {selectedLocationId === location._id && <Check size={16} className="text-white" />}
-                                    </button>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="p-6 bg-gray-50 rounded-xl text-gray-400 text-sm text-center border-2 border-dashed border-gray-200">
-                                {selectedServiceId ? "No locations available for this service." : "Please select a service above first."}
-                            </div>
-                        )}
+                            return (
+                                <div
+                                    key={location._id}
+                                    onClick={() => handleLocationClick(location)}
+                                    className="group bg-white rounded-3xl shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 border border-[#EADBC8]/30 overflow-hidden cursor-pointer flex flex-col h-full"
+                                >
+                                    <div className="relative h-60 overflow-hidden">
+                                        <img
+                                            src={location.imageUrl || "/assets/marjana.jpeg"}
+                                            alt={location.name}
+                                            className="w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-110"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-40 group-hover:opacity-20 transition-opacity" />
+                                    </div>
+
+                                    <div className="p-6 flex-1 flex flex-col">
+                                        <div className="flex-1">
+                                            <h3 className="font-serif font-bold text-xl text-[#2C0E0F] group-hover:text-[#D35400] transition-colors mb-3 leading-tight">
+                                                {location.name}
+                                            </h3>
+                                            <div className="flex items-center text-gray-500 text-sm mb-4">
+                                                <MapPin size={16} className="mr-1.5 text-[#DAA520] shrink-0" />
+                                                <span className="line-clamp-1">{location.city}, {location.state}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="pt-5 border-t border-[#EADBC8]/20 flex items-center justify-between mt-auto">
+                                            <div>
+                                                <p className="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-bold mb-0.5">Starting at</p>
+                                                <p className="font-bold text-xl text-[#2C0E0F]">₹{minPrice.toLocaleString('en-IN')}</p>
+                                            </div>
+                                            <div className="w-10 h-10 rounded-full bg-orange-50 text-[#D35400] flex items-center justify-center group-hover:bg-[#D35400] group-hover:text-white transition-all transform group-hover:rotate-[-45deg] shadow-sm">
+                                                <ArrowRight size={20} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             </div>
 
-            {/* Step 3: Pricing Display */}
-            {selectedServiceId && selectedLocationId && displayPricing.length > 0 && (
-                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <h2 className="text-3xl font-bold text-center text-[#922B21] mb-10 font-serif">
-                        Available Packages
-                    </h2>
-                    <div className="flex flex-wrap justify-center items-stretch gap-8">
-                        {displayPricing.map((pkg, index) => (
-                            <div
-                                key={index}
-                                className={`flex-1 min-w-[300px] max-w-[380px] bg-white rounded-xl p-8 text-center border transition-all duration-300 relative flex flex-col group
-                                    ${pkg.recommended
-                                        ? 'border-2 border-[#DAA520] shadow-xl z-10 scale-105'
-                                        : 'border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1'
-                                    }
-                                `}
-                            >
-                                {(pkg.recommended || pkg.name.toLowerCase().includes('special') || pkg.name.toLowerCase().includes('premium')) && (
-                                    <div className="absolute -top-[12px] left-1/2 -translate-x-1/2 bg-[#DAA520] text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
-                                        Most Popular
+            {isPackagesOpen && activeLocation && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#1A1A1A]/90 p-4 md:p-6 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="relative max-h-[92vh] w-full max-w-6xl overflow-hidden rounded-[3rem] bg-[#FDFAF5] shadow-[0_50px_100px_rgba(0,0,0,0.4)] border border-white/20 animate-in zoom-in-95 duration-500">
+                        <button
+                            type="button"
+                            onClick={() => setIsPackagesOpen(false)}
+                            className="absolute right-4 top-4 md:right-6 md:top-6 z-20 rounded-full bg-white/20 backdrop-blur-md p-3 text-white border border-white/30 hover:bg-[#D35400] transition-all duration-300 hover:rotate-90 group shadow-lg"
+                        >
+                            <X size={20} />
+                        </button>
+
+                        <div className="flex flex-col max-h-[92vh] overflow-y-auto scrollbar-hide">
+                            <div className="relative min-h-[350px] md:min-h-[450px] bg-[#2C0E0F] overflow-hidden shrink-0">
+                                <div
+                                    className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 scale-105"
+                                    style={{ backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.8) 100%), url(${activeLocation.imageUrl || "/assets/marjana.jpeg"})` }}
+                                />
+                                <div className="relative flex h-full flex-col justify-end p-10 md:p-14 text-white">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="h-[1px] w-8 bg-[#DAA520]"></div>
+                                        <p className="text-xs uppercase tracking-[0.3em] text-[#DAA520] font-bold">
+                                            {selectedService?.name}
+                                        </p>
                                     </div>
-                                )}
-                                <h3 className="text-[#922B21] mb-2 text-xl font-bold">{pkg.name}</h3>
-                                <div className="text-4xl font-bold text-[#2C3E50] mb-8 font-serif">
-                                    ₹ {pkg.price.toLocaleString('en-IN')}
+                                    <h2 className="text-4xl md:text-6xl font-serif font-bold leading-tight mb-6">{activeLocation.name}</h2>
+                                    <p className="max-w-md text-lg text-white/80 font-light leading-relaxed mb-8">
+                                        {activeLocation.description || selectedService?.details || "Experience the sacred traditions at our verified holy sites."}
+                                    </p>
+                                    <div className="flex items-center gap-6">
+                                        <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/10 text-sm">
+                                            <MapPin size={16} className="text-[#DAA520]" />
+                                            <span>{activeLocation.city}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/10 text-sm">
+                                            <ShieldCheck size={16} className="text-[#DAA520]" />
+                                            <span>Verified Pandit</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <ul className="list-none text-left mb-8 flex-grow space-y-3">
-                                    {pkg.features.map((feature, i) => (
-                                        <li key={i} className="flex items-start gap-3 text-gray-600 text-sm">
-                                            <Check size={16} className="text-[#D35400] min-w-[16px] mt-1" />
-                                            <span className="leading-snug">{feature}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                                <button
-                                    onClick={() => handleBookNow(pkg)}
-                                    className="w-full py-3 rounded-lg font-bold uppercase tracking-wider text-sm transition-all duration-300 bg-[#D35400] text-white hover:bg-[#E67E22] shadow-md hover:shadow-lg hover:-translate-y-0.5"
-                                >
-                                    Book Now
-                                </button>
                             </div>
-                        ))}
+
+                            <div className="p-8 md:p-14 flex flex-col">
+                                <div className="flex items-center justify-between mb-10">
+                                    <div>
+                                        <h3 className="text-3xl md:text-4xl font-serif font-bold text-[#2C0E0F]">Available Packages</h3>
+                                        <div className="flex items-center gap-2 mt-2 text-[#D35400] font-bold">
+                                            <Check size={16} />
+                                            <span className="text-sm tracking-wide">Trusted by 10,000+ devotees</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
+                                    {activePackages.map((pkg, index) => (
+                                        <div
+                                            key={index}
+                                            className={`group relative flex flex-col justify-between rounded-[2.5rem] border-2 p-8 transition-all duration-300 ${pkg.recommended 
+                                                ? "border-[#D35400] bg-white shadow-[0_20px_50px_rgba(211,84,0,0.1)] ring-1 ring-[#D35400]/20" 
+                                                : "border-[#E5E7EB] bg-white hover:border-[#D35400]/30 hover:shadow-xl"}`}
+                                        >
+                                            {pkg.recommended && (
+                                                <div className="absolute -top-4 right-10 flex items-center gap-2 rounded-full bg-gradient-to-r from-[#D35400] to-[#E67E22] px-6 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-white shadow-lg overflow-hidden">
+                                                    <div className="absolute inset-0 animate-shimmer pointer-events-none"></div>
+                                                    <span className="relative z-10">Recommended Choice</span>
+                                                </div>
+                                            )}
+                                            
+                                            <div className="flex-1">
+                                                <h4 className="text-2xl font-bold text-[#111827] mb-2">{pkg.name}</h4>
+                                                <div className="flex items-baseline gap-1 mb-6">
+                                                    <span className="text-3xl font-black text-[#2C0E0F]">₹{pkg.price.toLocaleString("en-IN")}</span>
+                                                    <span className="text-gray-400 text-sm font-medium">/ ritual</span>
+                                                </div>
+                                                <ul className="flex flex-col gap-y-3 mb-8">
+                                                    {pkg.features.map((feature, featureIndex) => (
+                                                        <li key={featureIndex} className="flex items-start gap-2.5 text-sm text-[#4B5563]">
+                                                            <div className="mt-1 flex-shrink-0 w-4 h-4 rounded-full bg-[#D35400]/10 flex items-center justify-center text-[#D35400]">
+                                                                <Check size={10} strokeWidth={4} />
+                                                            </div>
+                                                            <span className="leading-tight">{feature}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+
+                                            <div className="mt-auto flex flex-col items-center pt-6 border-t border-gray-100">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleBookNow(pkg)}
+                                                    className={`w-full inline-flex items-center justify-center gap-3 rounded-2xl px-10 py-5 font-bold text-center transition-all duration-300 transform active:scale-95 ${pkg.recommended 
+                                                        ? "bg-[#D35400] text-white shadow-lg shadow-[#D35400]/30 hover:bg-[#B84A00] hover:-translate-y-1" 
+                                                        : "bg-[#2C0E0F] text-white hover:bg-[#1A1A1A] hover:-translate-y-1"}`}
+                                                >
+                                                    <span>Book Now</span>
+                                                    <ArrowRight size={18} />
+                                                </button>
+                                                <div className="mt-3 flex items-center gap-1.5 text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                                                    <ShieldCheck size={12} />
+                                                    <span>Safe Booking</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <p className="mt-10 text-center text-xs text-gray-400 font-medium italic">
+                                    * Our Vedic experts ensure all rituals are performed with the utmost purity and adherence to tradition.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
-            <PujaModal
-                isOpen={isPujaModalOpen}
-                onClose={() => setIsPujaModalOpen(false)}
-            />
+
         </div>
     );
 }

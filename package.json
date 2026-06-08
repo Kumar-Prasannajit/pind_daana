@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@fortawesome/react-fontawesome": "^3.2.0",
+    "@supabase/ssr": "^0.10.3",
+    "@supabase/supabase-js": "^2.105.4",
     "@types/jsonwebtoken": "^9.0.10",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.2.3",
@@ -22,8 +24,10 @@
     "mongoose": "^9.1.6",
     "next": "16.1.6",
     "nodemailer": "^8.0.1",
+    "razorpay": "^2.9.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "react-hot-toast": "^2.6.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -36,6 +40,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }

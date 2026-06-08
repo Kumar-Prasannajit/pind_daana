@@ -1,19 +1,9 @@
 
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
-import mongoose from "mongoose";
+import dbConnect from "@/lib/db";
 import Client from "@/models/Client";
 import { cookies } from "next/headers";
-
-const connectToDB = async () => {
-    if (mongoose.connection.readyState >= 1) return;
-    try {
-        await mongoose.connect(process.env.MONGODB_URI as string);
-    } catch (error) {
-        console.error("DB Connection Error:", error);
-    }
-};
-
 export async function GET() {
     try {
         const cookieStore = await cookies();
@@ -23,10 +13,10 @@ export async function GET() {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const secret = new TextEncoder().encode(process.env.JWT_SECRET || "default_secret");
+        const secret = new TextEncoder().encode(process.env.JWT_SECRET || "your-secret-key");
         const { payload } = await jwtVerify(token, secret);
 
-        await connectToDB();
+        await dbConnect();
         const client = await Client.findById(payload.id).select("-password");
 
         if (!client) {

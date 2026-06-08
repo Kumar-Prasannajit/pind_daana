@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Loader2, Plus, Edit2, Package, Search } from "lucide-react";
+import { Loader2, Plus, Edit2, Package, Search, Trash2 } from "lucide-react";
 
 interface IService {
     _id: string;
     name: string;
     details: string;
+    availability: "explore" | "coming_soon";
 }
 
 export default function ServicesPage() {
@@ -34,14 +35,56 @@ export default function ServicesPage() {
         }
     };
 
+    const handleDelete = async (id: string) => {
+        if (!window.confirm("Are you sure you want to delete this service?")) return;
+
+        try {
+            const res = await fetch(`/api/services?id=${id}`, { method: "DELETE" });
+            const data = await res.json();
+            if (res.ok) {
+                setServices(services.filter(s => s._id !== id));
+            } else {
+                alert(data.error || "Failed to delete service");
+            }
+        } catch (error) {
+            console.error("Error deleting service:", error);
+            alert("Failed to delete service");
+        }
+    };
+
     const filteredServices = services.filter(service =>
         service.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <Loader2 className="animate-spin text-manima-red" size={40} />
+            <div className="max-w-6xl mx-auto p-6 w-full animate-pulse">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                    <div>
+                        <div className="h-8 bg-gray-200 rounded w-48 mb-2"></div>
+                        <div className="h-4 bg-gray-200 rounded w-64"></div>
+                    </div>
+                    <div className="h-10 bg-gray-200 rounded-lg w-40"></div>
+                </div>
+                <div className="h-12 bg-gray-200 rounded-xl w-full mb-6"></div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[1, 2, 3, 4, 5, 6].map(i => (
+                        <div key={i} className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 h-48 flex flex-col justify-between">
+                            <div className="flex justify-between items-start mb-4">
+                                <div className="w-10 h-10 bg-gray-200 rounded-lg"></div>
+                                <div className="flex gap-2">
+                                    <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
+                                    <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
+                                </div>
+                            </div>
+                            <div className="h-6 bg-gray-200 rounded w-3/4 mb-3"></div>
+                            <div className="space-y-2 mt-auto">
+                                <div className="h-3 bg-gray-200 rounded w-full"></div>
+                                <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         );
     }
@@ -93,23 +136,47 @@ export default function ServicesPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredServices.map((service) => (
                         <div key={service._id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow group relative p-6">
+                            {(() => {
+                                const isExplore = service.availability !== "coming_soon";
+                                return (
+                                    <>
                             <div className="flex justify-between items-start mb-4">
                                 <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center text-manima-red">
                                     <Package size={20} />
                                 </div>
-                                <Link
-                                    href={`/admin/dashboard/edit-service/${service._id}`}
-                                    className="p-2 text-gray-400 hover:text-manima-red hover:bg-red-50 rounded-lg transition-colors"
-                                    title="Edit Service"
-                                >
-                                    <Edit2 size={18} />
-                                </Link>
+                                <div className="flex gap-2">
+                                    <Link
+                                        href={`/admin/dashboard/edit-service/${service._id}`}
+                                        className="p-2 text-gray-400 hover:text-manima-red hover:bg-red-50 rounded-lg transition-colors"
+                                        title="Edit Service"
+                                    >
+                                        <Edit2 size={18} />
+                                    </Link>
+                                    <button
+                                        onClick={() => handleDelete(service._id)}
+                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                        title="Delete Service"
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
+                                </div>
                             </div>
 
                             <h3 className="font-heading font-bold text-lg text-gray-900 mb-2">{service.name}</h3>
+                            <div className="mb-3">
+                                <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider ${isExplore
+                                    ? "bg-green-50 text-green-700 border border-green-100"
+                                    : "bg-amber-50 text-amber-700 border border-amber-100"
+                                    }`}>
+                                    {isExplore ? "Explore" : "Coming Soon"}
+                                </span>
+                            </div>
                             <p className="text-gray-500 text-sm line-clamp-3 mb-4 h-15">
                                 {service.details}
                             </p>
+                                    </>
+                                );
+                            })()}
                         </div>
                     ))}
                 </div>

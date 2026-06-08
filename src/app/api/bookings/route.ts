@@ -1,28 +1,44 @@
 import { NextResponse } from "next/server";
-import mongoose from "mongoose";
+import dbConnect from "@/lib/db";
 import Booking from "@/models/Booking";
 import Client from "@/models/Client";
 import Service from "@/models/Service";
 import LocationModel from "@/models/Location";
-
-const connectToDB = async () => {
-    if (mongoose.connection.readyState >= 1) return;
-    try {
-        await mongoose.connect(process.env.MONGODB_URI as string);
-    } catch (error) {
-        console.error("DB Connection Error:", error);
-    }
-};
-
 export async function POST(req: Request) {
     try {
-        await connectToDB();
+        await dbConnect();
         const body = await req.json();
 
         // Basic validation
         if (!body.client || (!body.puja && (!body.location || !body.service)) || !body.priceCategory || !body.price) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
+
+        // --- DUPLICATE BOOKING PREVENTION (Task 5) ---
+        // Prevent duplicate bookings created within a 5-minute window
+        // (e.g. from double-clicks or retry on slow networks)
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+        const duplicateQuery: any = {
+            client: body.client,
+            priceCategory: body.priceCategory,
+            createdAt: { $gte: fiveMinutesAgo },
+        };
+
+        if (body.puja) {
+            duplicateQuery.puja = body.puja;
+        } else {
+            duplicateQuery.service = body.service;
+            duplicateQuery.location = body.location;
+        }
+
+        const existingBooking = await Booking.findOne(duplicateQuery);
+        if (existingBooking) {
+            return NextResponse.json(
+                { message: "Booking already exists", booking: existingBooking },
+                { status: 200 }
+            );
+        }
+        // --- END DUPLICATE PREVENTION ---
 
         const bookingData = {
             ...body,
@@ -88,6 +104,12 @@ export async function POST(req: Request) {
             // Don't fail the booking if sheet sync fails
         }
         // ---------------------------------
+
+        // Update Client Status
+        await Client.findByIdAndUpdate(body.client, {
+            $set: { isBooked: true },
+            $unset: { expireAt: "" }
+        });
 
         return NextResponse.json({ message: "Booking created successfully", booking: newBooking }, { status: 201 });
     } catch (error: any) {

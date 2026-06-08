@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
+
+export const dynamic = 'force-dynamic';
 import dbConnect from "@/lib/db";
 import Puja from "@/models/Puja";
+import "@/models/PujaService"; // Required so Mongoose can populate services.service refs
 
 import imagekit from "@/lib/imagekit";
 
@@ -21,9 +24,9 @@ export async function POST(req: Request) {
       data = Object.fromEntries(formData);
       fileToUpload = formData.get("file") || formData.get("image"); // Expecting 'file' or 'image' field
       // Extract other fields from JSON string if needed, or simple fields
-      if (typeof data.packages === 'string') {
+      if (typeof data.services === 'string') {
         try {
-          data.packages = JSON.parse(data.packages);
+          data.services = JSON.parse(data.services);
         } catch (e) {
           // ignore
         }
@@ -54,6 +57,10 @@ export async function POST(req: Request) {
       data.imageUrl = uploadResponse.url;
     }
 
+    if (data.priority !== undefined) {
+      data.priority = Number(data.priority);
+    }
+
     const puja = await Puja.create(data);
 
     return NextResponse.json(
@@ -76,10 +83,27 @@ export async function GET() {
   try {
     await dbConnect();
 
-    const pujas = await Puja.find().sort({ createdAt: -1 });
+    const pujas = await Puja.find()
+      .populate("services.service", "name significance")
+      .lean();
+
+    // Sort in code to safely handle legacy pujas missing the priority field
+    const sortedPujas = pujas.sort((a: any, b: any) => {
+        const priorityA = a.priority !== undefined && a.priority !== null ? Number(a.priority) : 8;
+        const priorityB = b.priority !== undefined && b.priority !== null ? Number(b.priority) : 8;
+        
+        if (priorityA !== priorityB) {
+            return priorityA - priorityB; // 1 (Highest) -> 8 (Standard)
+        }
+        
+        // Tie-breaker: Newest first
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA; 
+    });
 
     return NextResponse.json(
-      { success: true, data: pujas },
+      { success: true, data: sortedPujas },
       { status: 200 }
     );
   } catch (error: any) {
@@ -106,9 +130,9 @@ export async function PATCH(req: Request) {
       data = Object.fromEntries(formData);
       fileToUpload = formData.get("file") || formData.get("image");
 
-      if (typeof data.packages === 'string') {
+      if (typeof data.services === 'string') {
         try {
-          data.packages = JSON.parse(data.packages);
+          data.services = JSON.parse(data.services);
         } catch (e) {
           // ignore
         }
@@ -126,6 +150,10 @@ export async function PATCH(req: Request) {
     }
 
     const id = data.id || data._id;
+
+    if (data.priority !== undefined) {
+      data.priority = Number(data.priority);
+    }
 
     if (fileToUpload) {
       let fileData: string | Buffer = fileToUpload as string;
@@ -168,6 +196,44 @@ export async function PATCH(req: Request) {
     return NextResponse.json(
       { success: false, message: error.message },
       { status: 400 }
+    );
+  }
+}
+
+/* -------------------- */
+/* DELETE: Delete Puja  */
+/* -------------------- */
+export async function DELETE(req: Request) {
+  try {
+    await dbConnect();
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, message: "Puja ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const puja = await Puja.findByIdAndDelete(id);
+
+    if (!puja) {
+      return NextResponse.json(
+        { success: false, message: "Puja not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(
+      { success: true, message: "Puja deleted successfully" },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    console.error("Error deleting puja:", error);
+    return NextResponse.json(
+      { success: false, message: error.message },
+      { status: 500 }
     );
   }
 }

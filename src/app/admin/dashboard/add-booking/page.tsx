@@ -7,8 +7,10 @@ import { useRouter } from "next/navigation";
 interface Location {
     _id: string;
     name: string;
-    services: string[]; // IDs
-    pricing: { name: string; price: number }[];
+    services?: {
+        service: string | { _id: string; name: string };
+        pricing: { name: string; price: number; features?: string[] }[];
+    }[];
 }
 
 interface Service {
@@ -96,30 +98,47 @@ export default function AddBooking() {
             };
             fetchAgents();
 
-            // Update Available Services & Pricing
+            // Update Available Services
             const selectedLoc = locations.find(l => l._id === formData.location);
             if (selectedLoc) {
-                // Filter services that are in the location's service list
-                const locServiceIds = selectedLoc.services || [];
-                // If location has no specific services array or it's empty, maybe show all? 
-                // Creating location didn't strictly filter services in backend, but frontend stored them.
-                // Let's assume location.services contains IDs.
-
-                // If location.services is undefined (old records), show all.
-                // Or verify how we stored it. The model has services: [{ type: ObjectId }]
-
+                const locServices = selectedLoc.services || [];
                 const filteredServices = allServices.filter(s =>
-                    locServiceIds.includes(s._id) || locServiceIds.length === 0
+                    locServices.some((ls: any) => {
+                        const id = typeof ls === 'string' ? ls : (ls.service?._id || ls.service || "");
+                        return id.toString() === s._id.toString();
+                    }) || locServices.length === 0
                 );
                 setAvailableServices(filteredServices);
-                setAvailablePricing(selectedLoc.pricing || []);
             }
         } else {
             setAgents([]);
             setAvailableServices([]);
-            setAvailablePricing([]);
         }
     }, [formData.location, locations, allServices]);
+
+    // Update Available Pricing/Packages when Location or Service changes
+    useEffect(() => {
+        if (formData.location && formData.service) {
+            const selectedLoc = locations.find(l => l._id === formData.location);
+            if (selectedLoc) {
+                const locServices = selectedLoc.services || [];
+                const serviceEntry = locServices.find((ls: any) => {
+                    const id = typeof ls === 'string' ? ls : (ls.service?._id || ls.service || "");
+                    return id.toString() === formData.service.toString();
+                });
+                if (serviceEntry && serviceEntry.pricing) {
+                    setAvailablePricing(serviceEntry.pricing);
+                } else {
+                    setAvailablePricing([]);
+                }
+            }
+        } else {
+            setAvailablePricing([]);
+        }
+
+        // Reset package selection and price when service or location changes
+        setFormData(prev => ({ ...prev, priceCategory: "", price: "" }));
+    }, [formData.location, formData.service, locations]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -342,16 +361,16 @@ export default function AddBooking() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Pricing Category</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Select Package</label>
                                 <select
                                     name="priceCategory"
                                     value={formData.priceCategory}
                                     onChange={handleChange}
                                     required
-                                    disabled={!formData.location}
+                                    disabled={!formData.location || !formData.service}
                                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-manima-gold/20 focus:border-manima-gold outline-none transition-all cursor-pointer disabled:opacity-50"
                                 >
-                                    <option value="">Select Category</option>
+                                    <option value="">Select Package</option>
                                     {availablePricing.map((p, idx) => (
                                         <option key={idx} value={p.name}>{p.name} - ₹{p.price}</option>
                                     ))}

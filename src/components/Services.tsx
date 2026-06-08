@@ -1,15 +1,15 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 interface Service {
     _id: string;
     name: string;
     details: string;
-    link?: string;
-    comingSoon?: boolean;
-    image?: string;
+    availability: "explore" | "coming_soon";
+    imageUrl?: string;
 }
 
 interface ServicesProps {
@@ -22,58 +22,21 @@ const Services = ({ onServiceClick }: ServicesProps) => {
 
     useEffect(() => {
         const fetchServices = async () => {
-            // Static services definition
-            const ritualPuja: Service = {
-                _id: 'ritual-puja-static',
-                name: 'Puja for Special Occasions',
-                details: 'Perform authentic Vedic Pujas with experienced Pandits.',
-                link: '/pujas',
-                image: '/assets/special_puja.jpeg'
-            };
-
-            const asthiVisarjan: Service = {
-                _id: 'online-asthi-visarjan',
-                name: 'Online Asthi Visarjan',
-                details: 'Perform Asthi Visarjan rituals remotely.',
-                comingSoon: true,
-                image: '/assets/asthi_visarjan.jpeg'
-            };
-
-            const pindDaan: Service = {
-                _id: 'online-pind-daan',
-                name: 'Online Pind Daan',
-                details: 'Perform Pind Daan for your ancestors.',
-                comingSoon: true,
-                image: '/assets/pind_daan_websiteimg.jpeg'
-            };
-
-            const bookPandit: Service = {
-                _id: 'book-a-pandit',
-                name: 'Book a Pandit',
-                details: 'Connect with knowledgeable Pandits.',
-                comingSoon: true,
-                image: '/assets/book_pandit.jpeg'
-            };
-
-            let apiServices: Service[] = [];
-
             try {
-                const res = await fetch('/api/services');
+                const res = await fetch("/api/services");
                 if (res.ok) {
-                    apiServices = await res.json();
+                    const data = await res.json();
+                    if (Array.isArray(data)) {
+                        setServices(data);
+                    }
                 }
             } catch (error) {
                 console.error("Failed to fetch services:", error);
             } finally {
-                // Ensure apiServices also have images if possible or use default
-                const processedApiServices = apiServices.map(s => ({
-                    ...s,
-                    image: s.image || '/assets/manima_logo.png' // Fallback
-                }));
-                setServices([ritualPuja, asthiVisarjan, pindDaan, bookPandit, ...processedApiServices]);
                 setLoading(false);
             }
         };
+
         fetchServices();
     }, []);
 
@@ -88,75 +51,72 @@ const Services = ({ onServiceClick }: ServicesProps) => {
                 </div>
 
                 {loading ? (
-                    <div className="w-full text-center py-20 text-gray-500">Loading services...</div>
-                ) : services.length > 0 ? (
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                        {services.slice(0, 4).map((service, index) => (
-                            <div key={service._id} className={`relative group ${service.comingSoon ? 'opacity-90' : ''}`}>
-                                {service.comingSoon ? (
-                                    <div className="block h-64 w-full rounded-[2rem] overflow-hidden relative shadow-md cursor-default">
-                                        {/* Background Image */}
-                                        <div
-                                            className="absolute inset-0 bg-cover bg-center transition-transform duration-700"
-                                            style={{ backgroundImage: `url(${service.image})` }}
-                                        />
-                                        {/* Overlay */}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-
-                                        {/* Content */}
-                                        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center z-10">
-                                            {/* Capsule Container for Coming Soon */}
-                                            <div className="bg-white/20 backdrop-blur-sm border border-white/30 px-4 py-1.5 rounded-full mb-3 shadow-lg">
-                                                <span className="text-white text-[10px] tracking-[0.2em] font-medium uppercase drop-shadow-sm block">COMING SOON</span>
-                                            </div>
-
-                                            <h3 className="text-white text-2xl font-[family-name:var(--font-dm-serif)] leading-tight drop-shadow-md">
-                                                {service.name.split(' ').map((word, i) => (
-                                                    <span key={i} className="block">{word}</span>
-                                                ))}
-                                            </h3>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <Link
-                                        href={service.link || `/services?serviceId=${service._id}`}
-                                        className="block h-64 w-full rounded-[2rem] overflow-hidden relative shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-                                    >
-                                        {/* Background Image */}
-                                        <div
-                                            className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-                                            style={{ backgroundImage: `url(${service.image})` }}
-                                        />
-                                        {/* Overlay */}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
-
-                                        {/* Content */}
-                                        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center z-10">
-                                            {/* Capsule Container for Explore */}
-                                            <div className="bg-white/20 backdrop-blur-sm border border-white/30 px-4 py-1.5 rounded-full mb-3 shadow-lg group-hover:bg-white/30 transition-colors">
-                                                <span className="text-white text-[10px] tracking-[0.2em] font-medium uppercase drop-shadow-sm block">EXPLORE</span>
-                                            </div>
-
-                                            <h3 className="text-white text-2xl font-[family-name:var(--font-dm-serif)] leading-tight drop-shadow-md">
-                                                {service.name.split(' ').map((word, i) => (
-                                                    <span key={i} className="block">{word}</span>
-                                                ))}
-                                            </h3>
-                                        </div>
-                                    </Link>
-                                )}
-                            </div>
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        {[1, 2, 3, 4].map((i) => (
+                            <div key={i} className="h-64 w-full rounded-[2rem] bg-gray-200 animate-pulse shadow-md" />
                         ))}
                     </div>
+                ) : services.length === 0 ? (
+                    <div className="rounded-[2rem] border border-dashed border-[#DAA520]/40 bg-white/70 px-6 py-12 text-center text-[#7A6A56]">
+                        No services available right now.
+                    </div>
                 ) : (
-                    <div className="w-full text-center py-10 text-gray-400">No services available.</div>
-                )}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        {services.map((service) => {
+                            const isExplore = service.availability !== "coming_soon";
+                            const cardContent = (
+                                <>
+                                    <div
+                                        className={`absolute inset-0 bg-cover bg-center ${isExplore ? "transition-transform duration-700 group-hover:scale-110" : ""}`}
+                                        style={{ backgroundImage: `url(${service.imageUrl || "/assets/marjana.jpeg"})` }}
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-95" />
+                                    <div className="absolute inset-0 flex flex-col justify-between p-4 sm:p-6 z-10">
+                                        <div className="bg-white/20 backdrop-blur-sm border border-white/30 px-3 py-1 rounded-full self-start shadow-md">
+                                            <span className="text-white text-[9px] sm:text-[10px] tracking-widest font-medium uppercase drop-shadow-sm">
+                                                {isExplore ? "Explore" : "Coming Soon"}
+                                            </span>
+                                        </div>
 
-                {/* <div className="text-center mt-8">
-                    <Link href="/services" className="inline-block p-3 bg-[#D35400] text-white rounded-full hover:bg-[#E67E22] transition-colors duration-300 shadow-lg group">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down group-hover:translate-y-1 transition-transform"><path d="m6 9 6 6 6-6" /></svg>
-                    </Link>
-                </div> */}
+                                        <div className="flex items-end justify-start sm:justify-between gap-2 min-h-[48px]">
+                                            <h3 className="text-white text-base sm:text-xl font-serif font-semibold leading-snug drop-shadow-md group-hover:text-[#FFD700] transition-colors text-center w-full">
+                                                {service.name}
+                                            </h3>
+
+                                            {isExplore && (
+                                                <div className="hidden sm:flex w-9 h-9 rounded-full bg-orange-50 text-[#D35400] items-center justify-center group-hover:bg-[#D35400] group-hover:text-white transition-all duration-300 transform group-hover:rotate-[-45deg] shadow-sm shrink-0 ml-2">
+                                                    <ArrowRight size={16} />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </>
+                            );
+
+                            if (!isExplore) {
+                                return (
+                                    <div
+                                        key={service._id}
+                                        className="group block h-64 w-full rounded-[2rem] overflow-hidden relative shadow-md cursor-default"
+                                    >
+                                        {cardContent}
+                                    </div>
+                                );
+                            }
+
+                            return (
+                                <Link
+                                    key={service._id}
+                                    href={`/services/${service._id}`}
+                                    onClick={() => onServiceClick?.(service._id)}
+                                    className="group block h-64 w-full rounded-[2rem] overflow-hidden relative shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                                >
+                                    {cardContent}
+                                </Link>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
         </section>
     );

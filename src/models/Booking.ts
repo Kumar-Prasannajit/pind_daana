@@ -15,6 +15,7 @@ export interface IBooking extends Document {
     isPaymentVerified: boolean;
     status: "Pending" | "Confirmed" | "Completed" | "Cancelled";
     isCompleted: boolean;
+    completedMilestones: string[];
     bookingDate: Date;
     createdAt: Date;
 }
@@ -77,6 +78,10 @@ const BookingSchema: Schema = new Schema({
     isCompleted: {
         type: Boolean,
         default: false,
+    },
+    completedMilestones: {
+        type: [String],
+        default: [],
     },
     bookingDate: {
         type: Date,

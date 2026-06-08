@@ -5,14 +5,29 @@ import { useEffect, useState } from "react";
 import {
     User, Mail, Phone, MapPin, Loader2, Calendar,
     Clock, LogOut, LayoutDashboard, Settings,
-    HelpCircle, Bell, ChevronDown, ShieldCheck, Search, Menu, X
+    HelpCircle, Bell, ChevronDown, ShieldCheck, Search, Menu, X, Home
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import ClientBookingsList from "@/components/client/ClientBookingsList";
+import dynamic from "next/dynamic";
 import ProfilePage from "./profile/page";
 import PujaModal from "@/components/PujaModal";
+
+const ClientBookingsList = dynamic(() => import("@/components/client/ClientBookingsList"), {
+    ssr: false,
+    loading: () => (
+        <div className="flex flex-col gap-6 w-full animate-pulse">
+            <div className="flex items-center justify-between">
+                <div className="h-8 bg-gray-200 rounded-lg w-48"></div>
+                <div className="h-6 bg-gray-200 rounded-full w-24"></div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                {[1, 2].map(i => <div key={i} className="h-64 bg-gray-200 rounded-2xl"></div>)}
+            </div>
+        </div>
+    )
+});
 
 interface ClientProfile {
     _id: string;
@@ -63,8 +78,31 @@ export default function ClientDashboard() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#F5F6F8] flex items-center justify-center">
-                <Loader2 className="animate-spin text-[#DAA520]" size={40} />
+            <div className="flex h-screen bg-[#F5F6F8] font-sans">
+                {/* Skeleton Sidebar - Desktop Only */}
+                <aside className="hidden md:flex flex-col w-72 bg-[#2C0E0F] shrink-0 border-r border-white/5 animate-pulse">
+                    <div className="h-24 px-8 flex items-center border-b border-white/10">
+                        <div className="w-10 h-10 rounded-full bg-white/10"></div>
+                        <div className="h-6 w-24 bg-white/10 rounded ml-3"></div>
+                    </div>
+                    <div className="flex-1 p-4 space-y-4 mt-4">
+                        {[1, 2, 3, 4, 5].map(i => <div key={i} className="h-12 w-full bg-white/5 rounded-xl"></div>)}
+                    </div>
+                </aside>
+                {/* Skeleton Main Content */}
+                <div className="flex-1 flex flex-col min-w-0">
+                    <header className="h-16 md:h-24 bg-white border-b border-gray-100 flex items-center px-4 md:px-8 shrink-0 animate-pulse">
+                        <div className="w-32 h-6 bg-gray-200 rounded"></div>
+                    </header>
+                    <main className="flex-1 p-4 md:p-8">
+                        <div className="max-w-7xl mx-auto space-y-8 animate-pulse">
+                            <div className="h-64 md:h-80 w-full bg-gray-200 rounded-3xl"></div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {[1, 2, 3].map(i => <div key={i} className="h-32 bg-gray-200 rounded-2xl"></div>)}
+                            </div>
+                        </div>
+                    </main>
+                </div>
             </div>
         );
     }
@@ -72,10 +110,10 @@ export default function ClientDashboard() {
     if (!client) return null;
 
     const navItems = [
+        { id: "home", label: "Home", icon: Home },
         { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
         { id: "bookings", label: "My Bookings", icon: Calendar },
-        { id: "history", label: "History", icon: Clock },
-        { id: "profile", label: "My Profile", icon: User },
+        { id: "profile", label: "Account", icon: User },
         { id: "support", label: "Support", icon: HelpCircle },
     ];
 
@@ -98,7 +136,7 @@ export default function ClientDashboard() {
                                         Verified Member
                                     </span>
                                     <h2 className="text-3xl md:text-4xl font-serif font-bold leading-tight">
-                                        Namaste, <span className="text-[#DAA520]">{client.name.split(' ')[0]}</span>
+                                        Namaste, <span className="text-[#DAA520]">{(client.name || "User").split(' ')[0]}</span>
                                     </h2>
                                     <p className="text-white/70 text-lg leading-relaxed">
                                         Your spiritual journey continues here. Book a ritual for your ancestors or manage your ongoing requests.
@@ -182,7 +220,7 @@ export default function ClientDashboard() {
                                     <div className="flex flex-col md:flex-row gap-8 items-center md:items-start text-center md:text-left">
                                         <div className="relative">
                                             <div className="w-24 h-24 rounded-full bg-[#2C0E0F] flex items-center justify-center text-3xl font-serif text-[#DAA520] font-bold ring-4 ring-gray-50 shadow-lg">
-                                                {client.name.charAt(0).toUpperCase()}
+                                                {(client.name || "U").charAt(0).toUpperCase()}
                                             </div>
                                             <div className="absolute bottom-0 right-0 bg-green-500 w-6 h-6 rounded-full border-4 border-white"></div>
                                         </div>
@@ -297,8 +335,12 @@ export default function ClientDashboard() {
                         <button
                             key={item.id}
                             onClick={() => {
-                                setActiveTab(item.id);
-                                setIsSidebarOpen(false);
+                                if (item.id === "home") {
+                                    window.location.href = "/";
+                                } else {
+                                    setActiveTab(item.id);
+                                    setIsSidebarOpen(false);
+                                }
                             }}
                             className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-200 group text-left ${activeTab === item.id
                                 ? "bg-[#DAA520] text-[#2C0E0F] shadow-lg font-semibold"
@@ -326,7 +368,7 @@ export default function ClientDashboard() {
                 <div className="p-4 border-t border-white/10 bg-[#230b0c] flex-shrink-0">
                     <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
                         <div className="w-10 h-10 rounded-full bg-[#DAA520] flex items-center justify-center text-[#2C0E0F] font-bold font-serif">
-                            {client.name.charAt(0).toUpperCase()}
+                            {(client.name || "U").charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold text-white truncate">{client.name}</p>
@@ -352,7 +394,7 @@ export default function ClientDashboard() {
                             <h1 className="text-xl md:text-2xl font-serif font-bold text-[#2C0E0F]">
                                 {navItems.find(i => i.id === activeTab)?.label || "Dashboard"}
                             </h1>
-                            <p className="text-xs md:text-sm text-gray-500">Welcome back, {client.name.split(' ')[0]}</p>
+                            <p className="text-xs md:text-sm text-gray-500">Welcome back, {(client.name || "User").split(' ')[0]}</p>
                         </div>
                     </div>
 

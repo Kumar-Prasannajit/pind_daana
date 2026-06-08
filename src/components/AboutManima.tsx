@@ -1,64 +1,152 @@
-import React from 'react';
-import Image from 'next/image';
+"use client";
+
+import { useEffect, useState } from "react";
+import TunnelSpinner from "./tunnelSpinner";
+import Image from "next/image";
+import { Heart, Users, Infinity } from "lucide-react";
 
 const AboutManima = () => {
+
+    const [spinnerConfig, setSpinnerConfig] = useState({
+        radius: 140,
+        count: 70
+    });
+
+    useEffect(() => {
+
+        const update = () => {
+
+            if (window.innerWidth >= 1280) {
+                setSpinnerConfig({
+                    radius: 220,
+                    count: 120
+                });
+
+            } else if (window.innerWidth >= 1024) {
+                setSpinnerConfig({
+                    radius: 170,
+                    count: 90
+                });
+
+            } else if (window.innerWidth >= 768) {
+                setSpinnerConfig({
+                    radius: 180,
+                    count: 100
+                });
+
+            } else {
+                setSpinnerConfig({
+                    radius: 110,
+                    count: 60
+                });
+            }
+        };
+
+        update();
+
+        window.addEventListener("resize", update);
+
+        return () => window.removeEventListener("resize", update);
+
+    }, []);
+
+    const content = {
+        title: "Our Philosophy",
+        tagline: "When you can't be there, your devotion still can",
+        descriptionParts: [
+            "At Manima, we believe distance should never come between faith and responsibility.",
+            "We help families stay connected to sacred traditions by making spiritual services simple, trusted, and accessible.",
+            "For us, it is not just about services; it is about preserving connection, respect, and continuity of tradition for modern families."
+        ],
+        cta: "How it works"
+    };
+
+    const { title, tagline, descriptionParts, cta } = content;
+
     return (
-        <section className="w-full py-20 md:py-32 bg-[#FDFAF0] relative overflow-hidden">
-            {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-5 pointer-events-none">
-                <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-manima-gold via-transparent to-transparent"></div>
-            </div>
+        <section className="w-full min-h-screen flex items-center bg-manima-sand overflow-hidden">
 
-            <div className="container mx-auto px-6 relative z-10 flex items-center justify-center">
+            <div className="max-w-300 mx-auto px-6 py-10 lg:py-6 grid
+                grid-cols-1 lg:grid-cols-[1fr_1fr]
+                items-center gap-10 md:gap-14 lg:gap-10 xl:gap-20">
 
-                {/* Stack Container */}
-                <div className="relative w-full max-w-5xl flex items-center justify-center">
+                {/* LEFT SIDE */}
+                <div className="relative flex items-center justify-center w-full
+                    h-75 sm:h-90 md:h-125 lg:h-120 xl:h-150
+                    mt-6 md:mt-0">
 
-                    {/* Bottom Layer: Logo & Effects */}
-                    <div className="absolute inset-0 flex items-center justify-center z-0 pointer-events-none">
-                        <div className="relative w-[300px] h-[300px] md:w-[600px] md:h-[600px] opacity-60">
-                            {/* Spinning Ring */}
-                            <div className="absolute inset-0 border-2 border-dashed border-manima-gold/30 rounded-full animate-[spin_10s_linear_infinite]"></div>
+                    <TunnelSpinner
+                        radius={spinnerConfig.radius}
+                        count={spinnerConfig.count}
+                    />
 
-                            {/* Glowing Background */}
-                            <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-manima-gold/20 rounded-full blur-[20px] animate-pulse"></div>
+                    {/* Glow */}
+                    <div className="absolute w-55 h-55 md:w-80 md:h-80 xl:w-90 xl:h-90 bg-manima-gold/20 blur-[90px] rounded-full"></div>
 
-                            {/* Logo */}
-                            <Image
-                                src="/assets/logo.png"
-                                alt="Manima Logo"
-                                fill
-                                className="object-contain drop-shadow-2xl"
-                                unoptimized
-                            />
-                        </div>
+                    {/* Logo */}
+                    <div className="relative w-30 h-30 md:w-50 md:h-50 lg:w-55 lg:h-55 xl:w-75 xl:h-75 z-10">
+                        <Image
+                            src="/assets/logo.png"
+                            alt="Manima Logo"
+                            fill
+                            className="object-contain drop-shadow-xl"
+                            unoptimized
+                        />
                     </div>
 
-                    {/* Top Layer: Glassmorphism Content Card */}
-                    <div className="relative z-10 bg-white/50 backdrop-blur-xl border border-white/40 shadow-2xl rounded-[3rem] p-8 md:p-20 text-center w-full max-w-4xl overflow-hidden">
-
-                        {/* Decorative Gradients inside card */}
-                        <div className="absolute top-0 left-0 w-40 h-40 bg-gradient-to-br from-manima-gold/10 to-transparent rounded-br-[3rem] -z-10 pointer-events-none"></div>
-                        <div className="absolute bottom-0 right-0 w-40 h-40 bg-gradient-to-tl from-manima-gold/10 to-transparent rounded-tl-[3rem] -z-10 pointer-events-none"></div>
-
-                        {/* Title */}
-                        <div className="inline-block mb-8 relative" data-aos="fade-down">
-                            <h2 className="font-heading text-4xl md:text-6xl text-[#843b11] leading-tight">
-                                Our Philosophy<br />
-                                <svg className="absolute w-full h-3 bottom--1 left-0 -z-10 text-[#843b11]" viewBox="0 0 100 10" preserveAspectRatio="none">
-                                    <path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="3" fill="none" />
-                                </svg>
-                            </h2>
-                            <p className="mt-4 text-xl md:text-xl text-[#582C12] italic font-serif font-bold">"When you can't be there, your devotion still can"</p>
-                        </div>
-
-                        {/* Description */}
-                        <div className="space-y-6 text-s md:text-lg text-[#000000] font-body leading-relaxed max-w-2xl mx-auto" data-aos="fade-up">
-                            <p className='text-justify'>At Manima, we believe distance should never come between faith and responsibility. We help families stay connected to sacred traditions by making spiritual services <strong>simple</strong>, <strong>trusted</strong>, and <strong>accessible</strong>. For us, it is not just about services; it is about preserving connection, respect, and continuity of tradition for modern families.</p>
-                        </div>
-                    </div>
                 </div>
+
+                {/* RIGHT SIDE */}
+                <div className="max-w-130 flex flex-col items-center md:items-start">
+
+                    <h2 className="font-heading text-[48px] md:text-[72px] lg:text-[72px] xl:text-[96px] leading-[0.95] tracking-[-1px] text-[#bf392a] text-center md:text-left">
+                        {title}
+                    </h2>
+
+                    <p className="mt-6 text-[16px] md:text-[18px] lg:text-[18px] xl:text-[22px] text-[#582C12] font-medium text-center md:text-left">
+                        &quot;{tagline}&quot;
+                    </p>
+
+                    <div className="mt-6 text-[15px] md:text-[16px] lg:text-[15px] xl:text-[18px] leading-[1.7] text-[#000000]">
+
+                        <p className="md:hidden text-justify">
+                            {descriptionParts.join(" ")}
+                        </p>
+
+                        <div className="hidden md:flex flex-col space-y-4">
+
+                            <div className="flex gap-4 items-start">
+                                <div className="size-8 rounded-full bg-[#bf392a]/10 flex items-center justify-center shrink-0 mt-1">
+                                    <Heart size={18} className="text-[#bf392a]" fill="#bf392a" />
+                                </div>
+                                <p>{descriptionParts[0]}</p>
+                            </div>
+
+                            <div className="flex gap-4 items-start">
+                                <div className="size-8 rounded-full bg-[#bf392a]/10 flex items-center justify-center shrink-0 mt-1">
+                                    <Users size={18} className="text-[#bf392a]" />
+                                </div>
+                                <p>{descriptionParts[1]}</p>
+                            </div>
+
+                            <div className="flex gap-4 items-start">
+                                <div className="size-8 rounded-full bg-[#bf392a]/10 flex items-center justify-center shrink-0 mt-1">
+                                    <Infinity size={18} className="text-[#bf392a]" />
+                                </div>
+                                <p>{descriptionParts[2]}</p>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div className="mt-8 xl:mt-10">
+                    </div>
+
+                </div>
+
             </div>
+
         </section>
     );
 };

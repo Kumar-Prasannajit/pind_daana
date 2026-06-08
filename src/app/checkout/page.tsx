@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Loader2, CreditCard, ScanLine, ArrowLeft, ShieldCheck, MapPin, Calendar, CheckCircle2, X, Tag } from 'lucide-react';
+import { Loader2, CreditCard, ScanLine, ArrowLeft, ShieldCheck, MapPin, Calendar, CheckCircle2, X, Tag, WifiOff } from 'lucide-react';
+import { fetchWithRetry, NetworkError } from '@/lib/fetchWithRetry';
 import Image from 'next/image';
 
 interface ClientProfile {
@@ -22,6 +23,8 @@ function CheckoutContent() {
     const locationId = searchParams.get('locationId');
     const packageName = searchParams.get('packageName');
     const pujaId = searchParams.get('pujaId'); // NEW
+    const source = searchParams.get('source');
+    const urlPrice = searchParams.get('price');
 
     // State
     const [client, setClient] = useState<ClientProfile | null>(null);
@@ -29,7 +32,7 @@ function CheckoutContent() {
     const [locationName, setLocationName] = useState("");
     const [loading, setLoading] = useState(true);
     const [verifying, setVerifying] = useState(false);
-    const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'qr'>('qr'); // Default to QR
+    const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'qr'>('razorpay'); // Default to Razorpay
     const [isProcessing, setIsProcessing] = useState(false);
     const [fetchedPrice, setFetchedPrice] = useState<number>(0);
 
@@ -54,12 +57,16 @@ function CheckoutContent() {
     const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
     const [discountAmount, setDiscountAmount] = useState(0);
 
+    // Network resilience state
+    const [networkError, setNetworkError] = useState("");
+    const bookingInProgress = useRef(false); // Prevents duplicate booking submissions
+
     // Calculate GST on the discounted price or base price? 
     // Usually GST is on the final taxable value. 
     // If discount is applied on base price: (Base - Discount) + GST
     // Let's assume discount reduces taxable amount.
     const taxableAmount = Math.max(0, basePrice - discountAmount);
-    const gstRate = paymentMethod === 'razorpay' ? 0.18 : 0;
+    const gstRate = 0;
     const gstAmount = taxableAmount * gstRate;
     const totalAmount = taxableAmount + gstAmount;
 
@@ -106,18 +113,35 @@ function CheckoutContent() {
     useEffect(() => {
         const initCheckout = async () => {
             try {
-                // 1. Fetch User Profile
-                const userRes = await fetch("/api/client/me");
+                setNetworkError("");
+
+                // 1. Fetch User Profile (no retry — auth check)
+                const userRes = await fetchWithRetry("/api/client/me", { retries: 1 });
                 if (!userRes.ok) {
-                    router.push('/client/login?redirect=/checkout'); // Handle auth expiry
+                    // Preserve all current search parameters for the redirect
+                    const currentParams = searchParams.toString();
+                    const redirectUrl = currentParams ? `/checkout?${currentParams}` : '/checkout';
+                    router.push(`/client/login?redirect=${encodeURIComponent(redirectUrl)}`); // Handle auth expiry
                     return;
                 }
                 const userData = await userRes.json();
                 setClient(userData);
 
+                // --- NEW: Puri Puja Flow ---
+                if (source === 'puri-puja') {
+                    setServiceName("Jagannath Temple, Puri");
+                    setLocationName("Puri");
+                    if (urlPrice) {
+                        setFetchedPrice(Number(urlPrice));
+                    }
+                    setLoading(false);
+                    return;
+                }
+                // -----------------------------
+
                 // --- NEW: Puja Booking Flow ---
-                if (pujaId && packageName) {
-                    const pRes = await fetch('/api/puja');
+                if (pujaId) {
+                    const pRes = await fetchWithRetry('/api/puja');
                     if (pRes.ok) {
                         const pData = await pRes.json();
                         // @ts-ignore
@@ -126,10 +150,30 @@ function CheckoutContent() {
                         if (foundPuja) {
                             setServiceName(foundPuja.name);
                             setLocationName(foundPuja.location);
-                            // @ts-ignore
-                            const foundPackage = foundPuja.packages.find((p: any) => p.name === packageName);
-                            if (foundPackage) {
-                                setFetchedPrice(foundPackage.priceAmount);
+
+                            // Find service matching serviceId from URL (preferred), else use first service
+                            const targetService = serviceId
+                                ? foundPuja.services?.find((svc: any) => {
+                                    if (!svc || !svc.service) return false;
+                                    const sId = typeof svc.service === 'object' ? svc.service._id : svc.service;
+                                    return String(sId) === String(serviceId);
+                                }) || foundPuja.services?.[0]
+                                : foundPuja.services?.[0];
+
+                            if (targetService) {
+                                const packages = targetService.packages || [];
+                                // Match by name if provided; otherwise use first package as fallback
+                                const foundPackage = packageName
+                                    ? packages.find((p: any) => p.name === packageName) || packages[0]
+                                    : packages[0];
+
+                                if (foundPackage) {
+                                    setFetchedPrice(foundPackage.priceAmount);
+                                } else {
+                                    console.error("Could not find any package in service for puja", pujaId);
+                                }
+                            } else {
+                                console.error("Could not find any service in puja", pujaId);
                             }
                         }
                     }
@@ -141,7 +185,7 @@ function CheckoutContent() {
 
                 // 2. Fetch Service Name
                 if (serviceId) {
-                    const sRes = await fetch('/api/services');
+                    const sRes = await fetchWithRetry('/api/services');
                     const services = await sRes.json();
                     const s = services.find((i: any) => i._id === serviceId);
                     if (s) setServiceName(s.name);
@@ -149,7 +193,7 @@ function CheckoutContent() {
 
                 // 3. Fetch Location & Validate Price
                 if (locationId) {
-                    const lRes = await fetch('/api/locations');
+                    const lRes = await fetchWithRetry('/api/locations');
                     const locations = await lRes.json();
                     const l = locations.find((i: any) => i._id === locationId);
                     if (l) {
@@ -174,25 +218,75 @@ function CheckoutContent() {
                     }
                 }
 
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Checkout init error:", error);
+                if (error instanceof NetworkError) {
+                    setNetworkError(error.isRetryExhausted
+                        ? "Request failed after retry. Please check your network and refresh."
+                        : error.isTimeout
+                            ? "Slow network detected. Please try refreshing."
+                            : error.message);
+                }
             } finally {
                 setLoading(false);
             }
         };
 
         initCheckout();
-    }, [router, serviceId, locationId, packageName, pujaId]);
+    }, [router, serviceId, locationId, packageName, pujaId, source, urlPrice]);
 
     const handlePayment = async () => {
 
         if (paymentMethod === 'razorpay') {
             setIsProcessing(true);
-            // Simulate Razorpay loading
-            setTimeout(() => {
-                setIsProcessing(false);
+            try {
+                // Create order on backend
+                const orderRes = await fetch("/api/bookings/create-order", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ amount: totalAmount })
+                });
+
+                const order = await orderRes.json();
+
+                if (!orderRes.ok) throw new Error(order.error);
+
+                // Initialize Razorpay
+                const options = {
+                    key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+                    order_id: order.id,
+                    amount: order.amount,
+                    currency: "INR",
+                    name: "Manima Spiritual Services",
+                    description: `${serviceName} - ${packageName}`,
+                    handler: (response: any) => {
+                        // Payment successful
+                        processBooking(response.razorpay_payment_id);
+                    },
+                    prefill: {
+                        name: client?.name,
+                        email: client?.email,
+                        contact: client?.phone,
+                    },
+                    theme: {
+                        color: "#D35400",
+                    },
+                    modal: {
+                        ondismiss: () => {
+                            setIsProcessing(false);
+                        }
+                    }
+                };
+
+                const razorpayWindow = (window as any).Razorpay;
+                const rzp1 = new razorpayWindow(options);
+                rzp1.open();
+            } catch (error) {
+                console.error(error);
                 setShowErrorModal(true);
-            }, 2000);
+            } finally {
+                setIsProcessing(false);
+            }
             return;
         }
 
@@ -207,7 +301,11 @@ function CheckoutContent() {
     };
 
     const processBooking = async (txnId?: string) => {
+        // --- DUPLICATE SUBMISSION GUARD (Tasks 4, 9, 10) ---
+        if (bookingInProgress.current) return;
+        bookingInProgress.current = true;
         setIsProcessing(true);
+        setNetworkError("");
 
         try {
             const bookingData: any = {
@@ -228,10 +326,11 @@ function CheckoutContent() {
             }
 
 
-            const res = await fetch('/api/bookings', {
+            const res = await fetchWithRetry('/api/bookings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(bookingData)
+                body: JSON.stringify(bookingData),
+                retries: 0, // No retry for mutations to prevent duplicates
             });
 
             if (res.ok) {
@@ -244,11 +343,18 @@ function CheckoutContent() {
                 setQrError("Failed to create booking. Please try again.");
             }
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("Booking failed", error);
-            setQrError("An error occurred. Please try again.");
+            if (error instanceof NetworkError) {
+                setQrError(error.isTimeout
+                    ? "Slow network detected. Your booking request timed out. Please try again."
+                    : "Network error. Check your connection and try again.");
+            } else {
+                setQrError("An error occurred. Please try again.");
+            }
         } finally {
             setIsProcessing(false);
+            bookingInProgress.current = false;
         }
     };
 
@@ -276,6 +382,21 @@ function CheckoutContent() {
 
     return (
         <div className="min-h-screen bg-[#F5F6F8] pb-12 relative">
+            {/* Network Error Banner */}
+            {networkError && (
+                <div className="bg-red-50 border-b border-red-200 px-4 py-3">
+                    <div className="max-w-6xl mx-auto flex items-center gap-3">
+                        <WifiOff size={18} className="text-red-500 shrink-0" />
+                        <p className="text-red-700 text-sm font-medium flex-1">{networkError}</p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="text-red-600 text-sm font-bold hover:underline shrink-0"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                </div>
+            )}
             {/* Professional Header */}
             <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
                 <div className="max-w-6xl mx-auto px-4 h-20 flex items-center justify-between">
@@ -337,7 +458,7 @@ function CheckoutContent() {
                             </h2>
 
                             <div className="space-y-4">
-                                {/* QR Code Option - NOW FIRST */}
+                                {/* QR Code Option - NOW FIRST
                                 <label
                                     className={`relative flex items-center p-5 border-2 rounded-xl cursor-pointer transition-all duration-200 group ${paymentMethod === 'qr'
                                         ? 'border-[#D35400] bg-orange-50/30'
@@ -359,6 +480,7 @@ function CheckoutContent() {
                                         <ScanLine className="text-[#D35400]" size={28} />
                                     </div>
                                 </label>
+                                */}
 
                                 {/* Razorpay Option - NOW SECOND */}
                                 <label
@@ -377,15 +499,13 @@ function CheckoutContent() {
                                     <div className="flex-1">
                                         <div className="flex items-center justify-between mb-1">
                                             <span className="font-bold text-gray-800 text-lg">Razorpay</span>
-                                            <span className="text-[10px] font-bold text-white bg-[#3399CC] px-2 py-1 rounded-full uppercase tracking-wider">Fastest</span>
                                         </div>
                                         <p className="text-sm text-gray-500">Credit/Debit Card, UPI, NetBanking</p>
-                                        <p className="text-xs text-[#D35400] mt-1 font-medium bg-orange-50 inline-block px-2 py-0.5 rounded">+18% GST Applicable</p>
                                     </div>
                                     <div className="hidden md:block opacity-80 pl-4 border-l border-gray-200 ml-4">
-                                        <div className="flex gap-2">
-                                            <div className="w-8 h-5 bg-gray-200 rounded"></div>
-                                            <div className="w-8 h-5 bg-gray-200 rounded"></div>
+                                        <div className="flex gap-3">
+                                            <CreditCard size={24} className="text-gray-400" />
+                                            <ShieldCheck size={24} className="text-green-600" />
                                         </div>
                                     </div>
                                 </label>
@@ -393,9 +513,9 @@ function CheckoutContent() {
                         </div>
                     </div>
 
-                    {/* Right Column: Order Summary (Sticky) */}
+                    {/* Right Column: Order Summary */}
                     <div className="lg:col-span-1">
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 sticky top-28 relative overflow-hidden">
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 h-full flex flex-col justify-between relative overflow-hidden">
                             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#D35400] to-[#F1C40F]"></div>
 
                             <div>

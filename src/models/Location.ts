@@ -3,6 +3,7 @@ import mongoose, { Schema, Model, Document } from "mongoose";
 export interface ILocation extends Document {
     name: string;
     description: string;
+    imageUrl?: string;
     city: string;
     state: string;
     services: {
@@ -13,6 +14,7 @@ export interface ILocation extends Document {
             features: string[];
             recommended?: boolean;
         }[];
+        milestones: string[];
     }[];
     createdAt: Date;
 }
@@ -24,6 +26,9 @@ const LocationSchema: Schema = new Schema({
         trim: true,
     },
     description: {
+        type: String,
+    },
+    imageUrl: {
         type: String,
     },
     city: {
@@ -44,7 +49,11 @@ const LocationSchema: Schema = new Schema({
             price: { type: Number, required: true },
             features: [String],
             recommended: { type: Boolean, default: false }
-        }]
+        }],
+        milestones: {
+            type: [String],
+            default: [],
+        }
     }],
     // Removed legacy flat pricing field
     createdAt: {

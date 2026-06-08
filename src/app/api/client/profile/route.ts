@@ -1,23 +1,13 @@
 import { NextResponse } from "next/server";
-import mongoose from "mongoose";
+import dbConnect from "@/lib/db";
 import Client from "@/models/Client";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
-
-const connectToDB = async () => {
-    if (mongoose.connection.readyState >= 1) return;
-    try {
-        await mongoose.connect(process.env.MONGODB_URI as string);
-    } catch (error) {
-        console.error("DB Connection Error:", error);
-    }
-};
-
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
 export async function PUT(req: Request) {
     try {
-        await connectToDB();
+        await dbConnect();
 
         const cookieStore = await cookies();
         const token = cookieStore.get("client_auth_token")?.value;
@@ -35,16 +25,16 @@ export async function PUT(req: Request) {
 
         const clientId = decoded.clientId;
         const body = await req.json();
-        const { name, phone, address } = body;
+        const { name, address } = body;
 
         // Validation
-        if (!name || !phone) {
-            return NextResponse.json({ error: "Name and Phone are required" }, { status: 400 });
+        if (!name) {
+            return NextResponse.json({ error: "Name is required" }, { status: 400 });
         }
 
         const updatedClient = await Client.findByIdAndUpdate(
             clientId,
-            { name, phone, address },
+            { name, address },
             { new: true, runValidators: true }
         ).select("-password");
 

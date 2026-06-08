@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
+import "./PujaService"; // Ensure the model is registered to prevent tree-shaking
 
 /* -------------------- */
 /* Package Interface   */
@@ -17,7 +18,11 @@ export interface IPuja extends Document {
   name: string;
   location: string;
   templeType: string;
-  packages: IPackage[];
+  priority: number;
+  services: {
+    service: mongoose.Types.ObjectId;
+    packages: IPackage[];
+  }[];
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -47,7 +52,7 @@ const packageSchema = new Schema<IPackage>(
 /* -------------------- */
 /* Validator           */
 /* -------------------- */
-const arrayLimit = (val: IPackage[]): boolean => val.length > 0;
+const arrayLimit = (val: any[]): boolean => val.length > 0;
 
 /* -------------------- */
 /* Puja Schema         */
@@ -71,11 +76,22 @@ const pujaSchema = new Schema<IPuja>(
       type: String,
       required: true,
     },
-    packages: {
-      type: [packageSchema],
+    priority: {
+      type: Number,
+      default: 8, // 1: Highest, ..., 8: Standard
+      required: true,
+    },
+    services: {
+      type: [{
+        service: {
+          type: Schema.Types.ObjectId,
+          ref: "PujaService",
+        },
+        packages: [packageSchema]
+      }],
       validate: {
         validator: arrayLimit,
-        message: "At least one package is required",
+        message: "At least one service is required",
       },
       required: true,
     },
@@ -88,6 +104,8 @@ const pujaSchema = new Schema<IPuja>(
 /* -------------------- */
 /* Model Export        */
 /* -------------------- */
-const Puja = (mongoose.models.Puja as Model<IPuja>) || mongoose.model<IPuja>("Puja", pujaSchema);
+
+// Delete the cached model if it exists so Next.js HMR uses the updated schema
+const Puja = (mongoose.models.Puja as mongoose.Model<IPuja>) || mongoose.model<IPuja>("Puja", pujaSchema);
 
 export default Puja;

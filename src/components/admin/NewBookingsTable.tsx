@@ -1,13 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, CheckCircle, UserPlus, Calendar, MapPin, DollarSign, Search, Filter, ShieldCheck, UserCheck, Eye, X } from "lucide-react";
+import { Loader2, CheckCircle, UserPlus, Calendar, MapPin, DollarSign, Search, Filter, ShieldCheck, UserCheck, Eye, X, Flag } from "lucide-react";
+import MilestoneProgress from "@/components/shared/MilestoneProgress";
+
+interface LocationService {
+    service: string | { _id: string; name: string };
+    milestones?: string[];
+}
 
 interface Booking {
     _id: string;
     client: { _id: string; name: string; email: string; phone: string };
     service: { name: string };
-    location: { name: string };
+    location: {
+        name: string;
+        services?: LocationService[];
+    };
+    completedMilestones?: string[];
     price: number;
     priceCategory: string;
     paymentMethod: string;
@@ -30,15 +40,29 @@ export default function NewBookingsTable() {
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
 
-    // Modal State
+    // Modal State - Verification Modal
     const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
     const [formData, setFormData] = useState({
         isPaymentVerified: false,
         agentId: "",
     });
 
+    // Modal State - Milestone Modal
+    const [milestoneModalBooking, setMilestoneModalBooking] = useState<Booking | null>(null);
+
     // Filter State
     const [filterStatus, setFilterStatus] = useState("All");
+
+    // Helper: Get available milestones from booking (from location.services)
+    const getAvailableMilestones = (booking: Booking): string[] => {
+        if (!booking.location?.services) return [];
+
+        // Iterate through services and collect milestones
+        for (const entry of booking.location.services) {
+            if (entry.milestones?.length) return entry.milestones;
+        }
+        return [];
+    };
 
     useEffect(() => {
         fetchData();
@@ -121,7 +145,42 @@ export default function NewBookingsTable() {
         return true;
     });
 
-    if (loading) return <div className="p-8 text-center text-gray-500">Loading bookings...</div>;
+    if (loading) return (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative animate-pulse">
+            <div className="p-6 border-b border-gray-100 flex justify-between">
+                <div>
+                    <div className="h-5 bg-gray-200 rounded w-40 mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-64"></div>
+                </div>
+                <div className="flex gap-2">
+                    {[1, 2, 3, 4].map(i => <div key={i} className="h-8 bg-gray-200 rounded-lg w-20"></div>)}
+                </div>
+            </div>
+            <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                    <thead>
+                        <tr className="bg-gray-50 border-b border-gray-100">
+                            {[1, 2, 3, 4, 5].map(i => <th key={i} className="px-6 py-4"><div className="h-3 bg-gray-200 rounded w-20"></div></th>)}
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                        {[1, 2, 3, 4, 5].map(row => (
+                            <tr key={row}>
+                                {[1, 2, 3, 4, 5].map(col => (
+                                    <td key={col} className="px-6 py-4">
+                                        <div className="flex flex-col gap-2">
+                                            <div className="h-4 bg-gray-200 rounded w-24"></div>
+                                            <div className="h-3 bg-gray-200 rounded w-16"></div>
+                                        </div>
+                                    </td>
+                                ))}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
 
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative">
@@ -245,6 +304,15 @@ export default function NewBookingsTable() {
                                                         <UserPlus size={12} /> Assign Agent
                                                     </span>
                                                 )}
+                                                {getAvailableMilestones(booking).length > 0 && (
+                                                    <button
+                                                        onClick={() => setMilestoneModalBooking(booking)}
+                                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-yellow-50 text-yellow-700 border border-yellow-200 hover:bg-yellow-100 transition-colors w-fit"
+                                                    >
+                                                        <Flag size={11} />
+                                                        Milestones ({(booking.completedMilestones || []).length}/{getAvailableMilestones(booking).length})
+                                                    </button>
+                                                )}
                                             </div>
                                         ) : booking.status === "Pending" ? (
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 w-fit">
@@ -343,6 +411,23 @@ export default function NewBookingsTable() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Shared Milestone Modal */}
+            {milestoneModalBooking && (
+                <MilestoneProgress
+                    milestones={getAvailableMilestones(milestoneModalBooking)}
+                    completedMilestones={
+                        milestoneModalBooking.completedMilestones || []
+                    }
+                    agentName={milestoneModalBooking.agent?.name}
+                    serviceName={milestoneModalBooking.service?.name}
+                    locationName={milestoneModalBooking.location?.name}
+                    clientName={milestoneModalBooking.client?.name}
+                    createdAt={milestoneModalBooking.createdAt}
+                    isOpen={!!milestoneModalBooking}
+                    onClose={() => setMilestoneModalBooking(null)}
+                />
             )}
         </div>
     );

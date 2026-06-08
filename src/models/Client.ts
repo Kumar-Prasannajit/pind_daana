@@ -3,50 +3,68 @@ import mongoose, { Schema, Model, Document } from "mongoose";
 export interface IClient extends Document {
     name: string;
     email: string;
-    password?: string;
     phone: string;
+    whatsapp_number: string;
+    is_verified: boolean;
     address?: string;
-    resetPasswordToken?: string;
-    resetPasswordTokenExpiry?: Date;
+    isBooked: boolean;
+    authProvider?: string;
     createdAt: Date;
 }
 
 const ClientSchema: Schema = new Schema({
-    name: {
-        type: String,
-        required: [true, "Please provide a client name"],
-        trim: true,
+    name: { 
+        type: String, 
+        required: true, 
+        trim: true, 
+        minlength: 2, 
+        maxlength: 100 
     },
-    email: {
-        type: String,
-        required: [true, "Please provide an email"],
-        unique: true,
-        trim: true,
-        lowercase: true,
+    email: { 
+        type: String, 
+        required: true, 
+        unique: true, 
+        lowercase: true, 
+        trim: true 
     },
-    password: {
-        type: String,
-        required: [true, "Please provide a password"],
+    phone: { 
+        type: String, 
+        required: true, 
+        unique: true, 
+        trim: true 
     },
-    phone: {
-        type: String,
-        required: [true, "Please provide a phone number"],
+    whatsapp_number: { 
+        type: String, 
+        required: true, 
+        trim: true 
+    },
+    is_verified: { 
+        type: Boolean, 
+        default: true 
     },
     address: {
         type: String,
         trim: true,
     },
-    resetPasswordToken: {
+    isBooked: {
+        type: Boolean,
+        default: false,
+    },
+    authProvider: {
         type: String,
+        enum: ['otp', 'google', 'facebook'],
+        default: 'otp'
     },
-    resetPasswordTokenExpiry: {
-        type: Date,
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-    },
-});
+    createdAt: { 
+        type: Date, 
+        default: Date.now 
+    }
+}, { strict: true });
+
+// Delete cached model in dev so schema changes are always applied on hot-reload
+if (process.env.NODE_ENV !== 'production' && mongoose.models.Client) {
+    delete mongoose.models.Client;
+}
 
 const Client: Model<IClient> = mongoose.models.Client || mongoose.model<IClient>("Client", ClientSchema);
 

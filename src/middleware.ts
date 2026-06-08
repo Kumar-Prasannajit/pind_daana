@@ -31,6 +31,34 @@ export default async function middleware(request: NextRequest) {
     }
 
     // ---------------------------------------------------------
+    // 2. Agent Authentication Logic
+    // ---------------------------------------------------------
+    const isProtectedAgentPath = path.startsWith("/agent") && !path.startsWith("/agent/login");
+
+    if (isProtectedAgentPath) {
+        const token = request.cookies.get("token")?.value;
+
+        if (!token) {
+            return NextResponse.redirect(new URL("/agent/login", request.url));
+        }
+
+        try {
+            const secret = new TextEncoder().encode(
+                process.env.JWT_SECRET || "your-secret-key"
+            );
+            const { payload } = await jwtVerify(token, secret);
+            const decoded = payload as any;
+
+            if (decoded.role !== "agent") {
+                return NextResponse.redirect(new URL("/agent/login", request.url));
+            }
+        } catch (error) {
+            // Token is invalid or expired
+            return NextResponse.redirect(new URL("/agent/login", request.url));
+        }
+    }
+
+    // ---------------------------------------------------------
     // 2. Site Gating Logic (Mahashivratri Countdown)
     // ---------------------------------------------------------
 

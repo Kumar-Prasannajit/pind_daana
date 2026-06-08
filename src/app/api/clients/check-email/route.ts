@@ -1,19 +1,9 @@
 import { NextResponse } from "next/server";
-import mongoose from "mongoose";
+import dbConnect from "@/lib/db";
 import Client from "@/models/Client";
-
-const connectToDB = async () => {
-    if (mongoose.connection.readyState >= 1) return;
-    try {
-        await mongoose.connect(process.env.MONGODB_URI as string);
-    } catch (error) {
-        console.error("DB Connection Error:", error);
-    }
-};
-
 export async function POST(req: Request) {
     try {
-        await connectToDB();
+        await dbConnect();
         const { email } = await req.json();
 
         if (!email) {

@@ -1,20 +1,10 @@
 import { NextResponse } from "next/server";
-import mongoose from "mongoose";
+import dbConnect from "@/lib/db";
 import Agent from "@/models/Agent";
 import bcrypt from "bcryptjs";
-
-const connectToDB = async () => {
-    if (mongoose.connection.readyState >= 1) return;
-    try {
-        await mongoose.connect(process.env.MONGODB_URI as string);
-    } catch (error) {
-        console.error("DB Connection Error:", error);
-    }
-};
-
 export async function POST(req: Request) {
     try {
-        await connectToDB();
+        await dbConnect();
         const body = await req.json();
 
         // Basic validation
@@ -43,7 +33,7 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
     try {
-        await connectToDB();
+        await dbConnect();
         const { searchParams } = new URL(req.url);
         const locationId = searchParams.get("location");
 
@@ -52,7 +42,7 @@ export async function GET(req: Request) {
             query = { location: locationId };
         }
 
-        const agents = await Agent.find(query).sort({ name: 1 });
+        const agents = await Agent.find(query).sort({ name: 1 }).lean();
         return NextResponse.json(agents);
     } catch (error) {
         console.error("Error fetching agents:", error);

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Loader2, Plus, Edit2, MapPin, Building2, Search } from "lucide-react";
+import { Loader2, Plus, Edit2, MapPin, Building2, Search, Trash2 } from "lucide-react";
 
 interface IPackage {
     name: string;
@@ -16,7 +16,11 @@ interface IPuja {
     name: string;
     location: string;
     templeType: string;
-    packages: IPackage[];
+    services: {
+        service: string;
+        packages: IPackage[];
+        _id: string;
+    }[];
 }
 
 export default function PujasPage() {
@@ -42,6 +46,23 @@ export default function PujasPage() {
         }
     };
 
+    const handleDelete = async (id: string) => {
+        if (!window.confirm("Are you sure you want to delete this puja?")) return;
+
+        try {
+            const res = await fetch(`/api/puja?id=${id}`, { method: "DELETE" });
+            const data = await res.json();
+            if (data.success) {
+                setPujas(pujas.filter(p => p._id !== id));
+            } else {
+                alert(data.message || "Failed to delete puja");
+            }
+        } catch (error) {
+            console.error("Error deleting puja:", error);
+            alert("Failed to delete puja");
+        }
+    };
+
     const filteredPujas = pujas.filter(puja =>
         puja.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         puja.location.toLowerCase().includes(searchTerm.toLowerCase())
@@ -49,8 +70,39 @@ export default function PujasPage() {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <Loader2 className="animate-spin text-manima-red" size={40} />
+            <div className="max-w-6xl mx-auto p-6 w-full animate-pulse">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                    <div>
+                        <div className="h-8 bg-gray-200 rounded w-48 mb-2"></div>
+                        <div className="h-4 bg-gray-200 rounded w-64"></div>
+                    </div>
+                    <div className="h-10 bg-gray-200 rounded-lg w-40"></div>
+                </div>
+                <div className="h-12 bg-gray-200 rounded-xl w-full mb-6"></div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[1, 2, 3, 4, 5, 6].map(i => (
+                        <div key={i} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden h-[340px] flex flex-col">
+                            <div className="h-48 bg-gray-200 w-full relative">
+                                <div className="absolute top-3 right-3 flex gap-2">
+                                    <div className="w-8 h-8 bg-white/50 rounded-lg"></div>
+                                    <div className="w-8 h-8 bg-white/50 rounded-lg"></div>
+                                </div>
+                                <div className="absolute bottom-4 left-4 w-20 h-5 bg-white/50 rounded"></div>
+                            </div>
+                            <div className="p-5 flex-1 flex flex-col">
+                                <div className="h-6 bg-gray-200 rounded w-3/4 mb-3"></div>
+                                <div className="flex gap-2 items-center mb-4">
+                                    <div className="w-4 h-4 rounded-full bg-gray-200"></div>
+                                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                                </div>
+                                <div className="flex justify-between items-center pt-4 mt-auto border-t border-gray-50">
+                                    <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+                                    <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         );
     }
@@ -108,7 +160,7 @@ export default function PujasPage() {
                                     alt={puja.name}
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                 />
-                                <div className="absolute top-3 right-3">
+                                <div className="absolute top-3 right-3 flex gap-2">
                                     <Link
                                         href={`/admin/dashboard/edit-puja/${puja._id}`}
                                         className="p-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-sm text-gray-700 hover:text-manima-red hover:bg-white transition-all flex items-center justify-center"
@@ -116,6 +168,13 @@ export default function PujasPage() {
                                     >
                                         <Edit2 size={18} />
                                     </Link>
+                                    <button
+                                        onClick={() => handleDelete(puja._id)}
+                                        className="p-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-sm text-gray-700 hover:text-red-600 hover:bg-white transition-all flex items-center justify-center"
+                                        title="Delete Puja"
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
                                 </div>
                                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
                                     <span className="inline-block px-2 py-1 bg-manima-gold/90 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider rounded">
@@ -131,10 +190,14 @@ export default function PujasPage() {
                                 </div>
                                 <div className="flex items-center justify-between pt-4 border-t border-gray-50">
                                     <div className="text-xs font-medium text-gray-500">
-                                        {puja.packages.length} Packages Available
+                                        {puja.services?.reduce((total, s) => total + (s.packages?.length || 0), 0) || 0} Packages Available
                                     </div>
                                     <div className="font-bold text-manima-red text-sm">
-                                        From ₹{Math.min(...puja.packages.map(p => p.priceAmount)).toLocaleString('en-IN')}
+                                        From ₹{
+                                            puja.services && puja.services.length > 0
+                                                ? Math.min(...puja.services.flatMap(s => s.packages.map(p => p.priceAmount))).toLocaleString('en-IN')
+                                                : 0
+                                        }
                                     </div>
                                 </div>
                             </div>

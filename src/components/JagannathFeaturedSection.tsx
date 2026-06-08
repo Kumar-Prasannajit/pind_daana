@@ -16,6 +16,7 @@ interface PuriPujaItem {
 }
 
 interface ServiceItem {
+  _id: string;
   name: string;
   pricing: { name: string; amount: number }[];
   image: string;
@@ -40,6 +41,7 @@ export default function JagannathFeaturedSection() {
             pricing = [{ name: "Standard", amount: p.price }];
           }
           return {
+            _id: p._id,
             name: p.name,
             pricing: pricing,
             image: p.imageUrl || FALLBACK_IMAGE,

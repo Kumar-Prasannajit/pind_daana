@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Loader2, CheckCircle, UserPlus, Calendar, MapPin, DollarSign, Search, Filter, ShieldCheck, UserCheck, Eye, X, Flag } from "lucide-react";
 import MilestoneProgress from "@/components/shared/MilestoneProgress";
+import { markPaymentCompleted, mergeMilestones, withPaymentCompletedMilestone } from "@/lib/milestones";
 
 interface LocationService {
     service: string | { _id: string; name: string };
@@ -12,7 +13,17 @@ interface LocationService {
 interface Booking {
     _id: string;
     client: { _id: string; name: string; email: string; phone: string };
-    service: { name: string };
+    service?: { _id?: string; name: string; milestones?: string[] };
+    puja?: {
+        name: string;
+        location?: string;
+        services?: {
+            service: string | { _id: string; name: string; milestones?: string[] };
+            packages?: { name: string; priceAmount: number }[];
+        }[];
+    };
+    pujaService?: { _id?: string; name: string; milestones?: string[] };
+    puriPuja?: { name: string; milestones?: string[] };
     location: {
         name: string;
         services?: LocationService[];
@@ -53,16 +64,37 @@ export default function NewBookingsTable() {
     // Filter State
     const [filterStatus, setFilterStatus] = useState("All");
 
-    // Helper: Get available milestones from booking (from location.services)
     const getAvailableMilestones = (booking: Booking): string[] => {
-        if (!booking.location?.services) return [];
+        const serviceId = booking.service?._id;
+        const locationServiceMilestones = serviceId
+            ? booking.location?.services?.find((entry) => {
+                const entryServiceId = typeof entry.service === "string" ? entry.service : entry.service?._id;
+                return entryServiceId === serviceId;
+            })?.milestones
+            : undefined;
 
-        // Iterate through services and collect milestones
-        for (const entry of booking.location.services) {
-            if (entry.milestones?.length) return entry.milestones;
-        }
-        return [];
+        // Fallback: If pujaService is not directly set/populated, find the service under puja that contains the booked package
+        const pujaFallbackMilestones = booking.pujaService?.milestones || (
+            booking.puja?.services?.find((entry) => {
+                return entry.packages?.some((pkg) => pkg.name === booking.priceCategory);
+            })?.service as any
+        )?.milestones;
+
+        return withPaymentCompletedMilestone(
+            mergeMilestones(
+                booking.puriPuja?.milestones,
+                pujaFallbackMilestones,
+                booking.service?.milestones,
+                locationServiceMilestones,
+                booking.location?.services?.flatMap((entry) => entry.milestones || [])
+            )
+        );
     };
+
+    const getCompletedMilestones = (booking: Booking): string[] =>
+        booking.isPaymentVerified
+            ? markPaymentCompleted(booking.completedMilestones || [])
+            : booking.completedMilestones || [];
 
     useEffect(() => {
         fetchData();
@@ -240,11 +272,11 @@ export default function NewBookingsTable() {
                                         <div className="flex flex-col gap-1.5">
                                             <div className="flex items-center gap-1.5 text-sm text-gray-700 font-medium">
                                                 <Calendar size={14} className="text-[#DAA520]" />
-                                                {booking.service?.name}
+                                                {booking.service?.name || booking.puja?.name || booking.puriPuja?.name || "Booking"}
                                             </div>
                                             <div className="flex items-center gap-1.5 text-xs text-gray-500">
                                                 <MapPin size={12} />
-                                                {booking.location?.name}
+                                                {booking.location?.name || booking.puja?.location || (booking.puriPuja ? "Jagannath Temple, Puri" : "-")}
                                             </div>
                                             <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded w-fit">
                                                 {booking.priceCategory}
@@ -310,7 +342,7 @@ export default function NewBookingsTable() {
                                                         className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-yellow-50 text-yellow-700 border border-yellow-200 hover:bg-yellow-100 transition-colors w-fit"
                                                     >
                                                         <Flag size={11} />
-                                                        Milestones ({(booking.completedMilestones || []).length}/{getAvailableMilestones(booking).length})
+                                                        Milestones ({getCompletedMilestones(booking).length}/{getAvailableMilestones(booking).length})
                                                     </button>
                                                 )}
                                             </div>
@@ -356,7 +388,7 @@ export default function NewBookingsTable() {
                             <div className="bg-gray-50 p-4 rounded-xl space-y-2 text-sm">
                                 <div className="flex justify-between">
                                     <span className="text-gray-500">Service</span>
-                                    <span className="font-medium text-gray-900">{selectedBooking.service?.name}</span>
+                                    <span className="font-medium text-gray-900">{selectedBooking.service?.name || selectedBooking.puja?.name || selectedBooking.puriPuja?.name || "Booking"}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-gray-500">Amount</span>
@@ -380,9 +412,12 @@ export default function NewBookingsTable() {
                                         type="checkbox"
                                         className="hidden"
                                         checked={formData.isPaymentVerified}
+                                        disabled={selectedBooking.paymentMethod === "razorpay"}
                                         onChange={(e) => setFormData({ ...formData, isPaymentVerified: e.target.checked })}
                                     />
-                                    <span className="font-medium text-gray-700">Verified Payment</span>
+                                    <span className="font-medium text-gray-700">
+                                        {selectedBooking.paymentMethod === "razorpay" ? "Razorpay Payment Verified" : "Verified Payment"}
+                                    </span>
                                 </label>
 
                                 <div className="space-y-2">
@@ -418,11 +453,11 @@ export default function NewBookingsTable() {
                 <MilestoneProgress
                     milestones={getAvailableMilestones(milestoneModalBooking)}
                     completedMilestones={
-                        milestoneModalBooking.completedMilestones || []
+                        getCompletedMilestones(milestoneModalBooking)
                     }
                     agentName={milestoneModalBooking.agent?.name}
-                    serviceName={milestoneModalBooking.service?.name}
-                    locationName={milestoneModalBooking.location?.name}
+                    serviceName={milestoneModalBooking.service?.name || milestoneModalBooking.puja?.name || milestoneModalBooking.puriPuja?.name}
+                    locationName={milestoneModalBooking.location?.name || milestoneModalBooking.puja?.location || (milestoneModalBooking.puriPuja ? "Jagannath Temple, Puri" : undefined)}
                     clientName={milestoneModalBooking.client?.name}
                     createdAt={milestoneModalBooking.createdAt}
                     isOpen={!!milestoneModalBooking}

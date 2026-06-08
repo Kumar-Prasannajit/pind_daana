@@ -17,7 +17,8 @@ import {
     PackagePlus,
     ChevronDown,
     Plus,
-    Tag
+    Tag,
+    MessageSquareHeart,
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -48,6 +49,7 @@ export default function Sidebar() {
         { href: "/admin/dashboard/puri-pujas", label: "Puri Pujas", icon: PackagePlus },
         { href: "/admin/dashboard/pujas", label: "All Temples", icon: PackagePlus },
         { href: "/admin/dashboard/coupons", label: "Coupons", icon: Tag },
+        { href: "/admin/dashboard/testimonials", label: "Testimonials", icon: MessageSquareHeart },
     ];
 
     return (

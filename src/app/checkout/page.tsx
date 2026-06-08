@@ -23,6 +23,7 @@ function CheckoutContent() {
     const locationId = searchParams.get('locationId');
     const packageName = searchParams.get('packageName');
     const pujaId = searchParams.get('pujaId'); // NEW
+    const puriPujaId = searchParams.get('puriPujaId');
     const source = searchParams.get('source');
     const urlPrice = searchParams.get('price');
 
@@ -129,8 +130,8 @@ function CheckoutContent() {
 
                 // --- NEW: Puri Puja Flow ---
                 if (source === 'puri-puja') {
-                    setServiceName("Jagannath Temple, Puri");
-                    setLocationName("Puri");
+                    setServiceName(packageName || "Puri Puja");
+                    setLocationName("Jagannath Temple, Puri");
                     if (urlPrice) {
                         setFetchedPrice(Number(urlPrice));
                     }
@@ -233,7 +234,7 @@ function CheckoutContent() {
         };
 
         initCheckout();
-    }, [router, serviceId, locationId, packageName, pujaId, source, urlPrice]);
+    }, [router, serviceId, locationId, packageName, pujaId, puriPujaId, source, urlPrice]);
 
     const handlePayment = async () => {
 
@@ -261,7 +262,10 @@ function CheckoutContent() {
                     description: `${serviceName} - ${packageName}`,
                     handler: (response: any) => {
                         // Payment successful
-                        processBooking(response.razorpay_payment_id);
+                        processBooking(response.razorpay_payment_id, {
+                            razorpayOrderId: response.razorpay_order_id,
+                            razorpaySignature: response.razorpay_signature,
+                        });
                     },
                     prefill: {
                         name: client?.name,
@@ -300,7 +304,10 @@ function CheckoutContent() {
         await processBooking();
     };
 
-    const processBooking = async (txnId?: string) => {
+    const processBooking = async (
+        txnId?: string,
+        razorpayVerification?: { razorpayOrderId?: string; razorpaySignature?: string }
+    ) => {
         // --- DUPLICATE SUBMISSION GUARD (Tasks 4, 9, 10) ---
         if (bookingInProgress.current) return;
         bookingInProgress.current = true;
@@ -315,11 +322,17 @@ function CheckoutContent() {
                 priceCategory: packageName, // Assuming this maps to priceCategory in schema
                 paymentMethod,
                 transactionId: txnId || undefined,
+                ...razorpayVerification,
             };
 
             // Conditionally add fields
             if (pujaId) {
                 bookingData.puja = pujaId;
+                if (serviceId) {
+                    bookingData.pujaService = serviceId;
+                }
+            } else if (source === 'puri-puja' && puriPujaId) {
+                bookingData.puriPuja = puriPujaId;
             } else {
                 bookingData.service = serviceId;
                 bookingData.location = locationId;

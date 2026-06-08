@@ -8,6 +8,7 @@ interface ServiceModalProps {
   isOpen: boolean;
   onClose: () => void;
   service: {
+    _id?: string;
     name: string;
     pricing: { name: string; amount: number }[];
     significance?: string;
@@ -43,6 +44,7 @@ export default function ServiceModal({ isOpen, onClose, service }: ServiceModalP
       packageName: fullPackageName,
       price: String(selectedPackage.amount),
       source: "puri-puja",
+      ...(service._id ? { puriPujaId: service._id } : {}),
     }).toString();
 
     const checkoutUrl = `/checkout?${queryParams}`;

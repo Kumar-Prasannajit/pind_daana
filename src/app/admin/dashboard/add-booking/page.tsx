@@ -79,6 +79,7 @@ type BookingPayload = {
     paymentDetails: string;
     transactionId?: string;
     puja?: string;
+    pujaService?: string;
     service?: string;
     location?: string;
 };
@@ -389,6 +390,7 @@ export default function AddBooking() {
 
             if (formData.mode === "puja") {
                 payload.puja = formData.puja;
+                payload.pujaService = formData.typePuja;
             } else {
                 payload.service = formData.service;
                 payload.location = formData.location;

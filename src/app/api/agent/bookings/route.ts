@@ -5,8 +5,12 @@ import Agent from "@/models/Agent";
 import Client from "@/models/Client";
 import Service from "@/models/Service";
 import Location from "@/models/Location";
+import Puja from "@/models/Puja";
+import PujaService from "@/models/PujaService";
+import PuriPuja from "@/models/PuriPuja";
 import { jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { markPaymentCompleted } from "@/lib/milestones";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +39,7 @@ export async function GET() {
         await dbConnect();
 
         // Register models for populate
-        const _models = [Client, Service, Location, Agent];
+        const _models = [Client, Service, Location, Agent, Puja, PujaService, PuriPuja];
 
         const agentId = await getAgentId();
         if (!agentId) {
@@ -44,9 +48,18 @@ export async function GET() {
 
         const bookings = await Booking.find({ agent: agentId })
             .populate("client", "name email phone")
-            .populate("service", "name _id")
+            .populate("service", "name _id milestones")
             .populate("location", "name services")
-            .populate("puja", "name")
+            .populate({
+                path: "puja",
+                select: "name location services",
+                populate: {
+                    path: "services.service",
+                    select: "name milestones"
+                }
+            })
+            .populate("pujaService", "name milestones")
+            .populate("puriPuja", "name milestones")
             .sort({ createdAt: -1 })
             .lean();
 
@@ -80,7 +93,11 @@ export async function PATCH(req: NextRequest) {
             return NextResponse.json({ error: "Booking not found or not assigned to you" }, { status: 404 });
         }
 
-        booking.completedMilestones = completedMilestones;
+        if (!booking.isPaymentVerified || booking.paymentStatus === "Pending") {
+            return NextResponse.json({ error: "Payment must be verified before updating milestones" }, { status: 400 });
+        }
+
+        booking.completedMilestones = markPaymentCompleted(completedMilestones);
         await booking.save();
 
         return NextResponse.json({ success: true, completedMilestones: booking.completedMilestones });

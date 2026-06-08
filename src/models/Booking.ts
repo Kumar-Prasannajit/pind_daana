@@ -5,6 +5,8 @@ export interface IBooking extends Document {
     location?: mongoose.Types.ObjectId;
     service?: mongoose.Types.ObjectId;
     puja?: mongoose.Types.ObjectId;
+    pujaService?: mongoose.Types.ObjectId;
+    puriPuja?: mongoose.Types.ObjectId;
     priceCategory: string;
     price: number;
     agent?: mongoose.Types.ObjectId;
@@ -37,6 +39,14 @@ const BookingSchema: Schema = new Schema({
     puja: {
         type: Schema.Types.ObjectId,
         ref: "Puja",
+    },
+    pujaService: {
+        type: Schema.Types.ObjectId,
+        ref: "PujaService",
+    },
+    puriPuja: {
+        type: Schema.Types.ObjectId,
+        ref: "PuriPuja",
     },
     priceCategory: {
         type: String,
@@ -93,6 +103,9 @@ const BookingSchema: Schema = new Schema({
     },
 });
 
+if (process.env.NODE_ENV === "development") {
+    delete mongoose.models.Booking;
+}
 const Booking: Model<IBooking> = mongoose.models.Booking || mongoose.model<IBooking>("Booking", BookingSchema);
 
 export default Booking;

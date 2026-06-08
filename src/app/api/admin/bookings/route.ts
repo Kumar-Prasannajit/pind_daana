@@ -8,15 +8,19 @@ import Agent from "@/models/Agent";
 import Client from "@/models/Client";
 import Service from "@/models/Service";
 import Location from "@/models/Location";
+import Puja from "@/models/Puja";
+import PujaService from "@/models/PujaService";
+import PuriPuja from "@/models/PuriPuja";
 import { jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { sendBookingConfirmationEmail } from "@/lib/email";
+import { PAYMENT_COMPLETED_MILESTONE, markPaymentCompleted } from "@/lib/milestones";
 // GET: Fetch all bookings for Admin
 export async function GET() {
     try {
         await dbConnect();
         // Ensure models are registered for populate
-        const _models = [Client, Service, Location, Agent];
+        const _models = [Client, Service, Location, Agent, Puja, PujaService, PuriPuja];
 
         // Verify Admin Token
         const cookieStore = await cookies();
@@ -32,7 +36,7 @@ export async function GET() {
 
         const bookings = await Booking.find({})
             .populate("client", "name email phone")
-            .populate("service", "name")
+            .populate("service", "name milestones")
             .populate({
                 path: "location",
                 select: "name services",
@@ -41,6 +45,16 @@ export async function GET() {
                     select: "name"
                 }
             })
+            .populate({
+                path: "puja",
+                select: "name location services",
+                populate: {
+                    path: "services.service",
+                    select: "name milestones"
+                }
+            })
+            .populate("pujaService", "name milestones")
+            .populate("puriPuja", "name milestones")
             .populate("agent", "name phone")
             .sort({ createdAt: -1 })
             .lean();
@@ -84,6 +98,17 @@ export async function PATCH(req: Request) {
         }
         if (agentId) {
             updateData.agent = agentId;
+        }
+
+        const existingBooking = await Booking.findById(bookingId).select("completedMilestones");
+        if (!existingBooking) {
+            return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+        }
+
+        if (typeof isPaymentVerified === 'boolean') {
+            updateData.completedMilestones = isPaymentVerified
+                ? markPaymentCompleted(existingBooking.completedMilestones || [])
+                : (existingBooking.completedMilestones || []).filter((milestone: string) => milestone !== PAYMENT_COMPLETED_MILESTONE);
         }
 
         const booking = await Booking.findByIdAndUpdate(

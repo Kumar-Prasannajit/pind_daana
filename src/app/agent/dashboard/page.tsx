@@ -8,6 +8,7 @@ import {
     LogOut, Menu, X, Bell, ShieldCheck, MapPin, Loader2,
     CheckCircle2, Clock, XCircle, AlertCircle, Phone, Mail, BookOpen, Flag, Save
 } from "lucide-react";
+import { markPaymentCompleted, mergeMilestones, withPaymentCompletedMilestone } from "@/lib/milestones";
 
 interface AgentProfile {
     _id: string;
@@ -24,8 +25,17 @@ interface LocationService {
 interface AssignedBooking {
     _id: string;
     client?: { name: string; email: string; phone: string };
-    service?: { _id: string; name: string };
-    puja?: { name: string };
+    service?: { _id: string; name: string; milestones?: string[] };
+    puja?: {
+        name: string;
+        location?: string;
+        services?: {
+            service: string | { _id: string; name: string; milestones?: string[] };
+            packages?: { name: string; priceAmount: number }[];
+        }[];
+    };
+    pujaService?: { _id?: string; name: string; milestones?: string[] };
+    puriPuja?: { name: string; milestones?: string[] };
     location?: { _id: string; name: string; services: LocationService[] };
     priceCategory: string;
     price: number;
@@ -85,7 +95,7 @@ export default function AgentDashboard() {
                 const res = await fetch("/api/agent/bookings");
                 const data = await res.json();
                 if (res.ok) setBookings(data.bookings || []);
-            } catch (err) {
+            } catch (err: any) {
                 console.error("Failed to fetch bookings", err);
             } finally {
                 setBookingsLoading(false);
@@ -94,32 +104,44 @@ export default function AgentDashboard() {
         fetchBookings();
     }, [agent]);
 
-    // Helper: get milestones available for a booking (from its location+service)
     const getAvailableMilestones = (booking: AssignedBooking): string[] => {
-        if (!booking.location?.services) return [];
-        // If we have a specific service, find milestones for that service
-        if (booking.service) {
-            const serviceId = String((booking.service as any)._id || booking.service);
-            const entry = booking.location.services.find((ls) => {
-                const svc = ls.service as any;
-                const sid = typeof svc === "string" ? svc : String(svc?._id || svc);
-                return sid === serviceId;
-            });
-            if (entry?.milestones?.length) return entry.milestones;
-        }
-        // Fallback: return milestones from any service entry that has them
-        for (const ls of booking.location.services) {
-            if (ls.milestones?.length) return ls.milestones;
-        }
-        return [];
+        const serviceId = booking.service?._id;
+        const locationServiceMilestones = serviceId
+            ? booking.location?.services?.find((entry) => {
+                const entryServiceId = typeof entry.service === "string" ? entry.service : entry.service?._id;
+                return entryServiceId === serviceId;
+            })?.milestones
+            : undefined;
+
+        // Fallback: If pujaService is not directly set/populated, find the service under puja that contains the booked package
+        const pujaFallbackMilestones = booking.pujaService?.milestones || (
+            booking.puja?.services?.find((entry) => {
+                return entry.packages?.some((pkg) => pkg.name === booking.priceCategory);
+            })?.service as any
+        )?.milestones;
+
+        return withPaymentCompletedMilestone(
+            mergeMilestones(
+                booking.puriPuja?.milestones,
+                pujaFallbackMilestones,
+                booking.service?.milestones,
+                locationServiceMilestones,
+                booking.location?.services?.flatMap((entry) => entry.milestones || [])
+            )
+        );
     };
+
+    const getCompletedMilestones = (booking: AssignedBooking): string[] =>
+        booking.isPaymentVerified
+            ? markPaymentCompleted(booking.completedMilestones || [])
+            : booking.completedMilestones || [];
 
     const toggleMilestonePanel = (bookingId: string, booking: AssignedBooking) => {
         setMilestonePanelOpen((prev) => {
             const next = { ...prev, [bookingId]: !prev[bookingId] };
             // init local state from saved milestones
             if (next[bookingId] && localMilestones[bookingId] === undefined) {
-                setLocalMilestones((lm) => ({ ...lm, [bookingId]: [...(booking.completedMilestones || [])] }));
+                setLocalMilestones((lm) => ({ ...lm, [bookingId]: [...getCompletedMilestones(booking)] }));
             }
             return next;
         });
@@ -502,6 +524,18 @@ export default function AgentDashboard() {
 
                                                                 {/* Service / Puja */}
                                                                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 mt-1">
+                                                                    {!booking.service?.name && (booking.puja?.name || booking.puriPuja?.name) && (
+                                                                        <span className="flex items-center gap-1">
+                                                                            <BookOpen size={12} />
+                                                                            {booking.puja?.name || booking.puriPuja?.name}
+                                                                        </span>
+                                                                    )}
+                                                                    {!booking.location?.name && (booking.puja?.location || booking.puriPuja) && (
+                                                                        <span className="flex items-center gap-1">
+                                                                            <MapPin size={12} />
+                                                                            {booking.puja?.location || "Jagannath Temple, Puri"}
+                                                                        </span>
+                                                                    )}
                                                                     {booking.service?.name && (
                                                                         <span className="flex items-center gap-1">
                                                                             <BookOpen size={12} />
@@ -554,7 +588,7 @@ export default function AgentDashboard() {
                                                                         : { background: 'transparent', color: '#DAA520', borderColor: '#DAA520' }}
                                                                 >
                                                                     <Flag size={11} />
-                                                                    Milestones ({(booking.completedMilestones || []).length}/{getAvailableMilestones(booking).length})
+                                                                    Milestones ({getCompletedMilestones(booking).length}/{getAvailableMilestones(booking).length})
                                                                 </button>
                                                             )}
                                                         </div>
@@ -563,7 +597,7 @@ export default function AgentDashboard() {
                                                     {/* Milestones expandable panel */}
                                                     {milestonePanelOpen[booking._id] && (() => {
                                                         const available = getAvailableMilestones(booking);
-                                                        const checked = localMilestones[booking._id] || booking.completedMilestones || [];
+                                                        const checked = localMilestones[booking._id] || getCompletedMilestones(booking);
                                                         const isSaving = savingMilestones[booking._id];
                                                         const isSaved = savedMilestones[booking._id];
                                                         return (

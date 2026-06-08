@@ -4,13 +4,15 @@ import Booking from "@/models/Booking";
 import Client from "@/models/Client";
 import Service from "@/models/Service";
 import LocationModel from "@/models/Location";
+import { markPaymentCompleted } from "@/lib/milestones";
+import crypto from "crypto";
 export async function POST(req: Request) {
     try {
         await dbConnect();
         const body = await req.json();
 
         // Basic validation
-        if (!body.client || (!body.puja && (!body.location || !body.service)) || !body.priceCategory || !body.price) {
+        if (!body.client || (!body.puja && !body.puriPuja && (!body.location || !body.service)) || !body.priceCategory || !body.price) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
@@ -26,6 +28,8 @@ export async function POST(req: Request) {
 
         if (body.puja) {
             duplicateQuery.puja = body.puja;
+        } else if (body.puriPuja) {
+            duplicateQuery.puriPuja = body.puriPuja;
         } else {
             duplicateQuery.service = body.service;
             duplicateQuery.location = body.location;
@@ -40,10 +44,31 @@ export async function POST(req: Request) {
         }
         // --- END DUPLICATE PREVENTION ---
 
+        const isRazorpayPayment = body.paymentMethod === "razorpay";
+        if (isRazorpayPayment) {
+            const { razorpayOrderId, transactionId, razorpaySignature } = body;
+            if (!razorpayOrderId || !transactionId || !razorpaySignature || !process.env.RAZORPAY_KEY_SECRET) {
+                return NextResponse.json({ error: "Razorpay payment verification failed" }, { status: 400 });
+            }
+
+            const expectedSignature = crypto
+                .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+                .update(`${razorpayOrderId}|${transactionId}`)
+                .digest("hex");
+
+            if (expectedSignature !== razorpaySignature) {
+                return NextResponse.json({ error: "Invalid Razorpay payment signature" }, { status: 400 });
+            }
+        }
+
         const bookingData = {
             ...body,
-            isPaymentVerified: false,
-            status: "Pending"
+            paymentStatus: isRazorpayPayment ? "Completed" : body.paymentStatus || "Pending",
+            isPaymentVerified: isRazorpayPayment,
+            completedMilestones: isRazorpayPayment
+                ? markPaymentCompleted(body.completedMilestones)
+                : body.completedMilestones || [],
+            status: body.status || "Pending"
         };
 
         const newBooking = await Booking.create(bookingData);
@@ -64,6 +89,13 @@ export async function POST(req: Request) {
                 if (pujaDetails) {
                     serviceName = pujaDetails.name;
                     locationName = pujaDetails.location; // Puja model has string location
+                }
+            } else if (body.puriPuja) {
+                const PuriPuja = (await import("@/models/PuriPuja")).default;
+                const puriPujaDetails = await PuriPuja.findById(body.puriPuja);
+                if (puriPujaDetails) {
+                    serviceName = puriPujaDetails.name;
+                    locationName = "Jagannath Temple, Puri";
                 }
             } else {
                 // Fetch Service/Location details
